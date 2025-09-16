@@ -19,3 +19,11 @@
   --color-text: var(--tukki-gray-900);
 }
 
+
+header {
+  background-image: url('/images/hero.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
