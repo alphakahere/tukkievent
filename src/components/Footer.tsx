@@ -1,150 +1,146 @@
-import React from 'react'
+import { Facebook, Instagram, Ticket, Twitter, Youtube as YouTube } from "lucide-react";
+import React from "react";
 
 const Footer = () => {
-  return (
-    <footer className="bg-[var(--tukki-gray-900)] text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-4 gap-8">
-                <div>
-                    <h3 className="text-2xl font-bold text-[var(--tukki-sun-yellow)] mb-4">
-                        TukkiEvent
-                    </h3>
-                    <p className="text-gray-300 mb-4">
-                        Simplifying event management across Africa with
-                        mobile-first solutions.
-                    </p>
-                    <div className="flex space-x-4">
-                        <a
-                            href="#"
-                            className="text-gray-400 hover:text-white"
-                        >
-                            Twitter
-                        </a>
-                        <a
-                            href="#"
-                            className="text-gray-400 hover:text-white"
-                        >
-                            Facebook
-                        </a>
-                        <a
-                            href="#"
-                            className="text-gray-400 hover:text-white"
-                        >
-                            LinkedIn
-                        </a>
-                    </div>
-                </div>
+	return (
+		<footer className="bg-gray-900 text-white pt-16 pb-8">
+			<div className="container mx-auto px-4">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+					<div>
+						<div className="flex items-center mb-4">
+							<Ticket className="h-8 w-8 text-orange-500 mr-2" />
+							<span className="text-2xl font-bold">TukkiEvent</span>
+						</div>
+						<p className="text-gray-400 mb-4">
+							Simplify event management across Africa. Create, sell, and
+							manage tickets seamlessly — even with limited
+							connectivity.
+						</p>
+						<div className="flex space-x-4">
+							<a
+								href="#"
+								className="text-gray-400 hover:text-white transition-colors"
+							>
+								<Facebook className="h-5 w-5" />
+							</a>
+							<a
+								href="#"
+								className="text-gray-400 hover:text-white transition-colors"
+							>
+								<Twitter className="h-5 w-5" />
+							</a>
+							<a
+								href="#"
+								className="text-gray-400 hover:text-white transition-colors"
+							>
+								<Instagram className="h-5 w-5" />
+							</a>
+							<a
+								href="#"
+								className="text-gray-400 hover:text-white transition-colors"
+							>
+								<YouTube className="h-5 w-5" />
+							</a>
+						</div>
+					</div>
 
-                <div>
-                    <h4 className="text-lg font-semibold mb-4">Product</h4>
-                    <ul className="space-y-2">
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Features
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Pricing
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                API
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Integrations
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+					<div>
+						<h3 className="text-lg font-semibold mb-4">Company</h3>
+						<ul className="space-y-2">
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									About Us
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Blog
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Careers
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Contact
+								</a>
+							</li>
+						</ul>
+					</div>
 
-                <div>
-                    <h4 className="text-lg font-semibold mb-4">Support</h4>
-                    <ul className="space-y-2">
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Help Center
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Contact Us
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Status
-                            </a>
-                        </li>
-                        <li>
-                            <a
-                                href="#"
-                                className="text-gray-300 hover:text-white"
-                            >
-                                Community
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+					<div>
+						<h3 className="text-lg font-semibold mb-4">Resources</h3>
+						<ul className="space-y-2">
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									FAQ
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Support Center
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Terms of Service
+								</a>
+							</li>
+							<li>
+								<a
+									href="#"
+									className="text-gray-400 hover:text-white transition-colors"
+								>
+									Privacy Policy
+								</a>
+							</li>
+						</ul>
+					</div>
 
-                <div>
-                    <h4 className="text-lg font-semibold mb-4">Language</h4>
-                    <select className="bg-[var(--tukki-gray-800)] text-white border border-gray-600 rounded-lg px-3 py-2 w-full">
-                        <option>English</option>
-                        <option>Français</option>
-                        <option>العربية</option>
-                        <option>Português</option>
-                    </select>
+					<div>
+						<h3 className="text-lg font-semibold mb-4">Language</h3>
+						<select className="bg-gray-800 text-gray-400 rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
+							<option value="en">English</option>
+							<option value="fr">Français</option>
+							<option value="sw">Kiswahili</option>
+							<option value="ha">Hausa</option>
+							<option value="yo">Yorùbá</option>
+						</select>
+					</div>
+				</div>
 
-                    <div className="mt-6">
-                        <h4 className="text-lg font-semibold mb-4">
-                            Payment Partners
-                        </h4>
-                        <div className="flex space-x-4">
-                            <div className="bg-white text-[var(--tukki-gray-900)] px-3 py-1 rounded text-sm font-semibold">
-                                Orange Money
-                            </div>
-                            <div className="bg-white text-[var(--tukki-gray-900)] px-3 py-1 rounded text-sm font-semibold">
-                                Wave
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+				<div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+					<p>
+						&copy; {new Date().getFullYear()} TukkiEvent. All rights
+						reserved.
+					</p>
+				</div>
+			</div>
+		</footer>
+	);
+};
 
-            <div className="border-t border-gray-700 mt-12 pt-8 text-center text-gray-400">
-                <p>
-                    &copy; 2024 TukkiEvent. All rights reserved. | 500+ events
-                    created | Secure & Reliable
-                </p>
-            </div>
-        </div>
-    </footer>
-  )
-}
-
-export default Footer
+export default Footer;

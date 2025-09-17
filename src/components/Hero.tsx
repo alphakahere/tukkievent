@@ -1,70 +1,91 @@
-import React from 'react'
+import React from "react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
-const Hero = () => {
-  return (
-    <section className="relative">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-8">
-                    <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                        Simplify Event Management
-                        <span className="block text-[var(--tukki-sun-yellow)]">
-                            Across Africa
-                        </span>
-                    </h1>
-                    <p className="text-xl md:text-2xl text-blue-100 leading-relaxed">
-                        Create, sell, and manage tickets seamlessly — even
-                        with limited connectivity
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <button className="bg-[var(--tukki-vibrant-orange)] text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-orange-600 transition-colors shadow-lg">
-                            Create Your Event
-                        </button>
-                        <button className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-[var(--tukki-deep-blue)] transition-colors">
-                            Explore Events
-                        </button>
-                    </div>
-                </div>
-                <div className="relative">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-3 h-3 bg-[var(--tukki-sun-yellow)] rounded-full"></div>
-                                <span className="text-sm">
-                                    Event Dashboard
-                                </span>
-                            </div>
-                            <div className="bg-white/20 rounded-lg p-4">
-                                <h3 className="font-semibold text-lg mb-2">
-                                    Afro Music Festival 2024
-                                </h3>
-                                <p className="text-sm text-blue-100 mb-3">
-                                    Dakar, Senegal • March 15-17
-                                </p>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm">
-                                        Tickets Sold: 1,247
-                                    </span>
-                                    <span className="text-[var(--tukki-sun-yellow)] font-bold">
-                                        $12,470
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex space-x-2">
-                                <div className="bg-[var(--tukki-vibrant-orange)] text-white px-4 py-2 rounded text-sm font-medium">
-                                    Scan Tickets
-                                </div>
-                                <div className="bg-white/20 text-white px-4 py-2 rounded text-sm">
-                                    Manage
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-  )
-}
+const Hero: React.FC = () => {
+	return (
+		<section className="relative min-h-screen flex pt-16 overflow-hidden">
+			{/* Background Image with Overlay */}
+			<div className="absolute inset-0 z-0">
+				<div className="absolute inset-0 bg-gradient-to-r from-purple-900/90 to-orange-900/80 z-10"></div>
+				<Image
+					src="/images/hero.jpg"
+					alt="African event with people using mobile phones"
+					className="w-full h-full object-cover"
+					width={1600}
+					height={500}
+				/>
+			</div>
 
-export default Hero
+			<div className="container mx-auto px-4 z-10 relative pt-32">
+				<div className="max-w-3xl">
+					<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+						Simplify Event Management Across Africa
+					</h1>
+
+					<p className="text-xl md:text-2xl text-white/90 mb-8">
+						Create, sell, and manage tickets seamlessly — even with limited
+						connectivity
+					</p>
+
+					<div className="flex flex-col sm:flex-row gap-4">
+						<a
+							href="#"
+							className="px-8 py-4 rounded-full bg-orange-500 text-white font-medium text-lg hover:bg-orange-600 transition-colors flex items-center justify-center sm:justify-start"
+						>
+							Create Your Event
+							<ArrowRight className="ml-2 h-5 w-5" />
+						</a>
+
+						<a
+							href="#"
+							className="px-8 py-4 rounded-full bg-white/10 text-white font-medium text-lg backdrop-blur-sm hover:bg-white/20 transition-colors flex items-center justify-center sm:justify-start border border-white/30"
+						>
+							Explore Events
+						</a>
+					</div>
+				</div>
+
+				{/* Stats */}
+				{/* <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
+					<div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+						<p className="text-3xl font-bold text-white mb-1">1000+</p>
+						<p className="text-white/80">Events Hosted</p>
+					</div>
+
+					<div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+						<p className="text-3xl font-bold text-white mb-1">25+</p>
+						<p className="text-white/80">African Countries</p>
+					</div>
+
+					<div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+						<p className="text-3xl font-bold text-white mb-1">100K+</p>
+						<p className="text-white/80">Tickets Sold</p>
+					</div>
+
+					<div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+						<p className="text-3xl font-bold text-white mb-1">98%</p>
+						<p className="text-white/80">Satisfaction Rate</p>
+					</div>
+				</div> */}
+			</div>
+
+			{/* Wave Separator */}
+			<div className="absolute bottom-0 left-0 right-0">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 1440 320"
+					className="w-full"
+				>
+					<path
+						fill="#ffffff"
+						fillOpacity="1"
+						d="M0,192L48,176C96,160,192,128,288,128C384,128,480,160,576,181.3C672,203,768,213,864,208C960,203,1056,181,1152,165.3C1248,149,1344,139,1392,133.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+					></path>
+				</svg>
+			</div>
+		</section>
+	);
+};
+
+export default Hero;

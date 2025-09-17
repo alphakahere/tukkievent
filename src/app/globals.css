@@ -1,29 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --tukki-deep-blue: #1e3a8a;
   --tukki-vibrant-orange: #ea580c;
-  --tukki-sun-yellow: #fbbf24;
-  --tukki-light-blue: #3b82f6;
-  --tukki-gray-50: #f9fafb;
-  --tukki-gray-100: #f3f4f6;
-  --tukki-gray-900: #111827;
 }
 
 @theme inline {
-  --color-primary: var(--tukki-deep-blue);
-  --color-secondary: var(--tukki-vibrant-orange);
-  --color-accent: var(--tukki-sun-yellow);
-  --color-light: var(--tukki-light-blue);
-  --color-background: var(--tukki-gray-50);
-  --color-text: var(--tukki-gray-900);
-}
-
-
-header {
-  background-image: url('/images/hero.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
 }
