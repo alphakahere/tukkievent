@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Search, Calendar, MapPin, Clock, Users, Tag, Filter } from "lucide-react";
+import { Search, Calendar, MapPin, Clock, Users, Tag } from "lucide-react";
 import Image from "next/image";
 
 type Event = {
@@ -230,7 +230,12 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 				</div>
 
 				<div className="flex items-center justify-between">
-					<p className="text-sm text-gray-500">by {event.organizer}</p>
+					<p className="text-sm text-gray-500">
+						by{" "}
+						<span className="font-medium text-gray-700">
+							{event.organizer}
+						</span>
+					</p>
 				</div>
 			</div>
 		</div>
@@ -242,7 +247,6 @@ const ListEvents: React.FC = () => {
 	const [selectedCategory, setSelectedCategory] = useState("All");
 	const [selectedQuick, setSelectedQuick] = useState<Set<QuickFilter>>(new Set());
 	const [place, setPlace] = useState("");
-	const [showFilters, setShowFilters] = useState(true);
 
 	const toggleQuick = (q: QuickFilter) => {
 		const next = new Set(selectedQuick);
@@ -328,14 +332,76 @@ const ListEvents: React.FC = () => {
 					</p>
 				</div>
 
+				{/* Categories */}
+				{
+					<div className="mb-4 border-b border-gray-100 pb-4">
+						<div className="flex items-center mb-3">
+							<Tag className="w-5 h-5 mr-2 text-orange-500" />
+							<h3 className="text-sm font-semibold text-gray-800">
+								Categories
+							</h3>
+						</div>
+						<div className="flex gap-2 overflow-x-auto">
+							{categories.map((category) => (
+								<button
+									key={category}
+									onClick={() => setSelectedCategory(category)}
+									className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+										selectedCategory === category
+											? "bg-orange-500 text-white"
+											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+									}`}
+								>
+									{category}
+								</button>
+							))}
+						</div>
+					</div>
+				}
+
+				{/* Quick Filters */}
+				{
+					<div className="mb-6 border-b border-gray-100 pb-4">
+						<div className="flex flex-wrap gap-2">
+							{quickFilters.map((q) => {
+								const active = selectedQuick.has(q);
+								return (
+									<button
+										key={q}
+										onClick={() => toggleQuick(q)}
+										className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+											active
+												? "bg-gray-900 text-white shadow-sm"
+												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+										}`}
+									>
+										{q}
+									</button>
+								);
+							})}
+							{(selectedQuick.size > 0 ||
+								selectedCategory !== "All" ||
+								place ||
+								searchTerm) && (
+								<button
+									onClick={clearAll}
+									className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+								>
+									Clear all
+								</button>
+							)}
+						</div>
+					</div>
+				}
+
 				{/* Search + Place */}
-				<div className="mx-auto mb-6">
+				<div className="mb-6">
 					<div className="flex gap-4">
-						<div className="relative flex-1">
+						<div className="relative flex-1 max-w-md">
 							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 							<input
 								type="text"
-								placeholder="Search events, locations, or organizers..."
+								placeholder="Search events or organizers..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
@@ -351,86 +417,8 @@ const ListEvents: React.FC = () => {
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
 							/>
 						</div>
-						{/* Filters toggle */}
-						<div className="mb-4">
-							<button
-								onClick={() => setShowFilters(!showFilters)}
-								className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-							>
-								<Filter className="w-4 h-4" />
-								{showFilters ? "Hide filters" : "Show filters"}
-							</button>
-						</div>
 					</div>
 				</div>
-
-				{/* Categories */}
-				{showFilters && (
-					<div className="max-w-5xl mx-auto mb-4">
-						<div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-							<div className="flex items-center mb-3">
-								<Tag className="w-5 h-5 mr-2 text-orange-500" />
-								<h3 className="text-sm font-semibold text-gray-800">
-									Categories
-								</h3>
-							</div>
-							<div className="flex gap-2 overflow-x-auto">
-								{categories.map((category) => (
-									<button
-										key={category}
-										onClick={() =>
-											setSelectedCategory(category)
-										}
-										className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-											selectedCategory === category
-												? "bg-orange-500 text-white"
-												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-										}`}
-									>
-										{category}
-									</button>
-								))}
-							</div>
-						</div>
-					</div>
-				)}
-
-				{/* Quick Filters */}
-				{showFilters && (
-					<div className="max-w-5xl mx-auto mb-8">
-						<div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-							<div className="flex flex-wrap gap-2">
-								{quickFilters.map((q) => {
-									const active = selectedQuick.has(q);
-									return (
-										<button
-											key={q}
-											onClick={() => toggleQuick(q)}
-											className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-												active
-													? "bg-gray-900 text-white shadow-sm"
-													: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-											}`}
-										>
-											{q}
-										</button>
-									);
-								})}
-								{(selectedQuick.size > 0 ||
-									selectedCategory !== "All" ||
-									place ||
-									searchTerm) && (
-									<button
-										onClick={clearAll}
-										className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-									>
-										Clear all
-									</button>
-								)}
-							</div>
-						</div>
-					</div>
-				)}
 
 				{/* Results Count */}
 				<div className="max-w-5xl mx-auto flex items-center justify-between mb-6 text-sm text-gray-600">

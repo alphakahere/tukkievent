@@ -40,30 +40,22 @@ const Header: React.FC = () => {
 
 					{/* Desktop Navigation */}
 					<nav className="hidden md:flex items-center space-x-6">
-						<a
-							href="#features"
-							className={`${
-								scrolled ? "text-gray-700" : "text-white"
-							} hover:text-orange-500 transition-colors`}
-						>
-							Features
-						</a>
-						<a
+						{/* <a
 							href="#how-it-works"
 							className={`${
 								scrolled ? "text-gray-700" : "text-white"
 							} hover:text-orange-500 transition-colors`}
 						>
 							How It Works
-						</a>
-						<a
+						</a> */}
+						{/* <a
 							href="#pricing"
 							className={`${
 								scrolled ? "text-gray-700" : "text-white"
 							} hover:text-orange-500 transition-colors`}
 						>
 							Pricing
-						</a>
+						</a> */}
 						<a
 							href="#"
 							className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors"
