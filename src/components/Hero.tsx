@@ -4,7 +4,7 @@ import Image from "next/image";
 
 const Hero: React.FC = () => {
 	return (
-		<section className="relative min-h-screen flex pt-16 overflow-hidden">
+		<section className="relative min-h-[80vh] flex pt-16 overflow-hidden">
 			{/* Background Image with Overlay */}
 			<div className="absolute inset-0 z-0">
 				<div className="absolute inset-0 bg-gradient-to-r from-purple-900/90 to-orange-900/80 z-10"></div>
@@ -74,11 +74,11 @@ const Hero: React.FC = () => {
 			<div className="absolute bottom-0 left-0 right-0">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 1440 320"
+					viewBox="0 0 1440 210"
 					className="w-full"
 				>
 					<path
-						fill="#ffffff"
+						fill="#f9fafb"
 						fillOpacity="1"
 						d="M0,192L48,176C96,160,192,128,288,128C384,128,480,160,576,181.3C672,203,768,213,864,208C960,203,1056,181,1152,165.3C1248,149,1344,139,1392,133.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
 					></path>
