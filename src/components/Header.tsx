@@ -60,13 +60,13 @@ const Header: React.FC = () => {
 							href="#"
 							className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors"
 						>
-							Sign In
+							Se connecter
 						</a>
 						<a
 							href="#"
 							className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors"
 						>
-							Create Event
+							Créer un événement
 						</a>
 					</nav>
 
@@ -100,33 +100,33 @@ const Header: React.FC = () => {
 								className="text-gray-700 hover:text-orange-500 transition-colors"
 								onClick={() => setIsOpen(false)}
 							>
-								Features
+								Fonctionnalités
 							</a>
 							<a
 								href="#how-it-works"
 								className="text-gray-700 hover:text-orange-500 transition-colors"
 								onClick={() => setIsOpen(false)}
 							>
-								How It Works
+								Comment ça marche
 							</a>
 							<a
 								href="#pricing"
 								className="text-gray-700 hover:text-orange-500 transition-colors"
 								onClick={() => setIsOpen(false)}
 							>
-								Pricing
+								Tarifs
 							</a>
 							<a
 								href="#"
 								className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors text-center"
 							>
-								Sign In
+								Se connecter
 							</a>
 							<a
 								href="#"
 								className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors text-center"
 							>
-								Create Event
+								Créer un événement
 							</a>
 						</nav>
 					</div>

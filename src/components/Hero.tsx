@@ -20,12 +20,12 @@ const Hero: React.FC = () => {
 			<div className="container mx-auto px-4 z-10 relative pt-32">
 				<div className="max-w-3xl">
 					<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-						Simplify Event Management Across Africa
+						Simplifiez la gestion d&apos;événements à travers l&apos;Afrique
 					</h1>
 
 					<p className="text-xl md:text-2xl text-white/90 mb-8">
-						Create, sell, and manage tickets seamlessly — even with limited
-						connectivity
+						Créez, vendez et gérez des billets facilement — même avec une
+						connectivité limitée
 					</p>
 
 					<div className="flex flex-col sm:flex-row gap-4">
@@ -33,7 +33,7 @@ const Hero: React.FC = () => {
 							href="#"
 							className="px-8 py-4 rounded-full bg-orange-500 text-white font-medium text-lg hover:bg-orange-600 transition-colors flex items-center justify-center sm:justify-start"
 						>
-							Create Your Event
+							Créer votre événement
 							<ArrowRight className="ml-2 h-5 w-5" />
 						</a>
 
@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
 							href="#"
 							className="px-8 py-4 rounded-full bg-white/10 text-white font-medium text-lg backdrop-blur-sm hover:bg-white/20 transition-colors flex items-center justify-center sm:justify-start border border-white/30"
 						>
-							Explore Events
+							Explorer les événements
 						</a>
 					</div>
 				</div>

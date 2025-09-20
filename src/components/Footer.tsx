@@ -12,9 +12,9 @@ const Footer = () => {
 							<span className="text-2xl font-bold">TukkiEvent</span>
 						</div>
 						<p className="text-gray-400 mb-4">
-							Simplify event management across Africa. Create, sell, and
-							manage tickets seamlessly — even with limited
-							connectivity.
+							Simplifiez la gestion d'événements à travers l'Afrique.
+							Créez, vendez et gérez vos billets facilement — même avec
+							une connectivité limitée.
 						</p>
 						<div className="flex space-x-4">
 							<a
@@ -45,14 +45,14 @@ const Footer = () => {
 					</div>
 
 					<div>
-						<h3 className="text-lg font-semibold mb-4">Company</h3>
+						<h3 className="text-lg font-semibold mb-4">Entreprise</h3>
 						<ul className="space-y-2">
 							<li>
 								<a
 									href="#"
 									className="text-gray-400 hover:text-white transition-colors"
 								>
-									About Us
+									À propos
 								</a>
 							</li>
 							<li>
@@ -68,7 +68,7 @@ const Footer = () => {
 									href="#"
 									className="text-gray-400 hover:text-white transition-colors"
 								>
-									Careers
+									Carrières
 								</a>
 							</li>
 							<li>
@@ -83,7 +83,7 @@ const Footer = () => {
 					</div>
 
 					<div>
-						<h3 className="text-lg font-semibold mb-4">Resources</h3>
+						<h3 className="text-lg font-semibold mb-4">Ressources</h3>
 						<ul className="space-y-2">
 							<li>
 								<a
@@ -98,7 +98,7 @@ const Footer = () => {
 									href="#"
 									className="text-gray-400 hover:text-white transition-colors"
 								>
-									Support Center
+									Centre d'aide
 								</a>
 							</li>
 							<li>
@@ -106,7 +106,7 @@ const Footer = () => {
 									href="#"
 									className="text-gray-400 hover:text-white transition-colors"
 								>
-									Terms of Service
+									Conditions d'utilisation
 								</a>
 							</li>
 							<li>
@@ -114,14 +114,14 @@ const Footer = () => {
 									href="#"
 									className="text-gray-400 hover:text-white transition-colors"
 								>
-									Privacy Policy
+									Politique de confidentialité
 								</a>
 							</li>
 						</ul>
 					</div>
 
 					<div>
-						<h3 className="text-lg font-semibold mb-4">Language</h3>
+						<h3 className="text-lg font-semibold mb-4">Langue</h3>
 						<select className="bg-gray-800 text-gray-400 rounded px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-orange-500">
 							<option value="en">English</option>
 							<option value="fr">Français</option>
@@ -134,8 +134,8 @@ const Footer = () => {
 
 				<div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
 					<p>
-						&copy; {new Date().getFullYear()} TukkiEvent. All rights
-						reserved.
+						&copy; {new Date().getFullYear()} TukkiEvent. Tous droits
+						réservés.
 					</p>
 				</div>
 			</div>

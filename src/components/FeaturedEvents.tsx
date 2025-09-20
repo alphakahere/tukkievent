@@ -143,6 +143,15 @@ const events: Event[] = [
 ];
 
 const categories = ["All", "Technology", "Fashion", "Arts", "Music", "Business", "Food & Drink"];
+const categoryLabel: Record<string, string> = {
+	All: "Tous",
+	Technology: "Technologie",
+	Fashion: "Mode",
+	Arts: "Arts",
+	Music: "Musique",
+	Business: "Business",
+	"Food & Drink": "Gastronomie",
+};
 const quickFilters = [
 	"Today",
 	"Tomorrow",
@@ -153,6 +162,15 @@ const quickFilters = [
 	"Paid",
 ] as const;
 type QuickFilter = (typeof quickFilters)[number];
+const quickFilterLabel: Record<QuickFilter, string> = {
+	Today: "Aujourd'hui",
+	Tomorrow: "Demain",
+	"This weekend": "Ce week‑end",
+	Online: "En ligne",
+	"In-person": "En présentiel",
+	Free: "Gratuit",
+	Paid: "Payant",
+};
 
 type EventCardProps = {
 	event: Event;
@@ -323,10 +341,10 @@ const ListEvents: React.FC = () => {
 				{/* Header */}
 				<div className="text-center max-w-3xl mx-auto mb-12">
 					<h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-						Discover Events Across Africa
+						Découvrez des événements à travers l&apos;Afrique
 					</h2>
 					<p className="text-xl text-gray-600">
-						Find and join amazing events happening in your area and beyond
+						Trouvez et rejoignez des événements près de chez vous et au-delà
 					</p>
 				</div>
 
@@ -337,7 +355,7 @@ const ListEvents: React.FC = () => {
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
 							<input
 								type="text"
-								placeholder="Search events, locations, or organizers..."
+								placeholder="Rechercher des événements, lieux ou organisateurs..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
@@ -347,7 +365,7 @@ const ListEvents: React.FC = () => {
 							<MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
 							<input
 								type="text"
-								placeholder="Place (city or country)"
+								placeholder="Lieu (ville ou pays)"
 								value={place}
 								onChange={(e) => setPlace(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
@@ -362,7 +380,7 @@ const ListEvents: React.FC = () => {
 						<div className="flex items-center mb-3">
 							<Tag className="w-5 h-5 mr-2 text-orange-500" />
 							<h3 className="text-sm font-semibold text-gray-800">
-								Categories
+								Catégories
 							</h3>
 						</div>
 						<div className="flex gap-2 overflow-x-auto no-scrollbar">
@@ -376,7 +394,7 @@ const ListEvents: React.FC = () => {
 											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 									}`}
 								>
-									{category}
+									{categoryLabel[category] ?? category}
 								</button>
 							))}
 						</div>
@@ -399,7 +417,7 @@ const ListEvents: React.FC = () => {
 												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 										}`}
 									>
-										{q}
+										{quickFilterLabel[q as QuickFilter]}
 									</button>
 								);
 							})}
@@ -411,7 +429,7 @@ const ListEvents: React.FC = () => {
 									onClick={clearAll}
 									className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
 								>
-									Clear all
+									Tout effacer
 								</button>
 							)}
 						</div>

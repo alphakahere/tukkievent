@@ -143,6 +143,15 @@ const events: Event[] = [
 ];
 
 const categories = ["All", "Technology", "Fashion", "Arts", "Music", "Business", "Food & Drink"];
+const categoryLabel: Record<string, string> = {
+	All: "Tous",
+	Technology: "Technologie",
+	Fashion: "Mode",
+	Arts: "Arts",
+	Music: "Musique",
+	Business: "Business",
+	"Food & Drink": "Gastronomie",
+};
 const quickFilters = [
 	"Today",
 	"Tomorrow",
@@ -152,6 +161,15 @@ const quickFilters = [
 	"Free",
 	"Paid",
 ] as const;
+const quickFilterLabel: Record<QuickFilter, string> = {
+	Today: "Aujourd'hui",
+	Tomorrow: "Demain",
+	"This weekend": "Ce week‑end",
+	Online: "En ligne",
+	"In-person": "En présentiel",
+	Free: "Gratuit",
+	Paid: "Payant",
+};
 type QuickFilter = (typeof quickFilters)[number];
 
 function dayRange(offsetDays: number) {
@@ -185,7 +203,7 @@ type EventCardProps = {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
 	return (
-		<div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 group">
+		<div className="bg-white rounded-xl overflow-hidden shadow-xs hover:shadow-sm transition-all duration-300 group border border-gray-100">
 			<div className="relative h-48 overflow-hidden">
 				<Image
 					src={event.image}
@@ -338,7 +356,7 @@ const ListEvents: React.FC = () => {
 						<div className="flex items-center mb-3">
 							<Tag className="w-5 h-5 mr-2 text-orange-500" />
 							<h3 className="text-sm font-semibold text-gray-800">
-								Categories
+								Catégories
 							</h3>
 						</div>
 						<div className="flex gap-2 overflow-x-auto">
@@ -352,7 +370,7 @@ const ListEvents: React.FC = () => {
 											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 									}`}
 								>
-									{category}
+									{categoryLabel[category] ?? category}
 								</button>
 							))}
 						</div>
@@ -375,7 +393,7 @@ const ListEvents: React.FC = () => {
 												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 										}`}
 									>
-										{q}
+										{quickFilterLabel[q as QuickFilter]}
 									</button>
 								);
 							})}
@@ -387,7 +405,7 @@ const ListEvents: React.FC = () => {
 									onClick={clearAll}
 									className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
 								>
-									Clear all
+									Tout effacer
 								</button>
 							)}
 						</div>
@@ -401,7 +419,7 @@ const ListEvents: React.FC = () => {
 							<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 							<input
 								type="text"
-								placeholder="Search events or organizers..."
+								placeholder="Rechercher des événements ou des organisateurs..."
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
@@ -411,7 +429,7 @@ const ListEvents: React.FC = () => {
 							<MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 							<input
 								type="text"
-								placeholder="Place (city or country)"
+								placeholder="Lieu (ville ou pays)"
 								value={place}
 								onChange={(e) => setPlace(e.target.value)}
 								className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
@@ -421,16 +439,16 @@ const ListEvents: React.FC = () => {
 				</div>
 
 				{/* Results Count */}
-				<div className="max-w-5xl mx-auto flex items-center justify-between mb-6 text-sm text-gray-600">
+				{/* <div className="max-w-5xl mx-auto flex items-center justify-between mb-6 text-sm text-gray-600">
 					<p>
 						{filteredEvents.length} event
 						{filteredEvents.length !== 1 ? "s" : ""} found
 						{selectedCategory !== "All" ? ` in ${selectedCategory}` : ""}
 					</p>
-				</div>
+				</div> */}
 
 				{/* Events Grid */}
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6">
 					{filteredEvents.map((event) => (
 						<EventCard key={event.id} event={event} />
 					))}

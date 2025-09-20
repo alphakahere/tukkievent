@@ -25,19 +25,19 @@ const Navbar = () => {
 						href="#schedule"
 						className="text-white hover:text-pink-200 transition-colors font-medium"
 					>
-						Schedule
+						Programme
 					</Link>
 					<Link
 						href="#speakers"
 						className="text-white hover:text-pink-200 transition-colors font-medium"
 					>
-						Speakers
+						Intervenants
 					</Link>
 					<Link
 						href="#tickets"
 						className="text-white hover:text-pink-200 transition-colors font-medium"
 					>
-						Tickets
+						Billets
 					</Link>
 					<Link
 						href="#contact"
@@ -50,7 +50,7 @@ const Navbar = () => {
 				{/* Login Button */}
 				<div className="flex items-center space-x-4">
 					<button className="bg-white/20 backdrop-blur-sm border border-white/30 text-white px-6 py-2 rounded-lg font-medium hover:bg-white/30 transition-all duration-200">
-						Login
+						Se connecter
 					</button>
 				</div>
 			</div>
