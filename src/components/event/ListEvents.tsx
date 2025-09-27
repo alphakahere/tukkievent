@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Search, Calendar, MapPin, Tag } from "lucide-react";
 import EventCard from "./EventCard";
+import EventCardSkeleton from "./EventCardSkeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetEventCategoriesQuery, useGetEventsQuery } from "@/store/api/event/event.api";
 import { Category, Event } from "@/store/api/event/event.type";
 
@@ -52,7 +54,7 @@ import { Category, Event } from "@/store/api/event/event.type";
 
 const ListEvents: React.FC = () => {
 	const { data: events, isLoading } = useGetEventsQuery();
-	const { data: categories } = useGetEventCategoriesQuery();
+	const { data: categories, isLoading: categoriesLoading } = useGetEventCategoriesQuery();
 	console.log({ events, categories });
 
 	const [searchTerm, setSearchTerm] = useState("");
@@ -96,21 +98,31 @@ const ListEvents: React.FC = () => {
 							</h3>
 						</div>
 						<div className="flex gap-2 flex-wrap">
-							{categories?.map((category: Category) => (
-								<button
-									key={category.id}
-									onClick={() =>
-										setSelectedCategory(category.id)
-									}
-									className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-										selectedCategory === category.id
-											? "bg-orange-500 text-white"
-											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-									}`}
-								>
-									{category.name}
-								</button>
-							))}
+							{categoriesLoading
+								? Array.from({ length: 5 }).map((_, index) => (
+										<Skeleton
+											key={index}
+											className="h-8 w-20 rounded-full"
+										/>
+								  ))
+								: categories?.map((category: Category) => (
+										<button
+											key={category.id}
+											onClick={() =>
+												setSelectedCategory(
+													category.id
+												)
+											}
+											className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+												selectedCategory ===
+												category.id
+													? "bg-orange-500 text-white"
+													: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+											}`}
+										>
+											{category.name}
+										</button>
+								  ))}
 						</div>
 					</div>
 				}
@@ -177,11 +189,13 @@ const ListEvents: React.FC = () => {
 
 				{/* Events Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6">
-					{!isLoading &&
-						events &&
-						events?.map((event: Event) => (
-							<EventCard key={event.id} event={event} />
-						))}
+					{isLoading
+						? Array.from({ length: 6 }).map((_, index) => (
+								<EventCardSkeleton key={index} />
+						  ))
+						: events?.map((event: Event) => (
+								<EventCard key={event.id} event={event} />
+						  ))}
 				</div>
 
 				{/* No Results */}
