@@ -100,7 +100,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 					<p className="text-gray-600 mb-2">{event.description}</p>
 					<div className="flex items-center justify-between">
 						<div>
-							<span className="text-2xl font-bold text-purple-500">
+							<span className="text-2xl font-bold text-orange-500">
 								{event.price}
 							</span>
 							<span className="text-gray-500 text-sm ml-1">
@@ -337,7 +337,7 @@ const ListEvents: React.FC = () => {
 				{filteredEvents.length > 0 && (
 					<div className="text-center mt-12">
 						<button className="px-8 py-3 bg-white border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors">
-							Load More Events
+							Charger plus d'événements
 						</button>
 					</div>
 				)}
