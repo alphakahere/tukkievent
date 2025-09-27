@@ -1,9 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import { Search, Calendar, MapPin, Clock, Tag } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { events, type Event } from "@/data/events";
+import { Search, Calendar, MapPin, Tag } from "lucide-react";
+		import EventCard from "./EventCard";
+import { events } from "@/data/events";
 
 // events data imported from @/data/events
 
@@ -61,58 +60,6 @@ function nextWeekendRange() {
 function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
 	return aStart <= bEnd && bStart <= aEnd;
 }
-
-type EventCardProps = {
-	event: Event;
-};
-
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
-	return (
-		<Link href={`/events/${event.id}`} className="block h-full">
-			<div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
-				<div className="relative">
-					<div className="h-48 bg-orange-100 flex items-center justify-center">
-						<Image
-							src={event.image}
-							alt={event.title}
-							className="w-full h-full object-cover"
-							width={600}
-							height={300}
-						/>
-					</div>
-					<div className="absolute top-4 left-4">
-						<span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-							{event.category}
-						</span>
-					</div>
-				</div>
-				<div className="p-6">
-					<div className="flex items-center text-gray-500 text-sm mb-2">
-						<Calendar className="w-4 h-4 mr-2" />
-						<span>{event.date}</span>
-						<span className="mx-2">•</span>
-						<Clock className="w-4 h-4 mr-2" />
-						<span>{event.time}</span>
-					</div>
-					<h3 className="text-xl font-bold text-gray-900 mb-2">
-						{event.title}
-					</h3>
-					<p className="text-gray-600 mb-2">{event.description}</p>
-					<div className="flex items-center justify-between">
-						<div>
-							<span className="text-2xl font-bold text-orange-500">
-								{event.price}
-							</span>
-							<span className="text-gray-500 text-sm ml-1">
-								par personne
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</Link>
-	);
-};
 
 const ListEvents: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState("");
@@ -197,10 +144,10 @@ const ListEvents: React.FC = () => {
 				{/* Header */}
 				<div className="text-center max-w-3xl mx-auto mb-12">
 					<h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-						Discover Events Across Africa
+					Découvrir les événements en Afrique
 					</h2>
 					<p className="text-xl text-gray-600">
-						Find and join amazing events happening in your area and beyond
+						Trouvez et rejoignez les événements incroyables qui se passent dans votre région et au-delà
 					</p>
 				</div>
 
@@ -315,11 +262,10 @@ const ListEvents: React.FC = () => {
 							<Calendar className="w-12 h-12 text-gray-400" />
 						</div>
 						<h3 className="text-xl font-semibold text-gray-800 mb-2">
-							No events found
+							Aucun événement trouvé
 						</h3>
 						<p className="text-gray-600 mb-6">
-							Try adjusting your search terms or filters to find more
-							events.
+							Essayez de modifier vos termes de recherche ou de filtres pour trouver plus d'événements.
 						</p>
 						<button
 							onClick={() => {
@@ -328,7 +274,7 @@ const ListEvents: React.FC = () => {
 							}}
 							className="px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors"
 						>
-							Clear Filters
+							Effacer les filtres
 						</button>
 					</div>
 				)}

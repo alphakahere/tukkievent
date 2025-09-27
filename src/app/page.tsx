@@ -2,7 +2,7 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import ListEvents from "@/components/ListEvents";
+import ListEvents from "@/components/event/ListEvents";
 
 export default function Home() {
 	return (
