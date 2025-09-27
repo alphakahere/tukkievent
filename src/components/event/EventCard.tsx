@@ -11,7 +11,7 @@ type Props = {
 
 const EventCard: React.FC<Props> = ({ event }) => {
 	return (
-		<Link href={`/events/${event.id}`} className="block h-full">
+		<Link href={`/events/${event.slug}`} className="block h-full">
 			<div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
 				<div className="relative">
 					<div className="h-48 bg-orange-100 flex items-center justify-center">

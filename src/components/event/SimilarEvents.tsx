@@ -1,6 +1,6 @@
 import React from "react";
-import { type Event } from "@/data/events";
 import EventCard from "./EventCard";
+import { Event } from "@/store/api/event/event.type";
 
 type SimilarEventsProps = {
 	events: Event[];
@@ -20,5 +20,3 @@ const SimilarEvents: React.FC<SimilarEventsProps> = ({ events }) => {
 };
 
 export default SimilarEvents;
-
-

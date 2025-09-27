@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ unitPrice }) => {
 				</div>
 				<div className="flex items-center">
 					<Undo2 className="text-orange-500 w-4 h-4 mr-2" />
-					Remboursement jusqu'à 24h avant
+					Remboursement jusqu'à 7 jours avant
 				</div>
 			</div>
 			<div className="bg-white rounded-xl p-0 mt-6">

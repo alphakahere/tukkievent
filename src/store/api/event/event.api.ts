@@ -8,18 +8,18 @@ export const eventApi = createApi({
 	tagTypes: ["events", "event", "eventCategories"],
 	endpoints: (builder) => ({
 		getEvents: builder.query<Event[], void>({
-			query: () => "/visitors/events",
+			query: () => "/visitor/events",
 			providesTags: ["events"],
 		}),
-		getEvent: builder.query<Event, string>({
-			query: (id) => `/visitors/events/${id}`,
+		getEventBySlug: builder.query<Event, string>({
+			query: (slug) => `/visitor/events/slug/${slug}`,
 			providesTags: ["event"],
 		}),
 		getEventCategories: builder.query<Category[], void>({
-			query: () => "/visitors/event-categories",
+			query: () => "/visitor/event-categories",
 			providesTags: ["eventCategories"],
 		}),
 	}),
 });
 
-export const { useGetEventsQuery, useGetEventQuery, useGetEventCategoriesQuery } = eventApi;
+export const { useGetEventsQuery, useGetEventBySlugQuery, useGetEventCategoriesQuery } = eventApi;
