@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Ticket, Share2, Check, Smartphone, ShieldCheck, Undo2, Copy } from "lucide-react";
+import Link from "next/link";
 
 type SidebarProps = {
 	unitPrice: number;
@@ -18,11 +19,27 @@ const Sidebar: React.FC<SidebarProps> = ({ unitPrice }) => {
 				<p className="text-gray-600">par personne</p>
 			</div>
 			<div className="mb-6">
-				<label className="block text-sm font-medium text-gray-700 mb-2">Nombre de billets</label>
+				<label className="block text-sm font-medium text-gray-700 mb-2">
+					Nombre de billets
+				</label>
 				<div className="flex items-center justify-center space-x-4">
-					<button onClick={() => setCount((c) => Math.max(1, c - 1))} className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50" aria-label="Diminuer">-</button>
-					<span className="text-xl font-bold text-gray-900 w-12 text-center">{count}</span>
-					<button onClick={() => setCount((c) => Math.min(10, c + 1))} className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50" aria-label="Augmenter">+</button>
+					<button
+						onClick={() => setCount((c) => Math.max(1, c - 1))}
+						className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+						aria-label="Diminuer"
+					>
+						-
+					</button>
+					<span className="text-xl font-bold text-gray-900 w-12 text-center">
+						{count}
+					</span>
+					<button
+						onClick={() => setCount((c) => Math.min(10, c + 1))}
+						className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+						aria-label="Augmenter"
+					>
+						+
+					</button>
 				</div>
 			</div>
 			<div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
@@ -30,18 +47,33 @@ const Sidebar: React.FC<SidebarProps> = ({ unitPrice }) => {
 				<span className="text-2xl font-bold text-orange-500">{total}€</span>
 			</div>
 			<div className="space-y-3">
-				<button className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold inline-flex items-center justify-center">
+				<Link
+					href="/checkout/summary"
+					className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold inline-flex items-center justify-center"
+				>
 					<Ticket className="w-5 h-5 mr-2" /> Réserver maintenant
-				</button>
+				</Link>
 				<button className="w-full border-2 border-orange-500 text-orange-500 py-3 rounded-lg hover:bg-orange-50 transition-colors font-semibold inline-flex items-center justify-center">
 					<Share2 className="w-5 h-5 mr-2" /> Ajouter au panier
 				</button>
 			</div>
 			<div className="mt-6 text-sm text-gray-600 space-y-2">
-				<div className="flex items-center"><Check className="text-green-500 w-4 h-4 mr-2" />Confirmation instantanée</div>
-				<div className="flex items-center"><Smartphone className="text-orange-500 w-4 h-4 mr-2" />Billet électronique</div>
-				<div className="flex items-center"><ShieldCheck className="text-orange-500 w-4 h-4 mr-2" />Paiement sécurisé</div>
-				<div className="flex items-center"><Undo2 className="text-orange-500 w-4 h-4 mr-2" />Remboursement jusqu'à 24h avant</div>
+				<div className="flex items-center">
+					<Check className="text-green-500 w-4 h-4 mr-2" />
+					Confirmation instantanée
+				</div>
+				<div className="flex items-center">
+					<Smartphone className="text-orange-500 w-4 h-4 mr-2" />
+					Billet électronique
+				</div>
+				<div className="flex items-center">
+					<ShieldCheck className="text-orange-500 w-4 h-4 mr-2" />
+					Paiement sécurisé
+				</div>
+				<div className="flex items-center">
+					<Undo2 className="text-orange-500 w-4 h-4 mr-2" />
+					Remboursement jusqu'à 24h avant
+				</div>
 			</div>
 			<div className="bg-white rounded-xl p-0 mt-6">
 				<button
