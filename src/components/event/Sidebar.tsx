@@ -144,9 +144,6 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 				>
 					<Ticket className="w-5 h-5 mr-2" /> Réserver maintenant
 				</Link>
-				{/* <button className="w-full border-2 border-orange-500 text-orange-500 py-3 rounded-lg hover:bg-orange-50 transition-colors font-semibold inline-flex items-center justify-center">
-					<Share2 className="w-5 h-5 mr-2" /> Ajouter au panier
-				</button> */}
 			</div>
 			<div className="mt-6 text-sm text-gray-600 space-y-2">
 				<div className="flex items-center">
