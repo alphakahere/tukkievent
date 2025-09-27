@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import TopBar from "@/components/event/TopBar";
 import Hero from "@/components/event/Hero";
 import TitleSummary from "@/components/event/TitleSummary";
 import Description from "@/components/event/Description";
@@ -9,9 +8,10 @@ import Organizer from "@/components/event/Organizer";
 import Sidebar from "@/components/event/Sidebar";
 import { ChevronRight } from "lucide-react";
 import { Event } from "@/store/api/event/event.type";
+import Layout from "@/layouts/Layout";
 
 type Props = {
-	event : Event;
+	event: Event;
 };
 
 export default function EventDetail({ event }: Props) {
@@ -31,8 +31,7 @@ export default function EventDetail({ event }: Props) {
 	}
 
 	return (
-		<div className="bg-gray-50 min-h-screen">
-			<TopBar />
+		<Layout>
 			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 				<nav className="flex items-center space-x-1 text-sm text-gray-500 mb-6">
 					<Link href="/" className="hover:text-orange-500">
@@ -72,6 +71,6 @@ export default function EventDetail({ event }: Props) {
 					<SimilarEvents events={similar} />
 				</div> */}
 			</main>
-		</div>
+		</Layout>
 	);
 }

@@ -1,23 +1,19 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { Ticket } from "lucide-react";
 
-type TopBarProps = {
+type NavbarProps = {
 	brand?: string;
 };
 
-const TopBar: React.FC<TopBarProps> = ({ brand = "TukkiEvent" }) => {
-	const router = useRouter();
+const Navbar: React.FC<NavbarProps> = ({ brand = "TukkiEvent" }) => {
 	return (
-		<header className="bg-white shadow-md sticky top-0 z-40">
+		<header className="bg-white sticky top-0 z-40">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-between items-center h-16">
 					<div className="flex items-center space-x-4">
-						<button onClick={() => router.back()} className="text-gray-600 hover:text-orange-500 transition-colors" aria-label="Retour">
-							<ArrowLeft className="w-6 h-6" />
-						</button>
+						<Ticket className="w-5 h-5 text-orange-500 mr-2" />
 						<Link href="/" className="text-2xl font-bold text-orange-500">
 							{brand}
 						</Link>
@@ -39,6 +35,6 @@ const TopBar: React.FC<TopBarProps> = ({ brand = "TukkiEvent" }) => {
 	);
 };
 
-export default TopBar;
+export default Navbar;
 
 
