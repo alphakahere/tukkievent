@@ -1,8 +1,19 @@
 "use client";
 import React, { useState } from "react";
-import { Ticket, Share2, Check, Smartphone, ShieldCheck, Undo2, Copy } from "lucide-react";
+import {
+	Ticket,
+	Share2,
+	Check,
+	Smartphone,
+	ShieldCheck,
+	Undo2,
+	Copy,
+	Minus,
+	Plus,
+} from "lucide-react";
 import Link from "next/link";
 import { TicketType } from "@/store/api/event/event.type";
+import { formatPrice } from "@/lib/utils";
 
 type SidebarProps = {
 	ticketTypes: TicketType[];
@@ -21,7 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 
 	const total = Object.entries(ticketQuantities).reduce((sum, [ticketTypeId, quantity]) => {
 		const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
-		return sum + (ticketType ? ticketType.price * quantity : 0);
+		return sum + (ticketType ? Number(ticketType.price) * quantity : 0);
 	}, 0);
 
 	return (
@@ -38,42 +49,51 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 							return (
 								<div
 									key={ticketType.id}
-									className="p-4 border border-gray-200 rounded-lg"
+									className="bg-white border border-gray-200 rounded-lg p-4 transition-all duration-200"
 								>
-									<div className="flex justify-between items-start mb-2">
-										<h4 className="font-semibold text-gray-900">
-											{ticketType.name}
-										</h4>
-										<span className="text-lg font-bold text-orange-500">
-											{ticketType.price}€
-										</span>
-									</div>
-									{ticketType.description && (
-										<p className="text-sm text-gray-600 mb-3">
-											{ticketType.description}
-										</p>
-									)}
-									<div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-										{ticketType.availableQuantity !==
-											undefined && (
-											<span>
-												{
-													ticketType.availableQuantity
-												}{" "}
-												disponibles
+									<div className="flex items-start justify-between mb-3">
+										<div className="flex items-start">
+											<div className="bg-orange-100 p-2 rounded-lg mr-3">
+												<Ticket className="w-5 h-5 text-orange-500" />
+											</div>
+											<div className="flex-1">
+												<h4 className="font-semibold text-base text-gray-900 mb-1">
+													{ticketType.name}
+												</h4>
+												{ticketType.description && (
+													<p className="text-xs text-gray-600 mb-2">
+														{
+															ticketType.description
+														}
+													</p>
+												)}
+												{ticketType.availableQuantity !==
+													undefined && (
+													<p className="text-xs text-gray-500">
+														{
+															ticketType.availableQuantity
+														}{" "}
+														disponibles
+													</p>
+												)}
+											</div>
+										</div>
+										<div className="text-right">
+											<span className="text-lg font-bold text-orange-500">
+												{formatPrice(
+													Number(
+														ticketType.price
+													)
+												)}
 											</span>
-										)}
-										<span>
-											Min: {ticketType.minPurchase} |
-											Max: {ticketType.maxPurchase}
-										</span>
+										</div>
 									</div>
-									{/* Quantity selector directly on card */}
-									<div className="flex items-center justify-between">
+
+									<div className="flex items-center justify-between pt-3 border-t border-gray-100">
 										<span className="text-sm font-medium text-gray-700">
 											Quantité:
 										</span>
-										<div className="flex items-center space-x-3">
+										<div className="flex items-center bg-gray-50 rounded-full px-3 py-2">
 											<button
 												onClick={() =>
 													updateQuantity(
@@ -85,12 +105,12 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 														)
 													)
 												}
-												className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+												className="text-gray-600 hover:text-orange-500 hover:bg-white rounded-full p-1 transition-all duration-200 cursor-pointer"
 												aria-label="Diminuer"
 											>
-												-
+												<Minus className="w-4 h-4" />
 											</button>
-											<span className="text-lg font-bold text-gray-900 w-8 text-center">
+											<span className="text-gray-900 font-bold mx-4 min-w-[32px] text-center">
 												{quantity}
 											</span>
 											<button
@@ -104,10 +124,10 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 														)
 													)
 												}
-												className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+												className="text-gray-600 hover:text-orange-500 hover:bg-white rounded-full p-1 transition-all duration-200 cursor-pointer"
 												aria-label="Augmenter"
 											>
-												+
+												<Plus className="w-4 h-4" />
 											</button>
 										</div>
 									</div>
@@ -122,7 +142,9 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 			{total > 0 && (
 				<div className="flex justify-between items-center mb-6 pb-4 border-t border-gray-200 pt-4">
 					<span className="text-lg font-semibold text-gray-700">Total</span>
-					<span className="text-2xl font-bold text-orange-500">{total}€</span>
+					<span className="text-2xl font-bold text-orange-500">
+						{formatPrice(total)}
+					</span>
 				</div>
 			)}
 			<div className="space-y-3">
@@ -138,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 			</div>
 			<div className="mt-6 text-sm text-gray-600 space-y-2">
 				<div className="flex items-center">
-					<Check className="text-green-500 w-4 h-4 mr-2" />
+					<Check className="text-orange-500 w-4 h-4 mr-2" />
 					Confirmation instantanée
 				</div>
 				<div className="flex items-center">
