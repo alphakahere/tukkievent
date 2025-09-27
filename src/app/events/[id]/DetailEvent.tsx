@@ -15,6 +15,7 @@ type Props = {
 };
 
 export default function EventDetail({ event }: Props) {
+	console.log(event);
 
 	if (!event) {
 		return (
@@ -52,13 +53,19 @@ export default function EventDetail({ event }: Props) {
 							category={event.category?.name}
 							title={event.title}
 						/>
-						<TitleSummary title={event.title} startDatetime={event.startDatetime} endDatetime={event.endDatetime} address={event.address} capacity={event.capacity}  />
-						<Description description={event.description}/>
+						<TitleSummary
+							title={event.title}
+							startDatetime={event.startDatetime}
+							endDatetime={event.endDatetime}
+							address={event.address}
+							capacity={event.capacity}
+						/>
+						<Description description={event.description} />
 						<Venue address={event.address} city={event.city} />
 						<Organizer organization={event.organization} />
 					</div>
 					<div className="lg:col-span-1">
-						<Sidebar unitPrice={25} />
+						<Sidebar ticketTypes={event.ticketTypes || []} />
 					</div>
 				</div>
 				{/* <div className="mt-8">

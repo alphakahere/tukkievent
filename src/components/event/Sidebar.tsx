@@ -2,50 +2,129 @@
 import React, { useState } from "react";
 import { Ticket, Share2, Check, Smartphone, ShieldCheck, Undo2, Copy } from "lucide-react";
 import Link from "next/link";
+import { TicketType } from "@/store/api/event/event.type";
 
 type SidebarProps = {
-	unitPrice: number;
+	ticketTypes: TicketType[];
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ unitPrice }) => {
-	const [count, setCount] = useState(1);
+const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
+	const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
 	const [copied, setCopied] = useState(false);
-	const total = unitPrice * count;
+
+	const updateQuantity = (ticketTypeId: string, quantity: number) => {
+		setTicketQuantities((prev) => ({
+			...prev,
+			[ticketTypeId]: quantity,
+		}));
+	};
+
+	const total = Object.entries(ticketQuantities).reduce((sum, [ticketTypeId, quantity]) => {
+		const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
+		return sum + (ticketType ? ticketType.price * quantity : 0);
+	}, 0);
 
 	return (
 		<div className="bg-white rounded-xl p-6 mb-6 sticky top-24">
-			<div className="text-center mb-6">
-				<div className="text-3xl font-bold text-orange-500 mb-1">{unitPrice}€</div>
-				<p className="text-gray-600">par personne</p>
-			</div>
-			<div className="mb-6">
-				<label className="block text-sm font-medium text-gray-700 mb-2">
-					Nombre de billets
-				</label>
-				<div className="flex items-center justify-center space-x-4">
-					<button
-						onClick={() => setCount((c) => Math.max(1, c - 1))}
-						className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
-						aria-label="Diminuer"
-					>
-						-
-					</button>
-					<span className="text-xl font-bold text-gray-900 w-12 text-center">
-						{count}
-					</span>
-					<button
-						onClick={() => setCount((c) => Math.min(10, c + 1))}
-						className="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
-						aria-label="Augmenter"
-					>
-						+
-					</button>
+			{/* Ticket Types Selection */}
+			{ticketTypes && ticketTypes.length > 0 && (
+				<div className="mb-6">
+					<h3 className="text-lg font-semibold text-gray-900 mb-4">
+						Types de billets
+					</h3>
+					<div className="space-y-3">
+						{ticketTypes.map((ticketType) => {
+							const quantity = ticketQuantities[ticketType.id] || 0;
+							return (
+								<div
+									key={ticketType.id}
+									className="p-4 border border-gray-200 rounded-lg"
+								>
+									<div className="flex justify-between items-start mb-2">
+										<h4 className="font-semibold text-gray-900">
+											{ticketType.name}
+										</h4>
+										<span className="text-lg font-bold text-orange-500">
+											{ticketType.price}€
+										</span>
+									</div>
+									{ticketType.description && (
+										<p className="text-sm text-gray-600 mb-3">
+											{ticketType.description}
+										</p>
+									)}
+									<div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+										{ticketType.availableQuantity !==
+											undefined && (
+											<span>
+												{
+													ticketType.availableQuantity
+												}{" "}
+												disponibles
+											</span>
+										)}
+										<span>
+											Min: {ticketType.minPurchase} |
+											Max: {ticketType.maxPurchase}
+										</span>
+									</div>
+									{/* Quantity selector directly on card */}
+									<div className="flex items-center justify-between">
+										<span className="text-sm font-medium text-gray-700">
+											Quantité:
+										</span>
+										<div className="flex items-center space-x-3">
+											<button
+												onClick={() =>
+													updateQuantity(
+														ticketType.id,
+														Math.max(
+															0,
+															quantity -
+																1
+														)
+													)
+												}
+												className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+												aria-label="Diminuer"
+											>
+												-
+											</button>
+											<span className="text-lg font-bold text-gray-900 w-8 text-center">
+												{quantity}
+											</span>
+											<button
+												onClick={() =>
+													updateQuantity(
+														ticketType.id,
+														Math.min(
+															ticketType.maxPurchase,
+															quantity +
+																1
+														)
+													)
+												}
+												className="w-8 h-8 border border-gray-300 rounded-full flex items-center justify-center hover:bg-gray-50"
+												aria-label="Augmenter"
+											>
+												+
+											</button>
+										</div>
+									</div>
+								</div>
+							);
+						})}
+					</div>
 				</div>
-			</div>
-			<div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-				<span className="text-gray-700">Total</span>
-				<span className="text-2xl font-bold text-orange-500">{total}€</span>
-			</div>
+			)}
+
+			{/* Total Section */}
+			{total > 0 && (
+				<div className="flex justify-between items-center mb-6 pb-4 border-t border-gray-200 pt-4">
+					<span className="text-lg font-semibold text-gray-700">Total</span>
+					<span className="text-2xl font-bold text-orange-500">{total}€</span>
+				</div>
+			)}
 			<div className="space-y-3">
 				<Link
 					href="/checkout/summary"

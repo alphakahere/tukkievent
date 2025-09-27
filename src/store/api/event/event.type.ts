@@ -13,6 +13,53 @@ export interface Category {
 	slug: string;
 }
 
+export enum TicketStatus {
+	VALID = "VALID",
+	USED = "USED",
+	REFUNDED = "REFUNDED",
+	CANCELLED = "CANCELLED",
+}
+export interface Ticket {
+	id: string;
+	orderId: string;
+	ticketTypeId: string;
+	ticketNumber: string;
+	qrCode: string;
+	barcode: string;
+	holderFirstName: string;
+	holderLastName: string;
+	holderEmail: string;
+	holderPhone: string;
+	status: TicketStatus;
+	usedAt: string;
+	usedBy: string;
+	originalHolderName: string;
+	transferredAt: string;
+	transferReason: string;
+	createdAt: string;
+	updatedAt: string;
+}
+export interface TicketType {
+	id: string;
+	eventId: string;
+	name: string;
+	description?: string;
+	price: number;
+	totalQuantity?: number;
+	availableQuantity?: number;
+	minPurchase: number;
+	maxPurchase: number;
+	saleStartDatetime?: string;
+	saleEndDatetime?: string;
+	isVisible: boolean;
+	requiresApproval: boolean;
+	sortOrder: number;
+	event: Event;
+	tickets: Ticket[];
+	createdAt: string;
+	updatedAt: string;
+}
+
 export interface Event {
 	id: string;
 	slug: string;
@@ -42,4 +89,6 @@ export interface Event {
 	updatedAt: string;
 	organization: Organization;
 	category: Category;
+	ticketTypes: TicketType[];
+	tickets: Ticket[];
 }
