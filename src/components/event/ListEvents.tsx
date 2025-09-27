@@ -1,142 +1,78 @@
 "use client";
 import React, { useState } from 'react';
 import { Search, Calendar, MapPin, Tag } from "lucide-react";
-		import EventCard from "./EventCard";
-import { events } from "@/data/events";
+import EventCard from "./EventCard";
+import { useGetEventCategoriesQuery, useGetEventsQuery } from "@/store/api/event/event.api";
+import { Category, Event } from "@/store/api/event/event.type";
 
-// events data imported from @/data/events
+// const quickFilters = [
+// 	"Today",
+// 	"Tomorrow",
+// 	"This weekend",
+// 	"Online",
+// 	"In-person",
+// 	"Free",
+// 	"Paid",
+// ] as const;
+// const quickFilterLabel: Record<QuickFilter, string> = {
+// 	Today: "Aujourd'hui",
+// 	Tomorrow: "Demain",
+// 	"This weekend": "Ce week‑end",
+// 	Online: "En ligne",
+// 	"In-person": "En présentiel",
+// 	Free: "Gratuit",
+// 	Paid: "Payant",
+// };
+// type QuickFilter = (typeof quickFilters)[number];
 
-const categories = ["All", "Technology", "Fashion", "Arts", "Music", "Business", "Food & Drink"];
-const categoryLabel: Record<string, string> = {
-	All: "Tous",
-	Technology: "Technologie",
-	Fashion: "Mode",
-	Arts: "Arts",
-	Music: "Musique",
-	Business: "Business",
-	"Food & Drink": "Gastronomie",
-};
-const quickFilters = [
-	"Today",
-	"Tomorrow",
-	"This weekend",
-	"Online",
-	"In-person",
-	"Free",
-	"Paid",
-] as const;
-const quickFilterLabel: Record<QuickFilter, string> = {
-	Today: "Aujourd'hui",
-	Tomorrow: "Demain",
-	"This weekend": "Ce week‑end",
-	Online: "En ligne",
-	"In-person": "En présentiel",
-	Free: "Gratuit",
-	Paid: "Payant",
-};
-type QuickFilter = (typeof quickFilters)[number];
+// function dayRange(offsetDays: number) {
+// 	const now = new Date();
+// 	const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetDays);
+// 	const end = new Date(start);
+// 	return {
+// 		start: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
+// 		end: new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59),
+// 	};
+// }
 
-function dayRange(offsetDays: number) {
-	const now = new Date();
-	const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offsetDays);
-	const end = new Date(start);
-	return {
-		start: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
-		end: new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59),
-	};
-}
+// function nextWeekendRange() {
+// 	const now = new Date();
+// 	const day = now.getDay(); // 0 Sun ... 6 Sat
+// 	const daysUntilSat = (6 - day + 7) % 7;
+// 	const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSat);
+// 	const sun = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate() + 1);
+// 	const start = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate());
+// 	const end = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59);
+// 	return { start, end };
+// }
 
-function nextWeekendRange() {
-	const now = new Date();
-	const day = now.getDay(); // 0 Sun ... 6 Sat
-	const daysUntilSat = (6 - day + 7) % 7;
-	const sat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSat);
-	const sun = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate() + 1);
-	const start = new Date(sat.getFullYear(), sat.getMonth(), sat.getDate());
-	const end = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate(), 23, 59, 59);
-	return { start, end };
-}
-
-function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
-	return aStart <= bEnd && bStart <= aEnd;
-}
+// function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
+// 	return aStart <= bEnd && bStart <= aEnd;
+// }
 
 const ListEvents: React.FC = () => {
+	const { data: events, isLoading } = useGetEventsQuery();
+	const { data: categories } = useGetEventCategoriesQuery();
+	console.log({ events, categories });
+
 	const [searchTerm, setSearchTerm] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("All");
-	const [selectedQuick, setSelectedQuick] = useState<Set<QuickFilter>>(new Set());
+	// const [selectedQuick, setSelectedQuick] = useState<Set<QuickFilter>>(new Set());
 	const [place, setPlace] = useState("");
 
-	const toggleQuick = (q: QuickFilter) => {
-		const next = new Set(selectedQuick);
-		if (next.has(q)) next.delete(q);
-		else next.add(q);
-		setSelectedQuick(next);
-	};
+	// const toggleQuick = (q: QuickFilter) => {
+	// 	const next = new Set(selectedQuick);
+	// 	if (next.has(q)) next.delete(q);
+	// 	else next.add(q);
+	// 	setSelectedQuick(next);
+	// };
 
-	const clearAll = () => {
-		setSearchTerm("");
-		setSelectedCategory("All");
-		setSelectedQuick(new Set());
-		setPlace("");
-	};
-
-	const filteredEvents = events.filter((event) => {
-		const matchesSearch =
-			event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			event.organizer.toLowerCase().includes(searchTerm.toLowerCase());
-
-		const matchesCategory =
-			selectedCategory === "All" || event.category === selectedCategory;
-
-		const matchesPlace =
-			!place || event.location.toLowerCase().includes(place.toLowerCase());
-
-		const hasOnline = selectedQuick.has("Online");
-		const hasInPerson = selectedQuick.has("In-person");
-		const matchesMode =
-			(!hasOnline && !hasInPerson) ||
-			(hasOnline && event.mode === "online") ||
-			(hasInPerson && event.mode === "in-person");
-
-		const hasFree = selectedQuick.has("Free");
-		const hasPaid = selectedQuick.has("Paid");
-		const isFree = event.price.toLowerCase() === "free";
-		const matchesPrice =
-			(!hasFree && !hasPaid) || (hasFree && isFree) || (hasPaid && !isFree);
-
-		const hasToday = selectedQuick.has("Today");
-		const hasTomorrow = selectedQuick.has("Tomorrow");
-		const hasWeekend = selectedQuick.has("This weekend");
-		const eventStart = new Date(event.startDate);
-		const eventEnd = new Date(event.endDate);
-		let matchesDate = true;
-		if (hasToday || hasTomorrow || hasWeekend) {
-			matchesDate = false;
-			if (hasToday) {
-				const { start, end } = dayRange(0);
-				if (rangesOverlap(eventStart, eventEnd, start, end)) matchesDate = true;
-			}
-			if (!matchesDate && hasTomorrow) {
-				const { start, end } = dayRange(1);
-				if (rangesOverlap(eventStart, eventEnd, start, end)) matchesDate = true;
-			}
-			if (!matchesDate && hasWeekend) {
-				const { start, end } = nextWeekendRange();
-				if (rangesOverlap(eventStart, eventEnd, start, end)) matchesDate = true;
-			}
-		}
-
-		return (
-			matchesSearch &&
-			matchesCategory &&
-			matchesPlace &&
-			matchesMode &&
-			matchesPrice &&
-			matchesDate
-		);
-	});
+	// const clearAll = () => {
+	// 	setSearchTerm("");
+	// 	setSelectedCategory("All");
+	// 	// setSelectedQuick(new Set());
+	// 	setPlace("");
+	// };
 
 	return (
 		<section id="events" className="py-20 bg-gray-50">
@@ -144,14 +80,13 @@ const ListEvents: React.FC = () => {
 				{/* Header */}
 				<div className="text-center max-w-3xl mx-auto mb-12">
 					<h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-					Découvrir les événements en Afrique
+						Découvrir les événements en Afrique
 					</h2>
 					<p className="text-xl text-gray-600">
-						Trouvez et rejoignez les événements incroyables qui se passent dans votre région et au-delà
+						Trouvez et rejoignez les événements incroyables qui se passent
+						dans votre région et au-delà
 					</p>
 				</div>
-
-				{/* Categories */}
 				{
 					<div className="mb-4 border-b border-gray-100 pb-4">
 						<div className="flex items-center mb-3">
@@ -160,57 +95,58 @@ const ListEvents: React.FC = () => {
 								Catégories
 							</h3>
 						</div>
-						<div className="flex gap-2 overflow-x-auto">
-							{categories.map((category) => (
+						<div className="flex gap-2 flex-wrap">
+							{categories?.map((category: Category) => (
 								<button
-									key={category}
-									onClick={() => setSelectedCategory(category)}
+									key={category.id}
+									onClick={() =>
+										setSelectedCategory(category.id)
+									}
 									className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-										selectedCategory === category
+										selectedCategory === category.id
 											? "bg-orange-500 text-white"
 											: "bg-gray-100 text-gray-700 hover:bg-gray-200"
 									}`}
 								>
-									{categoryLabel[category] ?? category}
+									{category.name}
 								</button>
 							))}
 						</div>
 					</div>
 				}
 
-				{/* Quick Filters */}
 				{
-					<div className="mb-6 border-b border-gray-100 pb-4">
-						<div className="flex flex-wrap gap-2">
-							{quickFilters.map((q) => {
-								const active = selectedQuick.has(q);
-								return (
-									<button
-										key={q}
-										onClick={() => toggleQuick(q)}
-										className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-											active
-												? "bg-gray-900 text-white shadow-sm"
-												: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-										}`}
-									>
-										{quickFilterLabel[q as QuickFilter]}
-									</button>
-								);
-							})}
-							{(selectedQuick.size > 0 ||
-								selectedCategory !== "All" ||
-								place ||
-								searchTerm) && (
-								<button
-									onClick={clearAll}
-									className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-								>
-									Tout effacer
-								</button>
-							)}
-						</div>
-					</div>
+					// <div className="mb-6 border-b border-gray-100 pb-4">
+					// 	<div className="flex flex-wrap gap-2">
+					// 		{quickFilters.map((q) => {
+					// 			const active = selectedQuick.has(q);
+					// 			return (
+					// 				<button
+					// 					key={q}
+					// 					onClick={() => toggleQuick(q)}
+					// 					className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+					// 						active
+					// 							? "bg-gray-900 text-white shadow-sm"
+					// 							: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+					// 					}`}
+					// 				>
+					// 					{quickFilterLabel[q as QuickFilter]}
+					// 				</button>
+					// 			);
+					// 		})}
+					// 		{(selectedQuick.size > 0 ||
+					// 			selectedCategory !== "All" ||
+					// 			place ||
+					// 			searchTerm) && (
+					// 			<button
+					// 				onClick={clearAll}
+					// 				className="ml-auto px-4 py-2 rounded-full text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+					// 			>
+					// 				Tout effacer
+					// 			</button>
+					// 		)}
+					// 	</div>
+					// </div>
 				}
 
 				{/* Search + Place */}
@@ -239,24 +175,17 @@ const ListEvents: React.FC = () => {
 					</div>
 				</div>
 
-				{/* Results Count */}
-				{/* <div className="max-w-5xl mx-auto flex items-center justify-between mb-6 text-sm text-gray-600">
-					<p>
-						{filteredEvents.length} event
-						{filteredEvents.length !== 1 ? "s" : ""} found
-						{selectedCategory !== "All" ? ` in ${selectedCategory}` : ""}
-					</p>
-				</div> */}
-
 				{/* Events Grid */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6">
-					{filteredEvents.map((event) => (
-						<EventCard key={event.id} event={event} />
-					))}
+					{!isLoading &&
+						events &&
+						events?.map((event: Event) => (
+							<EventCard key={event.id} event={event} />
+						))}
 				</div>
 
 				{/* No Results */}
-				{filteredEvents.length === 0 && (
+				{events && events?.length === 0 && (
 					<div className="text-center py-12">
 						<div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
 							<Calendar className="w-12 h-12 text-gray-400" />
@@ -265,7 +194,8 @@ const ListEvents: React.FC = () => {
 							Aucun événement trouvé
 						</h3>
 						<p className="text-gray-600 mb-6">
-							Essayez de modifier vos termes de recherche ou de filtres pour trouver plus d'événements.
+							Essayez de modifier vos termes de recherche ou de filtres
+							pour trouver plus d'événements.
 						</p>
 						<button
 							onClick={() => {
@@ -279,14 +209,14 @@ const ListEvents: React.FC = () => {
 					</div>
 				)}
 
-				{/* Load More Button */}
-				{filteredEvents.length > 0 && (
+				{/* Load More Button
+				{data.length > 0 && (
 					<div className="text-center mt-12">
 						<button className="px-8 py-3 bg-white border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors">
 							Charger plus d'événements
 						</button>
 					</div>
-				)}
+				)} */}
 			</div>
 		</section>
 	);

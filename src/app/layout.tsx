@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ReduxProvider from "@/store/Provider";
 
 const inter = Inter({
 	variable: "--font-geist-sans",
@@ -25,7 +26,7 @@ export default function RootLayout({
   return (
 		<html lang="en">
 			<body className={`${inter.variable} ${geistMono.variable} antialiased`}>
-				{children}
+				<ReduxProvider>{children}</ReduxProvider>
 			</body>
 		</html>
   );
