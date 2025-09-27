@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Search, Calendar, MapPin, Clock, Users, Tag } from "lucide-react";
+import { Search, Calendar, MapPin, Clock, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { events, type Event } from "@/data/events";
@@ -68,60 +68,45 @@ type EventCardProps = {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
 	return (
-		<Link href={`/events/${event.id}`} className="block">
-			<div className="bg-white rounded-xl overflow-hidden shadow-xs hover:shadow-sm transition-all duration-300 group border border-gray-100">
-				<div className="relative h-48 overflow-hidden">
-					<Image
-						src={event.image}
-						alt={event.title}
-						className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-						width={500}
-						height={500}
-					/>
-					<div className="absolute top-3 left-3 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-						{event.category}
+		<Link href={`/events/${event.id}`} className="block h-full">
+			<div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
+				<div className="relative">
+					<div className="h-48 bg-orange-100 flex items-center justify-center">
+						<Image
+							src={event.image}
+							alt={event.title}
+							className="w-full h-full object-cover"
+							width={600}
+							height={300}
+						/>
 					</div>
-					<div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-						{event.price}
+					<div className="absolute top-4 left-4">
+						<span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+							{event.category}
+						</span>
 					</div>
 				</div>
-
 				<div className="p-6">
-					<h3 className="text-xl font-semibold mb-3 text-gray-800 group-hover:text-orange-600 transition-colors">
+					<div className="flex items-center text-gray-500 text-sm mb-2">
+						<Calendar className="w-4 h-4 mr-2" />
+						<span>{event.date}</span>
+						<span className="mx-2">•</span>
+						<Clock className="w-4 h-4 mr-2" />
+						<span>{event.time}</span>
+					</div>
+					<h3 className="text-xl font-bold text-gray-900 mb-2">
 						{event.title}
 					</h3>
-
-					<div className="space-y-2 mb-4">
-						<div className="flex items-center text-gray-600">
-							<Calendar className="w-4 h-4 mr-2 text-gray-800" />
-							<span className="text-sm">{event.date}</span>
-						</div>
-
-						<div className="flex items-center text-gray-600">
-							<Clock className="w-4 h-4 mr-2 text-gray-800" />
-							<span className="text-sm">{event.time}</span>
-						</div>
-
-						<div className="flex items-center text-gray-600">
-							<MapPin className="w-4 h-4 mr-2 text-gray-800" />
-							<span className="text-sm">{event.location}</span>
-						</div>
-
-						<div className="flex items-center text-gray-600">
-							<Users className="w-4 h-4 mr-2 text-gray-800" />
-							<span className="text-sm">
-								{event.attendees} attendees
-							</span>
-						</div>
-					</div>
-
+					<p className="text-gray-600 mb-2">{event.description}</p>
 					<div className="flex items-center justify-between">
-						<p className="text-sm text-gray-500">
-							by{" "}
-							<span className="font-medium text-gray-700">
-								{event.organizer}
+						<div>
+							<span className="text-2xl font-bold text-purple-500">
+								{event.price}
 							</span>
-						</p>
+							<span className="text-gray-500 text-sm ml-1">
+								par personne
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
