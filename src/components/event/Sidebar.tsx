@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 	// Update cart when user clicks "Réserver maintenant"
 	const handleReserveNow = () => {
 		const tickets = Object.entries(localQuantities)
-			.filter(([_, quantity]) => quantity > 0)
+			.filter(([, quantity]) => quantity > 0)
 			.map(([ticketTypeId, quantity]) => {
 				const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId)!;
 				return {
@@ -72,14 +72,12 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 				})
 			);
 
-			// Navigate to checkout
 			router.push("/checkout/summary");
 		}
 	};
 
 	return (
 		<div className="bg-white rounded-xl p-6 mb-6 sticky top-24">
-			{/* Ticket Types Selection */}
 			{ticketTypes && ticketTypes.length > 0 && (
 				<div className="mb-6">
 					<h3 className="text-lg font-semibold text-gray-900 mb-4">

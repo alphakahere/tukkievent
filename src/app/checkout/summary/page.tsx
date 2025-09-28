@@ -1,27 +1,19 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import { useAppSelector, useAppDispatch } from "@/store/features/hooks";
 import {
 	selectCartItems,
 	selectCartSubtotal,
-	selectCartFees,
 	selectCartTotal,
 	selectCartIsEmpty,
 } from "@/store/selectors/cart.selectors";
-import {
-	updateQuantity,
-	removeFromCart,
-	updateBuyerInfo,
-	setCurrentStep,
-} from "@/store/features/cart.slice";
-import { buyerInfoSchema, BuyerInfoFormData } from "@/schemas/checkout.schema";
+import { updateQuantity, removeFromCart } from "@/store/features/cart.slice";
 import { formatPrice } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function SummaryPage() {
 	const router = useRouter();
@@ -29,18 +21,8 @@ export default function SummaryPage() {
 
 	const cartItems = useAppSelector(selectCartItems);
 	const subtotal = useAppSelector(selectCartSubtotal);
-	const fees = useAppSelector(selectCartFees);
 	const total = useAppSelector(selectCartTotal);
 	const isEmpty = useAppSelector(selectCartIsEmpty);
-
-	const {
-		register,
-		handleSubmit,
-		formState: { errors, isValid },
-	} = useForm<BuyerInfoFormData>({
-		resolver: yupResolver(buyerInfoSchema),
-		mode: "onChange",
-	});
 
 	// Redirect if cart is empty
 	React.useEffect(() => {
@@ -57,18 +39,12 @@ export default function SummaryPage() {
 		dispatch(removeFromCart({ eventId, ticketTypeId }));
 	};
 
-	const onSubmit = (data: BuyerInfoFormData) => {
-		dispatch(updateBuyerInfo(data));
-		dispatch(setCurrentStep("payment"));
-		router.push("/checkout/payment");
-	};
-
 	if (isEmpty) {
-		return null; // Will redirect
+		return router.push("/"); // Will redirect
 	}
 
 	return (
-		<main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+		<main>
 			<div className="flex items-center justify-between mb-6">
 				<h1 className="text-2xl font-bold text-gray-900">
 					Récapitulatif de la réservation
@@ -107,7 +83,7 @@ export default function SummaryPage() {
 								{eventItem.tickets.map((ticket) => (
 									<div
 										key={ticket.ticketTypeId}
-										className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+										className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0 gap-4"
 									>
 										<div className="flex-1">
 											<p className="font-medium text-gray-800">
@@ -170,81 +146,6 @@ export default function SummaryPage() {
 							</div>
 						</div>
 					))}
-
-					{/* Buyer Information Form */}
-					<div className="bg-white rounded-xl shadow-sm p-6">
-						<h3 className="text-lg font-semibold text-gray-900">
-							Informations de contact
-						</h3>
-						<p className="text-sm text-gray-500 mb-5">
-							Entrez vos informations de contact et votre numero de
-							téléphone Wave pour finaliser l'achat.
-						</p>
-						<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Prénom *
-									</label>
-									<input
-										{...register("buyerFirstName")}
-										type="text"
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-									/>
-									{errors.buyerFirstName && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.buyerFirstName.message}
-										</p>
-									)}
-								</div>
-								<div>
-									<label className="block text-sm font-medium text-gray-700 mb-1">
-										Nom *
-									</label>
-									<input
-										{...register("buyerLastName")}
-										type="text"
-										className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-									/>
-									{errors.buyerLastName && (
-										<p className="text-red-500 text-sm mt-1">
-											{errors.buyerLastName.message}
-										</p>
-									)}
-								</div>
-							</div>
-							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Email *
-								</label>
-								<input
-									{...register("buyerEmail")}
-									type="email"
-									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-								/>
-								{errors.buyerEmail && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.buyerEmail.message}
-									</p>
-								)}
-							</div>
-							<div>
-								<label className="block text-sm font-medium text-gray-700 mb-1">
-									Téléphone Wave *
-								</label>
-								<input
-									{...register("buyerPhone")}
-									type="tel"
-									className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-								/>
-								{errors.buyerPhone && (
-									<p className="text-red-500 text-sm mt-1">
-										{errors.buyerPhone.message}
-									</p>
-								)}
-							</div>
-						</form>
-					</div>
 				</div>
 
 				{/* Right Column - Order Summary */}
@@ -260,14 +161,6 @@ export default function SummaryPage() {
 									{formatPrice(subtotal)}
 								</span>
 							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-gray-600">
-									Frais de service
-								</span>
-								<span className="text-gray-900 font-medium">
-									{formatPrice(fees)}
-								</span>
-							</div>
 							<hr className="my-3" />
 							<div className="flex items-center justify-between text-base">
 								<span className="font-semibold text-gray-900">
@@ -278,17 +171,16 @@ export default function SummaryPage() {
 								</span>
 							</div>
 						</div>
-						<div className="mt-6 space-y-3">
-							<button
-								onClick={handleSubmit(onSubmit)}
-								disabled={!isValid}
-								className="w-full px-5 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold"
+						<div className="mt-6 space-y-3 flex flex-col gap-3 items-center">
+							<Button
+								onClick={() => router.push("/checkout/payment")}
+								className="w-min"
 							>
-								Payer maintenant
-							</button>
+								Continuer vers le paiement
+							</Button>
 							<button
 								onClick={() => router.back()}
-								className="block w-full text-center text-sm text-gray-600 hover:text-gray-800"
+								className="block text-center text-sm text-gray-600 hover:text-gray-800"
 							>
 								Modifier la sélection
 							</button>

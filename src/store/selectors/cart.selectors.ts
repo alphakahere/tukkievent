@@ -30,10 +30,6 @@ export const selectCartSubtotal = createSelector(
   (cart) => cart.subtotal
 );
 
-export const selectCartFees = createSelector(
-  [selectCart],
-  (cart) => cart.fees
-);
 
 export const selectCartTotal = createSelector(
   [selectCart],

@@ -26,7 +26,6 @@ export interface CartState {
 	items: CartItem[];
 	buyerInfo: BuyerInfo;
 	subtotal: number;
-	fees: number;
 	totalAmount: number;
 	currency: string;
 	paymentMethod?: string;
@@ -60,7 +59,6 @@ const initialState: CartState = {
 	items: [],
 	buyerInfo: {},
 	subtotal: 0,
-	fees: 0,
 	totalAmount: 0,
 	currency: "XOF",
 	currentStep: "cart",
@@ -181,7 +179,6 @@ const cartSlice = createSlice({
 		clearCart: (state) => {
 			state.items = [];
 			state.subtotal = 0;
-			state.fees = 0;
 			state.totalAmount = 0;
 			state.orderId = undefined;
 			state.expiresAt = undefined;
@@ -219,11 +216,8 @@ const cartSlice = createSlice({
 				);
 			}, 0);
 
-			// Calculate fees (example: 5% service fee)
-			state.fees = state.subtotal * 0.05;
-
 			// Calculate total amount
-			state.totalAmount = state.subtotal + state.fees;
+			state.totalAmount = state.subtotal;
 		},
 
 		// Helper action to set multiple tickets at once (for sidebar integration)
