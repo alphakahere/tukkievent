@@ -8,9 +8,19 @@ export enum OrderStatus {
   }
 
 export interface OrderInput {
-    eventId: string;
-    ticketTypeId: string;
-    quantity: number;
+	eventId: string;
+	totalAmount: string;
+	buyerEmail: string;
+	buyerPhone: string;
+	buyerFirstName: string;
+	buyerLastName: string;
+	paymentMethod: string;
+	subtotal: string;
+	fees: string;
+	tickets: {
+		ticketTypeId: string;
+		quantity: number;
+	}[];
 }
 
 export interface Order {

@@ -20,21 +20,23 @@ export const buyerInfoSchema = yup.object({
 		.min(2, "Le nom doit contenir au moins 2 caractères")
 		.max(50, "Le nom ne peut pas dépasser 50 caractères"),
 
-	buyerEmail: yup
-		.string()
-		.required("L'email est requis")
-		.email("Veuillez entrer un email valide"),
+	buyerEmail: yup.string().email("Veuillez entrer un email valide").optional(),
 
-	buyerPhone: yup.string().required("Le numéro de téléphone est requis"),
-	// .matches(
-	//   /^[1-9](\d{8})$/,
-	//   'Veuillez entrer un numéro de téléphone valide'
-	// ),
+	buyerPhone: yup
+		.string()
+		.required("Le numéro de téléphone est requis")
+		.matches(/^[1-9](\d{8})$/, "Veuillez entrer un numéro de téléphone valide"),
 });
 
 export type BuyerInfoFormData = yup.InferType<typeof buyerInfoSchema>;
 
-const BuyerForm = () => {
+const BuyerForm = ({
+	onCreateOrder,
+	isLoading,
+}: {
+	onCreateOrder: () => void;
+	isLoading: boolean;
+}) => {
 	const dispatch = useAppDispatch();
 
 	const {
@@ -42,13 +44,14 @@ const BuyerForm = () => {
 		handleSubmit,
 		formState: { errors, isValid },
 	} = useForm<BuyerInfoFormData>({
+		// @ts-ignore
 		resolver: yupResolver(buyerInfoSchema),
 		mode: "onChange",
 	});
 
-	const onSubmit = (data: BuyerInfoFormData) => {
+	const onSubmit = async (data: BuyerInfoFormData) => {
 		dispatch(updateBuyerInfo(data));
-		console.log(data);
+		await onCreateOrder();
 	};
 
 	return (
@@ -58,6 +61,7 @@ const BuyerForm = () => {
 				Entrez vos informations de contact et votre numero de téléphone Wave pour
 				finaliser l'achat.
 			</p>
+			{/* @ts-ignore */}
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<InputField
@@ -84,7 +88,6 @@ const BuyerForm = () => {
 					id="buyerEmail"
 					label="Email"
 					type="email"
-					required
 					error={errors.buyerEmail?.message}
 					placeholder="exemple@email.com"
 				/>
@@ -99,8 +102,12 @@ const BuyerForm = () => {
 					helperText="Votre numéro Wave pour recevoir la demande de paiement"
 				/>
 				<div>
-					<Button type="submit" className="w-full" disabled={!isValid}>
-						Payer maintenant
+					<Button
+						type="submit"
+						className="w-full"
+						disabled={!isValid || isLoading}
+					>
+						{isLoading ? "En cours de paiement..." : "Payer avec Wave"}
 					</Button>
 				</div>
 			</form>

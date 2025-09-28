@@ -12,9 +12,11 @@ import { formatPrice } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import BuyerForm from "./BuyerForm";
+import { useCreateOrderMutation } from "@/store/api/order/order.api";
 
 export default function PaymentPage() {
 	const router = useRouter();
+	const [createOrder, { isLoading, error }] = useCreateOrderMutation();
 
 	const cartItems = useAppSelector(selectCartItems);
 	const total = useAppSelector(selectCartTotal);
@@ -24,50 +26,37 @@ export default function PaymentPage() {
 	// Redirect if cart is empty or buyer info missing
 	useEffect(() => {
 		if (isEmpty) {
-			router.push("/");
-		} else if (
-			!buyerInfo.buyerEmail ||
-			!buyerInfo.buyerFirstName ||
-			!buyerInfo.buyerLastName
-		) {
-			router.push("/checkout/summary");
+			router.back();
 		}
-	}, [isEmpty, buyerInfo, router]);
+	}, [isEmpty, router]);
 
-	// const onSubmit = async (data: PaymentMethodFormData) => {
-	// 	try {
-	// 		dispatch(setPaymentMethod(data.paymentMethod));
-	// 		dispatch(setCurrentStep("processing"));
+	const onSubmit = async () => {
+		try {
+			const orderData = {
+				eventId: cartItems[0]?.eventId, // For now, assume single event
+				buyerEmail: buyerInfo.buyerEmail!,
+				buyerPhone: buyerInfo.buyerPhone!,
+				buyerFirstName: buyerInfo.buyerFirstName!,
+				buyerLastName: buyerInfo.buyerLastName!,
+				subtotal: total.toString(),
+				fees: "0",
+				totalAmount: total.toString(),
+				paymentMethod: "WAVE",
+				tickets: cartItems.flatMap((event) =>
+					event.tickets.map((ticket) => ({
+						ticketTypeId: ticket.ticketTypeId,
+						quantity: ticket.quantity,
+						unitPrice: ticket.unitPrice,
+					}))
+				),
+			};
 
-	// 		// Create order
-	// 		const orderData = {
-	// 			eventId: cartItems[0]?.eventId, // For now, assume single event
-	// 			buyerEmail: buyerInfo.buyerEmail!,
-	// 			buyerPhone: buyerInfo.buyerPhone!,
-	// 			buyerFirstName: buyerInfo.buyerFirstName!,
-	// 			buyerLastName: buyerInfo.buyerLastName!,
-	// 			subtotal: total,
-	// 			fees: 0,
-	// 			totalAmount: total,
-	// 			paymentMethod: data.paymentMethod,
-	// 			tickets: cartItems.flatMap((event) =>
-	// 				event.tickets.map((ticket) => ({
-	// 					ticketTypeId: ticket.ticketTypeId,
-	// 					quantity: ticket.quantity,
-	// 					unitPrice: ticket.unitPrice,
-	// 				}))
-	// 			),
-	// 		};
-
-	// 		const result = await createOrder(orderData).unwrap();
-
-	// 		// Navigate to processing page
-	// 		router.push("/checkout/processing");
-	// 	} catch (error) {
-	// 		console.error("Order creation failed:", error);
-	// 		router.push("/checkout/failed");
-	// 	}
-	// };
+			const result = await createOrder(orderData).unwrap();
+			console.log(result);
+		} catch (error) {
+			console.error("Order creation failed:", error);
+		}
+	};
 
 	if (isEmpty) {
 		return null; // Will redirect
@@ -81,11 +70,18 @@ export default function PaymentPage() {
 
 			<div className="grid lg:grid-cols-3 gap-8">
 				<div className="lg:col-span-2">
-					<BuyerForm />
+					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} />
 				</div>
 
 				{/* Order Summary */}
 				<div className="lg:col-span-1">
+					{error && (
+						<div className="flex items-center justify-center">
+							<p className="text-red-500">
+								Erreur lors de la création de la commande
+							</p>
+						</div>
+					)}
 					<div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-24">
 						<h3 className="text-base font-semibold text-gray-900 mb-4">
 							Récapitulatif

@@ -7,12 +7,12 @@ export const orderApi = createApi({
 	baseQuery: baseQuery,
 	tagTypes: ["orders"],
 	endpoints: (builder) => ({
-	createOrder: builder.mutation<Order, OrderInput>({		
-		query: (order) => ({
-			url: "/visitor/orders",
-			method: "POST",
-			body: order,
-		}),
+		createOrder: builder.mutation<Order, OrderInput>({
+			query: (order) => ({
+				url: "/orders",
+				method: "POST",
+				body: order,
+			}),
 		}),
 	}),
 });
