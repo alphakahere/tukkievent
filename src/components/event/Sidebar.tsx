@@ -1,29 +1,81 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Ticket, Check, Smartphone, ShieldCheck, Undo2, Copy, Minus, Plus } from "lucide-react";
-import Link from "next/link";
-import { TicketType } from "@/store/api/event/event.type";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
+import { setTicketsForEvent } from "@/store/features/cart.slice";
+import { selectCartItems } from "@/store/selectors/cart.selectors";
+import { Event } from "@/store/api/event/event.type";
 import { formatPrice } from "@/lib/utils";
 
 type SidebarProps = {
-	ticketTypes: TicketType[];
+	event: Event;
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
-	const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
+const Sidebar: React.FC<SidebarProps> = ({ event }) => {
+	const dispatch = useAppDispatch();
+	const router = useRouter();
 	const [copied, setCopied] = useState(false);
+	const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
+
+	const ticketTypes = event.ticketTypes || [];
+
+	const cartItems = useAppSelector(selectCartItems);
+
+	useEffect(() => {
+		const initialQuantities: Record<string, number> = {};
+		const eventInCart = cartItems.find((item) => item.eventId === event.id);
+
+		ticketTypes.forEach((ticketType) => {
+			const ticketInCart = eventInCart?.tickets.find(
+				(t) => t.ticketTypeId === ticketType.id
+			);
+			initialQuantities[ticketType.id] = ticketInCart?.quantity || 0;
+		});
+		setLocalQuantities(initialQuantities);
+	}, [event.id, ticketTypes, cartItems]);
 
 	const updateQuantity = (ticketTypeId: string, quantity: number) => {
-		setTicketQuantities((prev) => ({
+		setLocalQuantities((prev) => ({
 			...prev,
 			[ticketTypeId]: quantity,
 		}));
 	};
 
-	const total = Object.entries(ticketQuantities).reduce((sum, [ticketTypeId, quantity]) => {
+	// Calculate local total
+	const total = Object.entries(localQuantities).reduce((sum, [ticketTypeId, quantity]) => {
 		const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
 		return sum + (ticketType ? Number(ticketType.price) * quantity : 0);
 	}, 0);
+
+	// Update cart when user clicks "Réserver maintenant"
+	const handleReserveNow = () => {
+		const tickets = Object.entries(localQuantities)
+			.filter(([_, quantity]) => quantity > 0)
+			.map(([ticketTypeId, quantity]) => {
+				const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId)!;
+				return {
+					ticketTypeId,
+					ticketTypeName: ticketType.name,
+					quantity,
+					unitPrice: Number(ticketType.price),
+				};
+			});
+
+		if (tickets.length > 0) {
+			dispatch(
+				setTicketsForEvent({
+					eventId: event.id,
+					eventTitle: event.title,
+					eventDate: event.startDatetime,
+					tickets,
+				})
+			);
+
+			// Navigate to checkout
+			router.push("/checkout/summary");
+		}
+	};
 
 	return (
 		<div className="bg-white rounded-xl p-6 mb-6 sticky top-24">
@@ -35,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 					</h3>
 					<div className="space-y-3">
 						{ticketTypes.map((ticketType) => {
-							const quantity = ticketQuantities[ticketType.id] || 0;
+							const quantity = localQuantities[ticketType.id] || 0;
 							return (
 								<div
 									key={ticketType.id}
@@ -138,12 +190,13 @@ const Sidebar: React.FC<SidebarProps> = ({ ticketTypes }) => {
 				</div>
 			)}
 			<div className="space-y-3">
-				<Link
-					href="/checkout/summary"
-					className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold inline-flex items-center justify-center"
+				<button
+					onClick={handleReserveNow}
+					disabled={total === 0}
+					className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold inline-flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
 				>
 					<Ticket className="w-5 h-5 mr-2" /> Réserver maintenant
-				</Link>
+				</button>
 			</div>
 			<div className="mt-6 text-sm text-gray-600 space-y-2">
 				<div className="flex items-center">

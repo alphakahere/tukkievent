@@ -64,7 +64,7 @@ export default function EventDetail({ event }: Props) {
 						<Organizer organization={event.organization} />
 					</div>
 					<div className="lg:col-span-1">
-						<Sidebar ticketTypes={event.ticketTypes || []} />
+						<Sidebar event={event} />
 					</div>
 				</div>
 				{/* <div className="mt-8">
