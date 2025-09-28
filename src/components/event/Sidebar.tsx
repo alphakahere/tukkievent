@@ -7,6 +7,7 @@ import { setTicketsForEvent } from "@/store/features/cart.slice";
 import { selectCartItems } from "@/store/selectors/cart.selectors";
 import { Event } from "@/store/api/event/event.type";
 import { formatPrice } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 type SidebarProps = {
 	event: Event;
@@ -188,13 +189,13 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 				</div>
 			)}
 			<div className="space-y-3">
-				<button
+				<Button
 					onClick={handleReserveNow}
 					disabled={total === 0}
-					className="w-full bg-orange-500 text-white py-3 rounded-lg hover:bg-orange-600 transition-colors font-semibold inline-flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+					className="w-full py-5"
 				>
 					<Ticket className="w-5 h-5 mr-2" /> Réserver maintenant
-				</button>
+				</Button>
 			</div>
 			<div className="mt-6 text-sm text-gray-600 space-y-2">
 				<div className="flex items-center">

@@ -27,7 +27,7 @@ export default function SummaryPage() {
 	// Redirect if cart is empty
 	React.useEffect(() => {
 		if (isEmpty) {
-			router.push("/");
+			router.back();
 		}
 	}, [isEmpty, router]);
 
@@ -38,10 +38,6 @@ export default function SummaryPage() {
 	const handleRemoveTicket = (eventId: string, ticketTypeId: string) => {
 		dispatch(removeFromCart({ eventId, ticketTypeId }));
 	};
-
-	if (isEmpty) {
-		return router.push("/"); // Will redirect
-	}
 
 	return (
 		<main>
