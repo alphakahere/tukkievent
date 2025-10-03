@@ -55,15 +55,17 @@ const BuyerForm = ({
 	};
 
 	return (
-		<div className="bg-white rounded-xl shadow-sm p-6">
-			<h3 className="text-lg font-semibold text-gray-900">Informations de contact</h3>
-			<p className="text-sm text-gray-500 mb-5">
+		<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+			<h3 className="text-base sm:text-lg font-semibold text-gray-900">
+				Informations de contact
+			</h3>
+			<p className="text-sm text-gray-500 mb-4 sm:mb-5">
 				Entrez vos informations de contact et votre numero de téléphone Wave pour
 				finaliser l'achat.
 			</p>
 			{/* @ts-ignore */}
-			<form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 					<InputField
 						{...register("buyerFirstName")}
 						id="buyerFirstName"
@@ -104,7 +106,7 @@ const BuyerForm = ({
 				<div>
 					<Button
 						type="submit"
-						className="w-full"
+						className="w-full py-3 sm:py-4 text-sm sm:text-base"
 						disabled={!isValid || isLoading}
 					>
 						{isLoading ? "En cours de paiement..." : "Payer avec Wave"}

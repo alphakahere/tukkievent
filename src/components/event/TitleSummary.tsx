@@ -18,28 +18,24 @@ type TitleSummaryProps = {
 const TitleSummary: React.FC<TitleSummaryProps> = (props) => {
 	const { title, startDatetime, endDatetime, address, capacity, price } = props;
 	return (
-		<div className="bg-white rounded-xl p-6 mb-6">
-			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-				<h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-0">
+		<div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+			{/* Title section - responsive */}
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+				<h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-0 leading-tight">
 					{title}
 				</h1>
-				{/* <div className="flex items-center space-x-2">
-					<div className="flex items-center text-yellow-500">
-						<Star className="w-4 h-4 fill-yellow-500" />
-						<Star className="w-4 h-4 fill-yellow-500" />
-						<Star className="w-4 h-4 fill-yellow-500" />
-						<Star className="w-4 h-4 fill-yellow-500" />
-						<Star className="w-4 h-4" />
-					</div>
-					<span className="text-gray-600 text-sm">(4.8/5 - 234 avis)</span>
-				</div> */}
 			</div>
-			<div className="flex flex-col sm:flex-row flex-wrap justify-between gap-4 mb-6">
-				<div className="flex items-center text-gray-700">
-					<CalendarIcon className="text-orange-500 w-5 h-5 mr-3" />
-					<div>
-						<p className="font-medium">{formatDate(startDatetime)}</p>
-						<p className="text-sm text-gray-500">
+
+			{/* Event details grid - responsive layout */}
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+				{/* Date */}
+				<div className="flex items-start text-gray-700">
+					<CalendarIcon className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+					<div className="min-w-0 flex-1">
+						<p className="font-medium text-sm sm:text-base">
+							{formatDate(startDatetime)}
+						</p>
+						<p className="text-xs sm:text-sm text-gray-500">
 							Dans{" "}
 							{formatDistanceToNow(startDatetime, {
 								locale: fr,
@@ -47,34 +43,43 @@ const TitleSummary: React.FC<TitleSummaryProps> = (props) => {
 						</p>
 					</div>
 				</div>
-				<div className="flex items-center text-gray-700">
-					<Clock className="text-orange-500 w-5 h-5 mr-3" />
-					<div>
-						<p className="font-medium">
+
+				{/* Time */}
+				<div className="flex items-start text-gray-700">
+					<Clock className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+					<div className="min-w-0 flex-1">
+						<p className="font-medium text-sm sm:text-base">
 							{formatTime(startDatetime)} - {formatTime(endDatetime)}
 						</p>
-						<p className="text-sm text-gray-500">
+						<p className="text-xs sm:text-sm text-gray-500">
 							Durée: {getDuration(startDatetime, endDatetime)}
 						</p>
 					</div>
 				</div>
+
+				{/* Location */}
 				{address && (
-					<div className="flex items-center text-gray-700">
-						<MapPin className="text-orange-500 w-5 h-5 mr-3" />
-						<div>
-							<p className="font-medium">{address}</p>
-							{/* <p className="text-sm text-gray-500">
-							123 Rue de la Musique, Paris 1er
-						</p> */}
+					<div className="flex items-start text-gray-700">
+						<MapPin className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="font-medium text-sm sm:text-base truncate">
+								{address}
+							</p>
 						</div>
 					</div>
 				)}
+
+				{/* Capacity */}
 				{capacity && (
-					<div className="flex items-center text-gray-700">
-						<Users className="text-orange-500 w-5 h-5 mr-3" />
-						<div>
-							<p className="font-medium">{capacity} participants</p>
-							<p className="text-sm text-gray-500">Places limitées</p>
+					<div className="flex items-start text-gray-700">
+						<Users className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+						<div className="min-w-0 flex-1">
+							<p className="font-medium text-sm sm:text-base">
+								{capacity} participants
+							</p>
+							<p className="text-xs sm:text-sm text-gray-500">
+								Places limitées
+							</p>
 						</div>
 					</div>
 				)}

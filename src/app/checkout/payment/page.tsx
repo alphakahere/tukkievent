@@ -63,26 +63,23 @@ export default function PaymentPage() {
 	}
 
 	return (
-		<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-2xl font-bold text-gray-900">Paiement</h1>
+		<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+			<div className="flex items-center justify-between mb-4 sm:mb-6">
+				<h1 className="text-xl sm:text-2xl font-bold text-gray-900">Paiement</h1>
 			</div>
 
-			<div className="grid lg:grid-cols-3 gap-8">
-				<div className="lg:col-span-2">
-					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} />
-				</div>
-
-				{/* Order Summary */}
-				<div className="lg:col-span-1">
+			{/* Mobile-first layout: Stack summary above form on mobile */}
+			<div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
+				{/* Order Summary - Appears first on mobile, second on desktop */}
+				<div className="lg:col-span-1 order-1 lg:order-2">
 					{error && (
-						<div className="flex items-center justify-center">
-							<p className="text-red-500">
+						<div className="flex items-center justify-center mb-4">
+							<p className="text-red-500 text-sm">
 								Erreur lors de la création de la commande
 							</p>
 						</div>
 					)}
-					<div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-24">
+					<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6 lg:sticky lg:top-24">
 						<h3 className="text-base font-semibold text-gray-900 mb-4">
 							Récapitulatif
 						</h3>
@@ -124,6 +121,11 @@ export default function PaymentPage() {
 							</span>
 						</div>
 					</div>
+				</div>
+
+				{/* Payment Form - Appears second on mobile, first on desktop */}
+				<div className="lg:col-span-2 order-2 lg:order-1">
+					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} />
 				</div>
 			</div>
 		</main>
