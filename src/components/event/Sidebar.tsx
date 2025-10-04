@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Ticket, Check, Smartphone, ShieldCheck, Undo2, Copy, Minus, Plus, X } from "lucide-react";
+import { Ticket, Check, Smartphone, ShieldCheck, Undo2, Copy, Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
 import { setTicketsForEvent } from "@/store/features/cart.slice";
@@ -317,9 +317,6 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 						</div>
 					</DialogContent>
 				</Dialog>
-
-				{/* Spacer to prevent content from being hidden behind fixed button */}
-				<div className="h-32"></div>
 			</div>
 		</>
 	);

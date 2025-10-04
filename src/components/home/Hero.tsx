@@ -4,7 +4,7 @@ import Image from "next/image";
 
 const Hero: React.FC = () => {
 	return (
-		<section className="relative min-h-[80vh] flex pt-16 overflow-hidden">
+		<section className="relative md:min-h-[80vh] min-h-[50vh] flex pt-16 overflow-hidden">
 			{/* Background Image with Overlay */}
 			<div className="absolute inset-0 z-0">
 				<div className="absolute inset-0 bg-gradient-to-r from-purple-900/90 to-orange-900/80 z-10"></div>
@@ -17,10 +17,10 @@ const Hero: React.FC = () => {
 				/>
 			</div>
 
-			<div className="container mx-auto px-4 z-10 relative pt-32">
+			<div className="container mx-auto px-4 z-10 relative pt-12 md:pt-32">
 				<div className="max-w-3xl">
 					<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-						Simplifiez la gestion d&apos;événements à travers l&apos;Afrique
+						Simplifiez la gestion d&apos;événements au Sénégal
 					</h1>
 
 					<p className="text-xl md:text-2xl text-white/90 mb-8">
@@ -28,7 +28,7 @@ const Hero: React.FC = () => {
 						connectivité limitée
 					</p>
 
-					<div className="flex flex-col sm:flex-row gap-4">
+					<div className="lg:flex flex-col sm:flex-row gap-4 hidden">
 						<a
 							href="#"
 							className="px-8 py-4 rounded-full bg-orange-500 text-white font-medium text-lg hover:bg-orange-600 transition-colors flex items-center justify-center sm:justify-start"
