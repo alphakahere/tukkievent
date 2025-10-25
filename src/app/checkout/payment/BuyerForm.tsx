@@ -30,13 +30,8 @@ export const buyerInfoSchema = yup.object({
 
 export type BuyerInfoFormData = yup.InferType<typeof buyerInfoSchema>;
 
-const BuyerForm = ({
-	onCreateOrder,
-	isLoading,
-}: {
-	onCreateOrder: () => void;
-	isLoading: boolean;
-}) => {
+const BuyerForm = (props: { onCreateOrder: () => void; isLoading: boolean }) => {
+	const { onCreateOrder, isLoading } = props;
 	const dispatch = useAppDispatch();
 
 	const {

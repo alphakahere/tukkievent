@@ -15,8 +15,6 @@ type Props = {
 };
 
 export default function EventDetail({ event }: Props) {
-	console.log(event);
-
 	if (!event) {
 		return (
 			<div className="max-w-3xl mx-auto px-4 py-16">
