@@ -1,11 +1,17 @@
+"use client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAppDispatch } from "@/store/features/hooks";
-import { updateBuyerInfo, } from "@/store/features/cart.slice";
+import { updateBuyerInfo } from "@/store/features/cart.slice";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import * as yup from "yup";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { Label } from "@/components/ui/label";
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
+import { SerializedError } from "@reduxjs/toolkit";
 
 export const buyerInfoSchema = yup.object({
 	buyerFirstName: yup
@@ -22,21 +28,26 @@ export const buyerInfoSchema = yup.object({
 
 	buyerEmail: yup.string().email("Veuillez entrer un email valide").optional(),
 
-	buyerPhone: yup
-		.string()
-		.required("Le numéro de téléphone est requis")
-		.matches(/^[1-9](\d{8})$/, "Veuillez entrer un numéro de téléphone valide"),
+	buyerPhone: yup.string().required("Le numéro de téléphone est requis"),
 });
 
 export type BuyerInfoFormData = yup.InferType<typeof buyerInfoSchema>;
 
-const BuyerForm = (props: { onCreateOrder: () => void; isLoading: boolean }) => {
-	const { onCreateOrder, isLoading } = props;
+interface Props {
+	onCreateOrder: () => void;
+	isLoading: boolean;
+	error: FetchBaseQueryError | SerializedError | undefined;
+}
+
+const BuyerForm = (props: Props) => {
+	const { onCreateOrder, isLoading, error } = props;
 	const dispatch = useAppDispatch();
+	const [buyerPhone, setBuyerPhone] = useState("");
 
 	const {
 		register,
 		handleSubmit,
+		setValue,
 		formState: { errors, isValid },
 	} = useForm<BuyerInfoFormData>({
 		// @ts-ignore
@@ -49,8 +60,25 @@ const BuyerForm = (props: { onCreateOrder: () => void; isLoading: boolean }) => 
 		await onCreateOrder();
 	};
 
+	const handlePhoneChange = (value: string) => {
+		setBuyerPhone(value);
+		setValue("buyerPhone", value);
+	};
+
+	useEffect(() => {
+		console.log(errors);
+		console.log({ isValid });
+	}, []);
+
 	return (
 		<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
+			{error && (
+				<div className="mb-4">
+					<p className="text-red-500 text-sm">
+						Une erreur est survenue lors de la création de la commande
+					</p>
+				</div>
+			)}
 			<h3 className="text-base sm:text-lg font-semibold text-gray-900">
 				Informations de contact
 			</h3>
@@ -88,16 +116,22 @@ const BuyerForm = (props: { onCreateOrder: () => void; isLoading: boolean }) => 
 					error={errors.buyerEmail?.message}
 					placeholder="exemple@email.com"
 				/>
-				<InputField
-					{...register("buyerPhone")}
-					id="buyerPhone"
-					label="Téléphone Wave"
-					type="tel"
-					required
-					error={errors.buyerPhone?.message}
-					placeholder="77 123 45 67"
-					helperText="Votre numéro Wave pour recevoir la demande de paiement"
-				/>
+				<div className="space-y-2 col-span-2">
+					<Label htmlFor="buyerPhone">
+						Numéro de téléphone Wave{" "}
+						<small className="text-xs text-red-500">*</small>
+					</Label>
+					<PhoneInput
+						placeholder="Entrez votre numéro de téléphone Wave"
+						country="sn"
+						onlyCountries={["sn"]}
+						preferredCountries={["sn"]}
+						value={buyerPhone}
+						onChange={handlePhoneChange}
+						inputStyle={{ width: "100%" }}
+						masks={{ sn: ".. ... .. .." }}
+					/>
+				</div>
 				<div>
 					<Button
 						type="submit"

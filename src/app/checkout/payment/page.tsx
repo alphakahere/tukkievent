@@ -22,7 +22,6 @@ export default function PaymentPage() {
 	const total = useAppSelector(selectCartTotal);
 	const isEmpty = useAppSelector(selectCartIsEmpty);
 	const buyerInfo = useAppSelector(selectBuyerInfo);
-
 	// Redirect if cart is empty or buyer info missing
 	useEffect(() => {
 		if (isEmpty) {
@@ -50,9 +49,12 @@ export default function PaymentPage() {
 					}))
 				),
 			};
-
+			// console.log(orderData, buyerInfo);
+			// return;
 			const result = await createOrder(orderData).unwrap();
-			console.log(result);
+			if ("data" in result) {
+				console.log(result);
+			}
 		} catch (error) {
 			console.error("Order creation failed:", error);
 		}
@@ -72,13 +74,6 @@ export default function PaymentPage() {
 			<div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
 				{/* Order Summary - Appears first on mobile, second on desktop */}
 				<div className="lg:col-span-1 order-1 lg:order-2">
-					{error && (
-						<div className="flex items-center justify-center mb-4">
-							<p className="text-red-500 text-sm">
-								Erreur lors de la création de la commande
-							</p>
-						</div>
-					)}
 					<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6 lg:sticky lg:top-24">
 						<h3 className="text-base font-semibold text-gray-900 mb-4">
 							Récapitulatif
@@ -125,7 +120,7 @@ export default function PaymentPage() {
 
 				{/* Payment Form - Appears second on mobile, first on desktop */}
 				<div className="lg:col-span-2 order-2 lg:order-1">
-					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} />
+					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} error={error} />
 				</div>
 			</div>
 		</main>
