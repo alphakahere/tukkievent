@@ -10,7 +10,7 @@ const Hero: React.FC = () => {
 				<div className="absolute inset-0 bg-gradient-to-r from-purple-900/90 to-orange-900/80 z-10"></div>
 				<Image
 					src="/images/hero.jpg"
-					alt="African event with people using mobile phones"
+					alt="Senegal event with people using mobile phones"
 					className="w-full h-full object-cover"
 					width={1600}
 					height={500}

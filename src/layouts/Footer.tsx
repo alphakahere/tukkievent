@@ -12,7 +12,7 @@ const Footer = () => {
 							<span className="text-2xl font-bold">TukkiEvent</span>
 						</div>
 						<p className="text-gray-400 mb-4">
-							Simplifiez la gestion d'événements à travers l'Afrique.
+							Simplifiez la gestion d'événements à travers le Sénégal.
 							Créez, vendez et gérez vos billets facilement — même avec
 							une connectivité limitée.
 						</p>

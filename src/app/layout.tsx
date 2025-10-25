@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "TukkiEvent - Simplify Event Management Across Africa",
-	description: "TukkiEvent is a platform for event management across Africa",
+	title: "TukkiEvent - Simplify Event Management Across Senegal",
+	description: "TukkiEvent is a platform for event management across Senegal",
 };
 
 export default function RootLayout({

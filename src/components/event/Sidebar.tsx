@@ -202,7 +202,7 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 					disabled={total === 0}
 					className="w-full py-3 sm:py-5 text-sm sm:text-base"
 				>
-					<Ticket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Réserver maintenant
+					<Ticket className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> Acheter maintenant
 				</Button>
 			</div>
 

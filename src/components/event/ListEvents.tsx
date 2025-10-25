@@ -21,7 +21,7 @@ const ListEvents: React.FC = () => {
 				{/* Header - Responsive */}
 				<div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
 					<h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4">
-						Découvrir les événements en Afrique
+						Découvrir les événements au Sénégal
 					</h2>
 					<p className="text-base sm:text-lg lg:text-xl text-gray-600">
 						Trouvez et rejoignez les événements incroyables qui se passent

@@ -56,7 +56,7 @@ const Header: React.FC = () => {
 						>
 							Pricing
 						</a> */}
-						<a
+						{/* <a
 							href="#"
 							className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors"
 						>
@@ -67,7 +67,7 @@ const Header: React.FC = () => {
 							className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors"
 						>
 							Créer un événement
-						</a>
+						</a> */}
 					</nav>
 
 					{/* Mobile Menu Button */}
