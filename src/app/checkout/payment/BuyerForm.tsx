@@ -1,7 +1,7 @@
 "use client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAppDispatch } from "@/store/features/hooks";
 import { updateBuyerInfo } from "@/store/features/cart.slice";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,10 @@ export const buyerInfoSchema = yup.object({
 
 	buyerEmail: yup.string().email("Veuillez entrer un email valide").optional(),
 
-	buyerPhone: yup.string().required("Le numéro de téléphone est requis"),
+	buyerPhone: yup
+		.string()
+		.required("Le numéro de téléphone est requis")
+		.min(10, "Le numéro de téléphone doit contenir au moins 10 chiffres"),
 });
 
 export type BuyerInfoFormData = yup.InferType<typeof buyerInfoSchema>;
@@ -48,6 +51,7 @@ const BuyerForm = (props: Props) => {
 		register,
 		handleSubmit,
 		setValue,
+		trigger,
 		formState: { errors, isValid },
 	} = useForm<BuyerInfoFormData>({
 		// @ts-ignore
@@ -60,15 +64,12 @@ const BuyerForm = (props: Props) => {
 		await onCreateOrder();
 	};
 
-	const handlePhoneChange = (value: string) => {
+	const handlePhoneChange = async (value: string) => {
 		setBuyerPhone(value);
-		setValue("buyerPhone", value);
+		setValue("buyerPhone", value, { shouldValidate: true });
+		// Trigger validation for the phone field
+		await trigger("buyerPhone");
 	};
-
-	useEffect(() => {
-		console.log(errors);
-		console.log({ isValid });
-	}, []);
 
 	return (
 		<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
@@ -128,9 +129,17 @@ const BuyerForm = (props: Props) => {
 						preferredCountries={["sn"]}
 						value={buyerPhone}
 						onChange={handlePhoneChange}
-						inputStyle={{ width: "100%" }}
+						inputStyle={{
+							width: "100%",
+							borderColor: errors.buyerPhone ? "#ef4444" : "#d1d5db",
+						}}
 						masks={{ sn: ".. ... .. .." }}
 					/>
+					{errors.buyerPhone && (
+						<p className="text-red-500 text-sm mt-1">
+							{errors.buyerPhone.message}
+						</p>
+					)}
 				</div>
 				<div>
 					<Button
