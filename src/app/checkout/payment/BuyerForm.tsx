@@ -26,7 +26,7 @@ export const buyerInfoSchema = yup.object({
 		.min(2, "Le nom doit contenir au moins 2 caractères")
 		.max(50, "Le nom ne peut pas dépasser 50 caractères"),
 
-	buyerEmail: yup.string().email("Veuillez entrer un email valide").optional(),
+	buyerEmail: yup.string().email("Veuillez entrer un email valide").nullable().optional(),
 
 	buyerPhone: yup
 		.string()
@@ -60,7 +60,12 @@ const BuyerForm = (props: Props) => {
 	});
 
 	const onSubmit = async (data: BuyerInfoFormData) => {
-		dispatch(updateBuyerInfo(data));
+		// Clean the data to handle nullable email
+		const cleanedData = {
+			...data,
+			buyerEmail: data.buyerEmail || undefined, // Convert null to undefined
+		};
+		dispatch(updateBuyerInfo(cleanedData));
 		await onCreateOrder();
 	};
 
@@ -84,8 +89,8 @@ const BuyerForm = (props: Props) => {
 				Informations de contact
 			</h3>
 			<p className="text-sm text-gray-500 mb-4 sm:mb-5">
-				Entrez vos informations de contact et votre numero de téléphone Wave pour
-				finaliser l'achat.
+				Entrez vos informations de contact et votre numéro de téléphone Wave pour
+				finaliser l'achat. L'email est optionnel.
 			</p>
 			{/* @ts-ignore */}
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
@@ -112,7 +117,7 @@ const BuyerForm = (props: Props) => {
 				<InputField
 					{...register("buyerEmail")}
 					id="buyerEmail"
-					label="Email"
+					label="Email (optionnel)"
 					type="email"
 					error={errors.buyerEmail?.message}
 					placeholder="exemple@email.com"
