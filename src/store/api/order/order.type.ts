@@ -24,8 +24,21 @@ export interface OrderInput {
 }
 
 export interface Order {
-    id: string;
-    eventId: string;
-    ticketTypeId: string;
-    quantity: number;
+	id: string;
+	eventId: string;
+	ticketTypeId: string;
+	quantity: number;
+	buyerFirstName: string;
+	buyerLastName: string;
+	buyerEmail: string;
+	buyerPhone: string;
+	paymentMethod: string;
+	subtotal: string;
+	fees: string;
+	tickets: {
+		ticketTypeId: string;
+		quantity: number;
+	}[];
+	createdAt: string;
+	updatedAt: string;
 }
