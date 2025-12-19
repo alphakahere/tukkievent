@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tukki-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tukki
+      POSTGRES_PASSWORD: tukki123
+      POSTGRES_DB: tukki_event
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tukki-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tukki -d tukki_event']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tukki-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - tukki-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # NestJS API
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: development
+    container_name: tukki-api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://tukki:tukki123@postgres:5432/tukki_event?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: development
+      PORT: 3000
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - tukki-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  # Next.js Web Application
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      target: development
+    container_name: tukki-web
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
+      NODE_ENV: development
+      PORT: 3001
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - tukki-network
+    depends_on:
+      - api
+    command: npm run dev
+
+networks:
+  tukki-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

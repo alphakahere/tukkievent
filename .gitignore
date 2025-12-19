@@ -39,3 +39,37 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# NestJS
+/apps/api/dist
+/apps/api/node_modules
+
+# Prisma
+/apps/api/prisma/migrations
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Uploads
+/apps/api/uploads
+/uploads

@@ -1,0 +1,271 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// USER MODEL
+// ==========================================
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(USER)
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  organizations OrganizationMember[]
+  registrations Registration[]
+  payments      Payment[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ORGANIZER
+  SUPER_ADMIN
+}
+
+// ==========================================
+// ORGANIZATION MODEL
+// ==========================================
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+  website     String?
+  email       String?
+  phone       String?
+  address     String?
+  ownerId     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members OrganizationMember[]
+  events  Event[]
+
+  @@map("organizations")
+}
+
+// ==========================================
+// ORGANIZATION MEMBERS WITH ROLES
+// ==========================================
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  userId         String
+  organizationId String
+  role           OrgRole  @default(STAFF)
+  invitedBy      String?
+  invitedAt      DateTime?
+  joinedAt       DateTime @default(now())
+  isActive       Boolean  @default(true)
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("organization_members")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+// ==========================================
+// EVENT MODEL
+// ==========================================
+model Event {
+  id             String      @id @default(uuid())
+  organizationId String
+  title          String
+  description    String?
+  slug           String      @unique
+  startDate      DateTime
+  endDate        DateTime
+  location       String?
+  venue          String?
+  address        String?
+  city           String?
+  country        String?
+  image          String?
+  coverImage     String?
+  status         EventStatus @default(DRAFT)
+  category       String?
+  tags           String[]
+  capacity       Int?
+  isPublished    Boolean     @default(false)
+  isFeatured     Boolean     @default(false)
+  allowWaitlist  Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tickets       Ticket[]
+  registrations Registration[]
+
+  @@index([organizationId])
+  @@index([slug])
+  @@index([startDate])
+  @@index([isPublished])
+  @@map("events")
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+// ==========================================
+// TICKET TYPES
+// ==========================================
+model Ticket {
+  id          String   @id @default(uuid())
+  eventId     String
+  name        String
+  description String?
+  price       Float
+  currency    String   @default("EUR")
+  quantity    Int
+  soldCount   Int      @default(0)
+  minPerOrder Int      @default(1)
+  maxPerOrder Int      @default(10)
+  isActive    Boolean  @default(true)
+  saleStart   DateTime?
+  saleEnd     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrations Registration[]
+
+  @@index([eventId])
+  @@map("tickets")
+}
+
+// ==========================================
+// REGISTRATION (User + Event + Ticket)
+// ==========================================
+model Registration {
+  id        String             @id @default(uuid())
+  userId    String
+  eventId   String
+  ticketId  String
+  status    RegistrationStatus @default(PENDING)
+  qrCode    String             @unique
+  quantity  Int                @default(1)
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
+  notes     String?
+  checkedInAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticket  Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  payment Payment?
+
+  @@index([userId])
+  @@index([eventId])
+  @@index([ticketId])
+  @@index([qrCode])
+  @@map("registrations")
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  ATTENDED
+  REFUNDED
+}
+
+// ==========================================
+// PAYMENT MODEL
+// ==========================================
+model Payment {
+  id             String        @id @default(uuid())
+  userId         String
+  registrationId String        @unique
+  amount         Float
+  currency       String        @default("EUR")
+  status         PaymentStatus @default(PENDING)
+  provider       String?       // stripe, paypal, etc.
+  providerPaymentId String?    // ID from payment provider
+  transactionId  String?       @unique
+  metadata       Json?
+  failureReason  String?
+  refundedAt     DateTime?
+  refundAmount   Float?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// ==========================================
+// REFRESH TOKENS FOR JWT
+// ==========================================
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
