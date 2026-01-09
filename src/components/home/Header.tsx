@@ -40,34 +40,6 @@ const Header: React.FC = () => {
 
 					{/* Desktop Navigation */}
 					<nav className="hidden md:flex items-center space-x-6">
-						{/* <a
-							href="#how-it-works"
-							className={`${
-								scrolled ? "text-gray-700" : "text-white"
-							} hover:text-orange-500 transition-colors`}
-						>
-							How It Works
-						</a> */}
-						{/* <a
-							href="#pricing"
-							className={`${
-								scrolled ? "text-gray-700" : "text-white"
-							} hover:text-orange-500 transition-colors`}
-						>
-							Pricing
-						</a> */}
-						{/* <a
-							href="#"
-							className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-						>
-							Se connecter
-						</a>
-						<a
-							href="#"
-							className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-						>
-							Créer un événement
-						</a> */}
 					</nav>
 
 					{/* Mobile Menu Button */}
@@ -115,18 +87,6 @@ const Header: React.FC = () => {
 								onClick={() => setIsOpen(false)}
 							>
 								Tarifs
-							</a>
-							<a
-								href="#"
-								className="px-4 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors text-center"
-							>
-								Se connecter
-							</a>
-							<a
-								href="#"
-								className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors text-center"
-							>
-								Créer un événement
 							</a>
 						</nav>
 					</div>

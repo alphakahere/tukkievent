@@ -46,15 +46,6 @@ const Navbar: React.FC<NavbarProps> = ({ brand = "TukkiEvent" }) => {
 						</a>
 					</nav>
 
-					{/* Desktop Auth Buttons */}
-					<div className="hidden md:flex items-center space-x-4">
-						<button className="text-gray-700 hover:text-orange-500 transition-colors font-medium">
-							Connexion
-						</button>
-						<button className="bg-orange-500 text-white px-4 lg:px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm lg:text-base">
-							S'inscrire
-						</button>
-					</div>
 
 					{/* Mobile Menu Button */}
 					<button
@@ -95,19 +86,6 @@ const Navbar: React.FC<NavbarProps> = ({ brand = "TukkiEvent" }) => {
 							>
 								Contact
 							</a>
-							<hr className="my-2" />
-							<button
-								className="text-gray-700 hover:text-orange-500 transition-colors font-medium text-left px-2 py-1"
-								onClick={() => setIsMenuOpen(false)}
-							>
-								Connexion
-							</button>
-							<button
-								className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium mx-2"
-								onClick={() => setIsMenuOpen(false)}
-							>
-								S'inscrire
-							</button>
 						</nav>
 					</div>
 				)}
