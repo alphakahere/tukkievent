@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "TukkiEvent - Simplify Event Management Across Senegal",
-	description: "TukkiEvent is a platform for event management across Senegal",
+	title: "TukkiEvent - Réservez vos billets d'événements au Sénégal",
+	description: "Découvrez et réservez facilement vos billets pour les meilleurs événements au Sénégal. Concerts, spectacles, conférences et plus encore - tout en un seul endroit.",
 };
 
 export default function RootLayout({
