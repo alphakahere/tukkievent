@@ -18,7 +18,20 @@ export const orderApi = createApi({
 		getOrderById: builder.query<Order, string>({
 			query: (id) => `/orders/${id}`,
 		}),
+
+		downloadOrderTickets: builder.query<Blob, { orderId: string }>({
+			query: ({ orderId }) => ({
+				url: `/orders/${orderId}/download-tickets`,
+				method: "GET",
+				responseHandler: (response) => response.blob(),
+			}),
+		}),
 	}),
 });
 
-export const { useCreateOrderMutation, useGetOrderByIdQuery } = orderApi;
+export const {
+	useCreateOrderMutation,
+	useGetOrderByIdQuery,
+	useDownloadOrderTicketsQuery,
+	useLazyDownloadOrderTicketsQuery,
+} = orderApi;

@@ -49,12 +49,19 @@ export default function PaymentPage() {
 					}))
 				),
 			};
-			// console.log(orderData, buyerInfo);
-			// return;
+
 			const result = await createOrder(orderData).unwrap();
-			if ("data" in result) {
-				console.log(result);
-			}
+			// navigate to success page directly for now
+			if (result)
+				router.push(
+					"/checkout/success?orderId=" + result.orderId
+				);
+			// if (
+			// 	"paymentUrl" in result &&
+			// 	typeof result.paymentUrl === "string"
+			// ) {
+			// 	window.location.href = result.paymentUrl;
+			// }
 		} catch (error) {
 			console.error("Order creation failed:", error);
 		}

@@ -1,11 +1,13 @@
+import { Event } from "../event/event.type";
+
 export enum OrderStatus {
-    PENDING = "PENDING",
-    CONFIRMED = "CONFIRMED",
-    PAID = "PAID",
-    CANCELLED = "CANCELLED",
-    EXPIRED = "EXPIRED",
-    REFUNDED = "REFUNDED"
-  }
+	PENDING = "PENDING",
+	CONFIRMED = "CONFIRMED",
+	PAID = "PAID",
+	CANCELLED = "CANCELLED",
+	EXPIRED = "EXPIRED",
+	REFUNDED = "REFUNDED",
+}
 
 export interface OrderInput {
 	eventId: string;
@@ -41,4 +43,5 @@ export interface Order {
 	}[];
 	createdAt: string;
 	updatedAt: string;
+	event: Event;
 }

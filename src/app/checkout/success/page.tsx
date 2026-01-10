@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Download, CheckCircle } from "lucide-react";
-import { useGetOrderByIdQuery } from "@/store/api/order/order.api";
+import { useLazyDownloadOrderTicketsQuery, useGetOrderByIdQuery } from "@/store/api/order/order.api";
+import { formatDate } from "@/lib/utils";
 
 export default function SuccessPage() {
 	// get order id from url
@@ -11,6 +12,8 @@ export default function SuccessPage() {
 	const { data: order, isLoading } = useGetOrderByIdQuery(orderId || "", {
 		skip: !orderId,
 	});
+
+	const [downloadOrderTickets] = useLazyDownloadOrderTicketsQuery();
 
 	if (isLoading) {
 		return <div>Loading...</div>;
@@ -27,9 +30,17 @@ export default function SuccessPage() {
 	}
 
 	const handleDownloadTickets = () => {
-		// TODO: Implement ticket download logic
-		console.log("Téléchargement des billets pour la commande:", orderId);
-		// This would typically trigger a PDF download or open a new tab with tickets
+		const tickets = downloadOrderTickets({ orderId }).unwrap();
+		tickets.then((blob) => {
+			const url = window.URL.createObjectURL(new Blob([blob]));
+			const link = document.createElement("a");
+			link.href
+			 = url;
+			link.setAttribute("download", `tickets_order_${orderId}.pdf`);
+			document.body.appendChild(link);
+			link.click();
+			link.parentNode?.removeChild(link);
+		});
 	};
 
 	return (
@@ -61,18 +72,23 @@ export default function SuccessPage() {
 						Récapitulatif de l'événement
 					</h3>
 					<p className="text-sm sm:text-base text-gray-700 mb-4">
-						Concert Jazz Night • 15 Mars 2024 • Le Blue Note, Dakar
+						{order?.event?.title} le {formatDate(order?.event?.startDatetime as string)} <br />
+						{order?.event?.address}
 					</p>
 
 					<h3 className="font-semibold text-gray-900 mb-2">
 						Informations de l'acheteur
 					</h3>
-					<div className="text-sm sm:text-base text-gray-700">
+					<div className="text-sm sm:text-base text-gray-700 space-y-1">
 						<p>
-							{order?.buyerFirstName} {order?.buyerLastName}
+							<span className="font-medium text-gray-900">Nom:</span> {order?.buyerFirstName} {order?.buyerLastName}
 						</p>
-						<p className="text-gray-500">Téléphone: {order?.buyerPhone}</p>
-						<p className="text-gray-500">Email: {order?.buyerEmail}</p>
+						<p>
+							<span className="font-medium text-gray-900">Téléphone:</span> <span className="text-gray-500">{order?.buyerPhone}</span>
+						</p>
+						<p>
+							<span className="font-medium text-gray-900">Email:</span> <span className="text-gray-500">{order?.buyerEmail}</span>
+						</p>
 					</div>
 				</div>
 
