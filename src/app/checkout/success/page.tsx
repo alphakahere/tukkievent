@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Download, CheckCircle } from "lucide-react";
 import { useLazyDownloadOrderTicketsQuery, useGetOrderByIdQuery } from "@/store/api/order/order.api";
 import { formatDate } from "@/lib/utils";
+import { PageLoading } from "@/components/ui/page-loading";
 
 export default function SuccessPage() {
 	// get order id from url
@@ -16,7 +17,12 @@ export default function SuccessPage() {
 	const [downloadOrderTickets] = useLazyDownloadOrderTicketsQuery();
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return (
+			<PageLoading
+				title="Chargement..."
+				description="Récupération de votre commande"
+			/>
+		);
 	}
 
 	if (!orderId) {
@@ -71,10 +77,21 @@ export default function SuccessPage() {
 					<h3 className="font-semibold text-gray-900 mb-3">
 						Récapitulatif de l'événement
 					</h3>
-					<p className="text-sm sm:text-base text-gray-700 mb-4">
-						{order?.event?.title} le {formatDate(order?.event?.startDatetime as string)} <br />
-						{order?.event?.address}
-					</p>
+					<div className="text-sm sm:text-base text-gray-700 space-y-2 mb-6">
+						<div>
+							<p className="font-bold text-gray-900 text-base sm:text-lg mb-1">
+								{order?.event?.title}
+							</p>
+						</div>
+						<div className="flex items-start gap-2">
+							<span className="font-medium text-gray-900 min-w-fit">Date:</span>
+							<span className="text-gray-700">{formatDate(order?.event?.startDatetime as string)}</span>
+						</div>
+						<div className="flex items-start gap-2">
+							<span className="font-medium text-gray-900 min-w-fit">Lieu:</span>
+							<span className="text-gray-700">{order?.event?.address}</span>
+						</div>
+					</div>
 
 					<h3 className="font-semibold text-gray-900 mb-2">
 						Informations de l'acheteur

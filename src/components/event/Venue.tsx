@@ -9,17 +9,25 @@ interface Props {
 const Venue: React.FC<Props> = ({ address, city }) => {
 	return (
 		<div className="bg-white rounded-xl p-6 mb-6">
-			<h2 className="text-2xl font-bold text-gray-900 mb-4">Lieu et accès</h2>
+			<h2 className="text-2xl font-bold text-gray-900 mb-4">
+				Lieu et accès
+			</h2>
 			<div className="mb-4">
-				<h3 className="font-semibold text-gray-900 mb-2">{address}</h3>
+				<h3 className="font-semibold text-gray-900 mb-2">
+					{address}
+				</h3>
 				<p className="text-gray-700 mb-1">{city}</p>
-				<p className="text-gray-600 text-sm mb-4">Medina, Douta Seck</p>
+				{/* <p className="text-gray-600 text-sm mb-4">
+					Parcelles assainies
+				</p> */}
 			</div>
 			<div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center mb-4">
 				<div className="text-center">
 					<MapPin className="w-8 h-8 text-orange-500 mb-2 mx-auto" />
 					<p className="text-gray-600">Carte interactive</p>
-					<p className="text-sm text-gray-500">{address}</p>
+					<p className="text-sm text-gray-500 ">
+						{address}
+					</p>
 				</div>
 			</div>
 			{/* <div className="grid sm:grid-cols-2 gap-4 text-sm">

@@ -49,10 +49,15 @@ const TitleSummary: React.FC<TitleSummaryProps> = (props) => {
 					<Clock className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
 					<div className="min-w-0 flex-1">
 						<p className="font-medium text-sm sm:text-base">
-							{formatTime(startDatetime)} - {formatTime(endDatetime)}
+							{formatTime(startDatetime)} -{" "}
+							{formatTime(endDatetime)}
 						</p>
 						<p className="text-xs sm:text-sm text-gray-500">
-							Durée: {getDuration(startDatetime, endDatetime)}
+							Durée:{" "}
+							{getDuration(
+								startDatetime,
+								endDatetime
+							)}
 						</p>
 					</div>
 				</div>
@@ -62,7 +67,7 @@ const TitleSummary: React.FC<TitleSummaryProps> = (props) => {
 					<div className="flex items-start text-gray-700">
 						<MapPin className="text-orange-500 w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
 						<div className="min-w-0 flex-1">
-							<p className="font-medium text-sm sm:text-base truncate">
+							<p className="font-medium text-sm sm:text-base">
 								{address}
 							</p>
 						</div>
@@ -91,10 +96,14 @@ const TitleSummary: React.FC<TitleSummaryProps> = (props) => {
 							<span className="text-3xl font-bold text-orange-500">
 								25€
 							</span>
-							<span className="text-gray-500 ml-2">par personne</span>
+							<span className="text-gray-500 ml-2">
+								par personne
+							</span>
 						</div>
 						<div className="text-sm text-gray-500 flex items-center">
-							<span className="line-through">30€</span>
+							<span className="line-through">
+								30€
+							</span>
 							<span className="bg-red-100 text-red-600 px-2 py-1 rounded ml-2 inline-flex items-center">
 								<Percent className="w-3 h-3 mr-1" />
 								-17%

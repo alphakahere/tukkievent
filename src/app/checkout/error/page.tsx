@@ -2,11 +2,30 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, RefreshCw, ArrowLeft, Phone, HelpCircle } from "lucide-react";
+import { PageLoading } from "@/components/ui/page-loading";
+import { useState, useEffect } from "react";
 
 export default function FailedPage() {
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get("orderId");
 	const errorCode = searchParams.get("error") || "unknown";
+	const [isLoading, setIsLoading] = useState(true);
+
+	useEffect(() => {
+		// Simulate loading state for better UX
+		const timer = setTimeout(() => setIsLoading(false), 500);
+		return () => clearTimeout(timer);
+	}, []);
+
+	if (isLoading) {
+		return (
+			<PageLoading
+				title="Traitement..."
+				description="Analyse de l'erreur de paiement"
+				showSkeleton={false}
+			/>
+		);
+	}
 
 	// Error messages mapping
 	const getErrorMessage = (code: string) => {

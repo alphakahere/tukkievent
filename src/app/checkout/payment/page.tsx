@@ -52,16 +52,16 @@ export default function PaymentPage() {
 
 			const result = await createOrder(orderData).unwrap();
 			// navigate to success page directly for now
-			if (result)
-				router.push(
-					"/checkout/success?orderId=" + result.orderId
-				);
-			// if (
-			// 	"paymentUrl" in result &&
-			// 	typeof result.paymentUrl === "string"
-			// ) {
-			// 	window.location.href = result.paymentUrl;
-			// }
+			// if (result)
+			// 	router.push(
+			// 		"/checkout/success?orderId=" + result.orderId
+			// 	);
+			if (
+				"paymentUrl" in result &&
+				typeof result.paymentUrl === "string"
+			) {
+				window.location.href = result.paymentUrl;
+			}
 		} catch (error) {
 			console.error("Order creation failed:", error);
 		}
