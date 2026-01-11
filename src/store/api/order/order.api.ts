@@ -19,9 +19,9 @@ export const orderApi = createApi({
 			query: (id) => `/orders/${id}`,
 		}),
 
-		downloadOrderTickets: builder.query<Blob, { orderId: string }>({
+		downloadOrderReceipt: builder.query<Blob, { orderId: string }>({
 			query: ({ orderId }) => ({
-				url: `/orders/${orderId}/download-tickets`,
+				url: `/orders/${orderId}/download-receipt`,
 				method: "GET",
 				responseHandler: (response) => response.blob(),
 			}),
@@ -32,6 +32,6 @@ export const orderApi = createApi({
 export const {
 	useCreateOrderMutation,
 	useGetOrderByIdQuery,
-	useDownloadOrderTicketsQuery,
-	useLazyDownloadOrderTicketsQuery,
+	useDownloadOrderReceiptQuery,
+	useLazyDownloadOrderReceiptQuery,
 } = orderApi;

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Download, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import {
-	useLazyDownloadOrderTicketsQuery,
+	useLazyDownloadOrderReceiptQuery,
 	useGetOrderByIdQuery,
 } from "@/store/api/order/order.api";
 import { formatDate } from "@/lib/utils";
@@ -27,9 +27,9 @@ export default function SuccessPage() {
 	}, [orderId]);
 
 	const [
-		downloadOrderTickets,
+		downloadOrderReceipt,
 		{ isLoading: isDownloading },
-	] = useLazyDownloadOrderTicketsQuery();
+	] = useLazyDownloadOrderReceiptQuery();
 
 	if (isLoading) {
 		return (
@@ -52,21 +52,21 @@ export default function SuccessPage() {
 		);
 	}
 
-	const handleDownloadTickets = async () => {
+	const handleDownloadReceipt = async () => {
 		try {
 			setDownloadError(null);
-			const blob = await downloadOrderTickets({ orderId }).unwrap();
+			const blob = await downloadOrderReceipt({ orderId }).unwrap();
 			const url = window.URL.createObjectURL(new Blob([blob]));
 			const link = document.createElement("a");
 			link.href = url;
-			link.setAttribute("download", `tickets_order_${orderId}.pdf`);
+			link.setAttribute("download", `receipt_order_${orderId}.pdf`);
 			document.body.appendChild(link);
 			link.click();
 			link.parentNode?.removeChild(link);
 		} catch (err) {
 			console.error("Download error:", err);
 			setDownloadError(
-				"Impossible de télécharger les billets. Veuillez réessayer."
+				"Impossible de télécharger le reçu. Veuillez réessayer."
 			);
 		}
 	};
@@ -93,7 +93,7 @@ export default function SuccessPage() {
 					Commande #{orderId}
 				</p>
 				<p className="text-gray-600 mt-3 text-sm sm:text-base">
-					Vos billets sont prêts à être téléchargés.
+					Votre reçu est prêt à être téléchargé.
 				</p>
 
 				{/* Event and Buyer Info */}
@@ -180,9 +180,9 @@ export default function SuccessPage() {
 
 				{/* Action Buttons */}
 				<div className="mt-8 space-y-3 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-					{/* Download Tickets Button */}
+					{/* Download Receipt Button */}
 					<button
-						onClick={handleDownloadTickets}
+						onClick={handleDownloadReceipt}
 						disabled={isDownloading}
 						className="w-full sm:w-auto px-6 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white font-semibold inline-flex items-center justify-center transition-colors"
 					>
@@ -194,7 +194,7 @@ export default function SuccessPage() {
 						) : (
 							<>
 								<Download className="w-5 h-5 mr-2" />
-								Télécharger mes billets
+								Télécharger le reçu
 							</>
 						)}
 					</button>
@@ -211,7 +211,7 @@ export default function SuccessPage() {
 				{/* Help Text */}
 				<div className="mt-8 pt-6 border-t border-gray-200">
 					<p className="text-xs sm:text-sm text-gray-500">
-						Vous pouvez télécharger vos billets à tout
+						Vous pouvez télécharger votre reçu à tout
 						moment. En cas de problème, contactez-nous
 						avec votre numéro de commande.
 					</p>
