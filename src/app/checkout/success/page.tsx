@@ -132,13 +132,15 @@ export default function SuccessPage() {
 						Informations de l'acheteur
 					</h3>
 					<div className="text-sm sm:text-base text-gray-700 space-y-1">
-						<p>
-							<span className="font-medium text-gray-900">
-								Nom:
-							</span>{" "}
-							{order?.buyerFirstName}{" "}
-							{order?.buyerLastName}
-						</p>
+						{order?.buyerFirstName && (
+							<p>
+								<span className="font-medium text-gray-900">
+									Nom:
+								</span>{" "}
+								{order?.buyerFirstName}{" "}
+								{order?.buyerLastName}
+							</p>
+						)}
 						<p>
 							<span className="font-medium text-gray-900">
 								Téléphone:
