@@ -16,6 +16,7 @@ import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 
 type PaymentMethod = "WAVE" | "PAYPAL";
+type Currency = "XOF" | "EUR";
 
 const createBuyerInfoSchema = (paymentMethod: PaymentMethod) => yup.object({
 	buyerFirstName: yup
@@ -43,7 +44,7 @@ const createBuyerInfoSchema = (paymentMethod: PaymentMethod) => yup.object({
 export type BuyerInfoFormData = yup.InferType<ReturnType<typeof createBuyerInfoSchema>>;
 
 interface Props {
-	onCreateOrder: (paymentMethod: PaymentMethod) => void;
+	onCreateOrder: (paymentMethod: PaymentMethod, currency: Currency) => void;
 	isLoading: boolean;
 	error: FetchBaseQueryError | SerializedError | undefined;
 }
@@ -53,6 +54,7 @@ const BuyerForm = (props: Props) => {
 	const dispatch = useAppDispatch();
 	const [buyerPhone, setBuyerPhone] = useState("");
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+	const [currency, setCurrency] = useState<Currency>("XOF");
 
 	const {
 		register,
@@ -65,6 +67,15 @@ const BuyerForm = (props: Props) => {
 		resolver: yupResolver(createBuyerInfoSchema(paymentMethod || "WAVE")),
 		mode: "onChange",
 	});
+
+	// Update currency when payment method changes
+	useEffect(() => {
+		if (paymentMethod === "WAVE") {
+			setCurrency("XOF");
+		} else if (paymentMethod === "PAYPAL") {
+			setCurrency("EUR");
+		}
+	}, [paymentMethod]);
 
 	// Re-validate form when payment method changes
 	useEffect(() => {
@@ -83,7 +94,7 @@ const BuyerForm = (props: Props) => {
 			buyerPhone: paymentMethod === "PAYPAL" ? undefined : data.buyerPhone,
 		};
 		dispatch(updateBuyerInfo(cleanedData));
-		await onCreateOrder(paymentMethod);
+		await onCreateOrder(paymentMethod, currency);
 	};
 
 	const handlePhoneChange = async (value: string) => {

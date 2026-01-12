@@ -45,6 +45,7 @@ export interface TicketType {
 	name: string;
 	description?: string;
 	price: number;
+	priceEuro?: number;
 	totalQuantity?: number;
 	availableQuantity?: number;
 	minPurchase: number;

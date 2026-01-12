@@ -61,16 +61,6 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 		}
 	}, [paymentMethod]);
 
-	// Get PayPal Euro price for ticket type
-	const getPayPalEuroPrice = (ticketTypeName: string): number => {
-		// Assuming Standard/Regular tickets are 9€ and VIP/Premium are 18€
-		const nameLower = ticketTypeName.toLowerCase();
-		if (nameLower.includes("vip") || nameLower.includes("premium")) {
-			return 18;
-		}
-		return 9;
-	};
-
 	const updateQuantity = (ticketTypeId: string, quantity: number) => {
 		setSelectedTickets((prev) => ({
 			...prev,
@@ -87,17 +77,16 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				);
 				if (!ticketType) return sum;
 
-				const price = Number(ticketType.price);
-
-				// Use fixed Euro prices for PayPal
+				// Use Euro price for PayPal if available, otherwise convert from XOF
 				if (currency === "EUR") {
-					const euroPrice = getPayPalEuroPrice(
-						ticketType.name
-					);
+					const euroPrice = ticketType.priceEuro
+						? Number(ticketType.priceEuro)
+						: Math.round(Number(ticketType.price) / 656 * 100) / 100;
 					return sum + euroPrice * quantity;
 				}
 
 				// Use XOF price for Wave
+				const price = Number(ticketType.price);
 				return sum + price * quantity;
 			},
 			0
@@ -158,6 +147,7 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				fees: "0",
 				totalAmount: total.toString(),
 				paymentMethod: paymentMethod || "WAVE",
+				currency: currency,
 				tickets,
 			};
 
@@ -302,11 +292,11 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 					const price = Number(ticketType.price);
 					let displayPrice = price;
 
-					// Use fixed Euro prices for PayPal
+					// Use Euro price for PayPal if available, otherwise convert from XOF
 					if (currency === "EUR") {
-						displayPrice = getPayPalEuroPrice(
-							ticketType.name
-						);
+						displayPrice = ticketType.priceEuro
+							? Number(ticketType.priceEuro)
+							: Math.round(price / 656 * 100) / 100;
 					}
 
 					return (

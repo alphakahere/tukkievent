@@ -17,6 +17,7 @@ export interface OrderInput {
 	buyerFirstName: string;
 	buyerLastName: string;
 	paymentMethod: string;
+	currency: string;
 	subtotal: string;
 	fees: string;
 	tickets: {

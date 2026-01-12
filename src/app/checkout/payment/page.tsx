@@ -29,25 +29,50 @@ export default function PaymentPage() {
 		}
 	}, [isEmpty, router]);
 
-	const onSubmit = async (paymentMethod: "WAVE" | "PAYPAL") => {
+	const onSubmit = async (paymentMethod: "WAVE" | "PAYPAL", currency: "XOF" | "EUR") => {
 		try {
+			// Calculate total based on currency
+			let calculatedTotal = total;
+			const tickets = cartItems.flatMap((event) =>
+				event.tickets.map((ticket) => {
+					let unitPrice = ticket.unitPrice;
+
+					// If PayPal/EUR, we need to use Euro prices
+					// For now, use a simple conversion or priceEuro if available
+					// This should ideally come from the ticket type data
+					if (currency === "EUR") {
+						// Simple conversion: divide by ~656 (approximate XOF to EUR rate)
+						// In production, this should use the priceEuro field from the backend
+						unitPrice = Math.round(ticket.unitPrice / 656 * 100) / 100;
+					}
+
+					return {
+						ticketTypeId: ticket.ticketTypeId,
+						quantity: ticket.quantity,
+						unitPrice: unitPrice,
+					};
+				})
+			);
+
+			// Recalculate total if using EUR
+			if (currency === "EUR") {
+				calculatedTotal = tickets.reduce((sum, ticket) => {
+					return sum + (ticket.unitPrice * ticket.quantity);
+				}, 0);
+			}
+
 			const orderData = {
 				eventId: cartItems[0]?.eventId, // For now, assume single event
 				buyerEmail: buyerInfo.buyerEmail || "",
 				buyerPhone: buyerInfo.buyerPhone || "",
 				buyerFirstName: buyerInfo.buyerFirstName!,
 				buyerLastName: buyerInfo.buyerLastName!,
-				subtotal: total.toString(),
+				subtotal: calculatedTotal.toString(),
 				fees: "0",
-				totalAmount: total.toString(),
+				totalAmount: calculatedTotal.toString(),
 				paymentMethod: paymentMethod,
-				tickets: cartItems.flatMap((event) =>
-					event.tickets.map((ticket) => ({
-						ticketTypeId: ticket.ticketTypeId,
-						quantity: ticket.quantity,
-						unitPrice: ticket.unitPrice,
-					}))
-				),
+				currency: currency,
+				tickets: tickets,
 			};
 
 			const result = await createOrder(orderData).unwrap();
