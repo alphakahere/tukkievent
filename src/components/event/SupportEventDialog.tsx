@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { Heart, Ticket, Minus, Plus, Phone, CreditCard, ChevronRight } from "lucide-react";
+import { Heart, Ticket, Minus, Plus, ChevronRight } from "lucide-react";
 import { Event } from "@/store/api/event/event.type";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import Image from "next/image";
 
 type SupportEventDialogProps = {
 	event: Event;
@@ -21,10 +22,16 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 	open,
 	onOpenChange,
 }) => {
-	const [step, setStep] = useState<"method" | "tickets" | "details" | "confirm">("method");
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+	const [step, setStep] = useState<
+		"method" | "tickets" | "details" | "confirm"
+	>("method");
+	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(
+		null
+	);
 	const [currency, setCurrency] = useState<Currency>("XOF");
-	const [selectedTickets, setSelectedTickets] = useState<Record<string, number>>({});
+	const [selectedTickets, setSelectedTickets] = useState<
+		Record<string, number>
+	>({});
 	const [phoneNumber, setPhoneNumber] = useState("");
 	const [isProcessing, setIsProcessing] = useState(false);
 
@@ -70,21 +77,28 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 
 	// Calculate total based on currency
 	const calculateTotal = () => {
-		return Object.entries(selectedTickets).reduce((sum, [ticketTypeId, quantity]) => {
-			const ticketType = ticketTypes.find((tt) => tt.id === ticketTypeId);
-			if (!ticketType) return sum;
+		return Object.entries(selectedTickets).reduce(
+			(sum, [ticketTypeId, quantity]) => {
+				const ticketType = ticketTypes.find(
+					(tt) => tt.id === ticketTypeId
+				);
+				if (!ticketType) return sum;
 
-			const price = Number(ticketType.price);
+				const price = Number(ticketType.price);
 
-			// Use fixed Euro prices for PayPal
-			if (currency === "EUR") {
-				const euroPrice = getPayPalEuroPrice(ticketType.name);
-				return sum + euroPrice * quantity;
-			}
+				// Use fixed Euro prices for PayPal
+				if (currency === "EUR") {
+					const euroPrice = getPayPalEuroPrice(
+						ticketType.name
+					);
+					return sum + euroPrice * quantity;
+				}
 
-			// Use XOF price for Wave
-			return sum + price * quantity;
-		}, 0);
+				// Use XOF price for Wave
+				return sum + price * quantity;
+			},
+			0
+		);
 	};
 
 	const total = calculateTotal();
@@ -135,9 +149,27 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 
 	const renderStepIndicator = () => (
 		<div className="flex items-center justify-center space-x-2 mb-6">
-			<div className={`h-2 w-2 rounded-full ${step === "method" ? "bg-orange-500" : "bg-gray-300"}`} />
-			<div className={`h-2 w-2 rounded-full ${step === "tickets" ? "bg-orange-500" : "bg-gray-300"}`} />
-			<div className={`h-2 w-2 rounded-full ${step === "details" ? "bg-orange-500" : "bg-gray-300"}`} />
+			<div
+				className={`h-2 w-2 rounded-full ${
+					step === "method"
+						? "bg-orange-500"
+						: "bg-gray-300"
+				}`}
+			/>
+			<div
+				className={`h-2 w-2 rounded-full ${
+					step === "tickets"
+						? "bg-orange-500"
+						: "bg-gray-300"
+				}`}
+			/>
+			<div
+				className={`h-2 w-2 rounded-full ${
+					step === "details"
+						? "bg-orange-500"
+						: "bg-gray-300"
+				}`}
+			/>
 		</div>
 	);
 
@@ -153,12 +185,21 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 			>
 				<div className="flex items-center justify-between">
 					<div className="flex items-center space-x-3">
-						<div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
-							<Phone className="w-6 h-6 text-blue-600" />
+						<div className="relative w-12 h-12 flex-shrink-0 bg-blue-200 rounded-full">
+							<Image
+								src="/images/wave.png"
+								alt="Wave"
+								fill
+								className="object-contain rounded-full"
+							/>
 						</div>
 						<div>
-							<p className="font-semibold text-gray-900">Wave</p>
-							<p className="text-sm text-gray-600">Paiement mobile (XOF)</p>
+							<p className="font-semibold text-gray-900">
+								Wave
+							</p>
+							<p className="text-sm text-gray-600">
+								Paiement mobile (XOF)
+							</p>
 						</div>
 					</div>
 					<ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500" />
@@ -171,12 +212,21 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 			>
 				<div className="flex items-center justify-between">
 					<div className="flex items-center space-x-3">
-						<div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
-							<CreditCard className="w-6 h-6 text-blue-600" />
+						<div className="relative w-12 h-12 flex-shrink-0 bg-blue-200 rounded-full">
+							<Image
+								src="/images/paypal.jpeg"
+								alt="PayPal"
+								fill
+								className="object-contain rounded-full"
+							/>
 						</div>
 						<div>
-							<p className="font-semibold text-gray-900">PayPal</p>
-							<p className="text-sm text-gray-600">Carte bancaire (EUR - 9€/18€)</p>
+							<p className="font-semibold text-gray-900">
+								PayPal
+							</p>
+							<p className="text-sm text-gray-600">
+								Carte bancaire (EUR - 9€/18€)
+							</p>
 						</div>
 					</div>
 					<ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500" />
@@ -199,19 +249,25 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 					Sélectionnez vos billets
 				</h3>
 				<p className="text-sm text-gray-600 mt-1">
-					Devise: <span className="font-semibold text-orange-500">{currency}</span>
+					Devise:{" "}
+					<span className="font-semibold text-orange-500">
+						{currency}
+					</span>
 				</p>
 			</div>
 
 			<div className="space-y-3 max-h-[400px] overflow-y-auto">
 				{ticketTypes.map((ticketType) => {
-					const quantity = selectedTickets[ticketType.id] || 0;
+					const quantity =
+						selectedTickets[ticketType.id] || 0;
 					const price = Number(ticketType.price);
 					let displayPrice = price;
 
 					// Use fixed Euro prices for PayPal
 					if (currency === "EUR") {
-						displayPrice = getPayPalEuroPrice(ticketType.name);
+						displayPrice = getPayPalEuroPrice(
+							ticketType.name
+						);
 					}
 
 					return (
@@ -226,17 +282,23 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 									</div>
 									<div className="flex-1 min-w-0">
 										<h4 className="font-semibold text-base text-gray-900 mb-1">
-											{ticketType.name}
+											{
+												ticketType.name
+											}
 										</h4>
 										{ticketType.description && (
 											<p className="text-xs text-gray-600 mb-1">
-												{ticketType.description}
+												{
+													ticketType.description
+												}
 											</p>
 										)}
 									</div>
 									<div className="text-right flex-shrink-0">
 										<span className="text-lg font-bold text-orange-500">
-											{formatPrice(displayPrice)}
+											{formatPrice(
+												displayPrice
+											)}
 										</span>
 									</div>
 								</div>
@@ -250,7 +312,11 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 											onClick={() =>
 												updateQuantity(
 													ticketType.id,
-													Math.max(0, quantity - 1)
+													Math.max(
+														0,
+														quantity -
+															1
+													)
 												)
 											}
 											className="text-gray-600 hover:text-orange-500 hover:bg-white rounded-full p-1 transition-all duration-200"
@@ -264,7 +330,11 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 											onClick={() =>
 												updateQuantity(
 													ticketType.id,
-													Math.min(ticketType.maxPurchase, quantity + 1)
+													Math.min(
+														ticketType.maxPurchase,
+														quantity +
+															1
+													)
 												)
 											}
 											className="text-gray-600 hover:text-orange-500 hover:bg-white rounded-full p-1 transition-all duration-200"
@@ -281,7 +351,9 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 
 			{total > 0 && (
 				<div className="flex justify-between items-center pt-4 border-t border-gray-200">
-					<span className="text-lg font-semibold text-gray-700">Total</span>
+					<span className="text-lg font-semibold text-gray-700">
+						Total
+					</span>
 					<span className="text-2xl font-bold text-orange-500">
 						{formatPrice(total)}
 					</span>
@@ -327,7 +399,8 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 							specialLabel=""
 						/>
 						<p className="text-xs text-gray-500 mt-2">
-							Vous recevrez une notification de paiement sur votre téléphone
+							Vous recevrez une notification de
+							paiement sur votre téléphone
 						</p>
 					</div>
 				</div>
@@ -337,7 +410,9 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				<div className="space-y-4">
 					<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
 						<p className="text-sm text-gray-700">
-							Vous serez redirigé vers PayPal pour finaliser votre paiement de manière sécurisée.
+							Vous serez redirigé vers PayPal pour
+							finaliser votre paiement de manière
+							sécurisée.
 						</p>
 					</div>
 				</div>
@@ -346,18 +421,28 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 			<div className="bg-gray-50 rounded-lg p-4 space-y-2">
 				<div className="flex justify-between text-sm">
 					<span className="text-gray-600">Événement:</span>
-					<span className="font-medium text-gray-900">{event.title}</span>
+					<span className="font-medium text-gray-900">
+						{event.title}
+					</span>
 				</div>
 				<div className="flex justify-between text-sm">
-					<span className="text-gray-600">Méthode de paiement:</span>
-					<span className="font-medium text-gray-900">{paymentMethod}</span>
+					<span className="text-gray-600">
+						Méthode de paiement:
+					</span>
+					<span className="font-medium text-gray-900">
+						{paymentMethod}
+					</span>
 				</div>
 				<div className="flex justify-between text-sm">
 					<span className="text-gray-600">Devise:</span>
-					<span className="font-medium text-gray-900">{currency}</span>
+					<span className="font-medium text-gray-900">
+						{currency}
+					</span>
 				</div>
 				<div className="flex justify-between pt-2 border-t border-gray-200">
-					<span className="font-semibold text-gray-900">Montant total:</span>
+					<span className="font-semibold text-gray-900">
+						Montant total:
+					</span>
 					<span className="font-bold text-orange-500 text-lg">
 						{formatPrice(total)}
 					</span>
@@ -366,10 +451,16 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 
 			<Button
 				onClick={handlePayNow}
-				disabled={isProcessing || (paymentMethod === "WAVE" && phoneNumber.length < 10)}
+				disabled={
+					isProcessing ||
+					(paymentMethod === "WAVE" &&
+						phoneNumber.length < 10)
+				}
 				className="w-full py-3 text-base"
 			>
-				{isProcessing ? "Traitement en cours..." : "Payer maintenant"}
+				{isProcessing
+					? "Traitement en cours..."
+					: "Payer maintenant"}
 			</Button>
 		</div>
 	);
@@ -387,22 +478,29 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 					Merci de soutenir l'événement !
 				</h3>
 				<p className="text-gray-600">
-					Votre contribution aide à faire de cet événement un succès.
+					Votre contribution aide à faire de cet événement
+					un succès.
 				</p>
 			</div>
 
 			<div className="bg-gray-50 rounded-lg p-4 space-y-2 text-left">
 				<div className="flex justify-between text-sm">
 					<span className="text-gray-600">Événement:</span>
-					<span className="font-medium text-gray-900">{event.title}</span>
+					<span className="font-medium text-gray-900">
+						{event.title}
+					</span>
 				</div>
 				<div className="flex justify-between text-sm">
 					<span className="text-gray-600">Montant:</span>
-					<span className="font-bold text-orange-500">{formatPrice(total)}</span>
+					<span className="font-bold text-orange-500">
+						{formatPrice(total)}
+					</span>
 				</div>
 				<div className="flex justify-between text-sm">
 					<span className="text-gray-600">Méthode:</span>
-					<span className="font-medium text-gray-900">{paymentMethod}</span>
+					<span className="font-medium text-gray-900">
+						{paymentMethod}
+					</span>
 				</div>
 			</div>
 
@@ -412,7 +510,10 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 					: "Vous allez recevoir une confirmation par email de PayPal."}
 			</p>
 
-			<Button onClick={handleClose} className="w-full py-3 text-base">
+			<Button
+				onClick={handleClose}
+				className="w-full py-3 text-base"
+			>
 				Fermer
 			</Button>
 		</div>
