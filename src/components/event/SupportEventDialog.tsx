@@ -7,6 +7,7 @@ import { Event } from "@/store/api/event/event.type";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Image from "next/image";
+import { useCreateOrderMutation } from "@/store/api/order/order.api";
 
 type SupportEventDialogProps = {
 	event: Event;
@@ -22,6 +23,8 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 	open,
 	onOpenChange,
 }) => {
+	const [createOrder, { isLoading: isCreatingOrder, error: orderError }] =
+		useCreateOrderMutation();
 	const [step, setStep] = useState<
 		"method" | "tickets" | "details" | "confirm"
 	>("method");
@@ -135,12 +138,48 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 	const handlePayNow = async () => {
 		setIsProcessing(true);
 
-		// TODO: Implement API call to backend
-		// For now, simulate processing
-		setTimeout(() => {
+		try {
+			// Prepare tickets array from selected tickets
+			const tickets = Object.entries(selectedTickets)
+				.filter(([, quantity]) => quantity > 0)
+				.map(([ticketTypeId, quantity]) => ({
+					ticketTypeId,
+					quantity,
+				}));
+
+			// Prepare order data
+			const orderData = {
+				eventId: event.id,
+				buyerEmail: "", // Empty for support donations
+				buyerPhone: phoneNumber,
+				buyerFirstName: "Support",
+				buyerLastName: "Donation",
+				subtotal: total.toString(),
+				fees: "0",
+				totalAmount: total.toString(),
+				paymentMethod: paymentMethod || "WAVE",
+				tickets,
+			};
+
+			// Create the order
+			const result = await createOrder(orderData).unwrap();
+
+			// Check if payment URL exists and open it
+			if (
+				"paymentUrl" in result &&
+				typeof result.paymentUrl === "string"
+			) {
+				window.location.href = result.paymentUrl;
+			} else {
+				// If no payment URL, show confirmation
+				setStep("confirm");
+			}
+		} catch (error) {
+			console.error("Order creation failed:", error);
+			// Keep processing state false to allow retry
+		} finally {
 			setIsProcessing(false);
-			setStep("confirm");
-		}, 2000);
+		}
 	};
 
 	const handleClose = () => {
@@ -383,6 +422,15 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				Détails de paiement
 			</h3>
 
+			{orderError && (
+				<div className="bg-red-50 border border-red-200 rounded-lg p-4">
+					<p className="text-sm text-red-600">
+						Une erreur est survenue lors de la création
+						de la commande. Veuillez réessayer.
+					</p>
+				</div>
+			)}
+
 			{paymentMethod === "WAVE" && (
 				<div className="space-y-4">
 					<div>
@@ -397,6 +445,11 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 							containerClass="w-full"
 							inputClass="w-full"
 							specialLabel=""
+							inputStyle={{
+								width: "100%",
+								height: 40,
+							}}
+							masks={{ sn: ".. ... .. .." }}
 						/>
 						<p className="text-xs text-gray-500 mt-2">
 							Vous recevrez une notification de
@@ -453,12 +506,13 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				onClick={handlePayNow}
 				disabled={
 					isProcessing ||
+					isCreatingOrder ||
 					(paymentMethod === "WAVE" &&
 						phoneNumber.length < 10)
 				}
 				className="w-full py-3 text-base"
 			>
-				{isProcessing
+				{isProcessing || isCreatingOrder
 					? "Traitement en cours..."
 					: "Payer maintenant"}
 			</Button>

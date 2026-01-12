@@ -29,18 +29,18 @@ export default function PaymentPage() {
 		}
 	}, [isEmpty, router]);
 
-	const onSubmit = async () => {
+	const onSubmit = async (paymentMethod: "WAVE" | "PAYPAL") => {
 		try {
 			const orderData = {
 				eventId: cartItems[0]?.eventId, // For now, assume single event
-				buyerEmail: buyerInfo.buyerEmail!,
-				buyerPhone: buyerInfo.buyerPhone!,
+				buyerEmail: buyerInfo.buyerEmail || "",
+				buyerPhone: buyerInfo.buyerPhone || "",
 				buyerFirstName: buyerInfo.buyerFirstName!,
 				buyerLastName: buyerInfo.buyerLastName!,
 				subtotal: total.toString(),
 				fees: "0",
 				totalAmount: total.toString(),
-				paymentMethod: "WAVE",
+				paymentMethod: paymentMethod,
 				tickets: cartItems.flatMap((event) =>
 					event.tickets.map((ticket) => ({
 						ticketTypeId: ticket.ticketTypeId,
