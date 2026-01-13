@@ -40,11 +40,20 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 								</div>
 								<div className="flex-1 min-w-0">
 									<h4 className="font-semibold text-gray-900 text-sm mb-1">
-										{event.organization.name}
+										{
+											event
+												.organization
+												.name
+										}
 									</h4>
-									{event.organization.description && (
+									{event.organization
+										.description && (
 										<p className="text-gray-600 text-xs line-clamp-2">
-											{event.organization.description}
+											{
+												event
+													.organization
+													.description
+											}
 										</p>
 									)}
 								</div>
@@ -55,10 +64,12 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 					{/* Action Buttons */}
 					<div className="space-y-3">
 						<Button
-							onClick={() => setIsSupportDialogOpen(true)}
+							onClick={() =>
+								setIsSupportDialogOpen(true)
+							}
 							className="w-full py-3 sm:py-5 text-sm sm:text-base"
 						>
-							Soutenir l'événement
+							Cliquez pour acheter
 						</Button>
 
 						<button
@@ -67,11 +78,13 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 						>
 							{copied ? (
 								<>
-									<Check className="w-4 h-4 mr-2" /> Lien copié !
+									<Check className="w-4 h-4 mr-2" />{" "}
+									Lien copié !
 								</>
 							) : (
 								<>
-									<Copy className="w-4 h-4 mr-2" /> Copier le lien
+									<Copy className="w-4 h-4 mr-2" />{" "}
+									Copier le lien
 								</>
 							)}
 						</button>
