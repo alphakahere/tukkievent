@@ -99,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ event }) => {
 						className="w-full py-3 text-base font-semibold"
 						onClick={() => setIsSupportDialogOpen(true)}
 					>
-						Soutenir l'événement
+						Cliquez pour acheter
 					</Button>
 				</div>
 			</div>
