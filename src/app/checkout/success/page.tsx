@@ -15,7 +15,11 @@ export default function SuccessPage() {
 	// get order id from url
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get("orderId");
-	const { data: order, isLoading } = useGetOrderByIdQuery(orderId || "", {
+	const {
+		data: order,
+		isLoading,
+		isError,
+	} = useGetOrderByIdQuery(orderId || "", {
 		skip: !orderId,
 	});
 
@@ -40,13 +44,51 @@ export default function SuccessPage() {
 		);
 	}
 
-	if (!orderId) {
+	if (isError || !orderId) {
 		return (
 			<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-				<div className="text-center">
-					<p className="text-red-500">
+				<div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 text-center">
+					<div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-100 flex items-center justify-center mb-6">
+						<AlertCircle className="text-red-600 w-8 h-8 sm:w-10 sm:h-10" />
+					</div>
+					<h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+						Erreur
+					</h1>
+					<p className="text-red-600 mb-6">
 						ID de commande introuvable
 					</p>
+					<Link
+						href="/"
+						className="inline-block px-6 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
+					>
+						Retour à l'accueil
+					</Link>
+				</div>
+			</div>
+		);
+	}
+
+	if (!order) {
+		return (
+			<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+				<div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 text-center">
+					<div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-100 flex items-center justify-center mb-6">
+						<AlertCircle className="text-red-600 w-8 h-8 sm:w-10 sm:h-10" />
+					</div>
+					<h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+						Commande introuvable
+					</h1>
+					<p className="text-gray-600 mb-6">
+						Impossible de trouver la commande #{orderId}
+						. Elle n'existe peut-être pas ou a été
+						supprimée.
+					</p>
+					<Link
+						href="/"
+						className="inline-block px-6 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold transition-colors"
+					>
+						Retour à l'accueil
+					</Link>
 				</div>
 			</div>
 		);
@@ -102,60 +144,68 @@ export default function SuccessPage() {
 						Récapitulatif de l'événement
 					</h3>
 					<div className="text-sm sm:text-base text-gray-700 space-y-2 mb-6">
-						<div>
-							<p className="font-bold text-gray-900 text-base sm:text-lg mb-1">
-								{order?.event?.title}
-							</p>
-						</div>
-						<div className="flex items-start gap-2">
-							<span className="font-medium text-gray-900 min-w-fit">
-								Date:
-							</span>
-							<span className="text-gray-700">
-								{formatDate(
-									order?.event
-										?.startDatetime as string
-								)}
-							</span>
-						</div>
-						<div className="flex items-start gap-2">
-							<span className="font-medium text-gray-900 min-w-fit">
-								Lieu:
-							</span>
-							<span className="text-gray-700">
-								{order?.event?.address}
-							</span>
-						</div>
+						{order.event?.title && (
+							<div>
+								<p className="font-bold text-gray-900 text-base sm:text-lg mb-1">
+									{order.event.title}
+								</p>
+							</div>
+						)}
+						{order.event?.startDatetime && (
+							<div className="flex items-start gap-2">
+								<span className="font-medium text-gray-900 min-w-fit">
+									Date:
+								</span>
+								<span className="text-gray-700">
+									{formatDate(
+										order.event
+											.startDatetime
+									)}
+								</span>
+							</div>
+						)}
+						{order.event?.address && (
+							<div className="flex items-start gap-2">
+								<span className="font-medium text-gray-900 min-w-fit">
+									Lieu:
+								</span>
+								<span className="text-gray-700">
+									{order.event.address}
+								</span>
+							</div>
+						)}
 					</div>
 
 					<h3 className="font-semibold text-gray-900 mb-2">
 						Informations de l'acheteur
 					</h3>
 					<div className="text-sm sm:text-base text-gray-700 space-y-1">
-						{order?.buyerFirstName && (
+						{order.buyerFirstName && (
 							<p>
 								<span className="font-medium text-gray-900">
 									Nom:
 								</span>{" "}
-								{order?.buyerFirstName}{" "}
-								{order?.buyerLastName}
+								{order.buyerFirstName}{" "}
+								{order.buyerLastName}
 							</p>
 						)}
-						<p>
-							<span className="font-medium text-gray-900">
-								Téléphone:
-							</span>{" "}
-							<span className="text-gray-500">
-								{order?.buyerPhone}
-							</span>
-						</p>
-						{order?.buyerEmail && (
+						{order.buyerPhone && (
+							<p>
+								<span className="font-medium text-gray-900">
+									Téléphone:
+								</span>{" "}
+								<span className="text-gray-500">
+									{order.buyerPhone}
+								</span>
+							</p>
+						)}
+						{order.buyerEmail && (
 							<p>
 								<span className="font-medium text-gray-900">
 									Email:
 								</span>{" "}
 								<span className="text-gray-500">
-									{order?.buyerEmail}
+									{order.buyerEmail}
 								</span>
 							</p>
 						)}
