@@ -144,8 +144,8 @@ const BuyerForm = (props: Props) => {
 
 					<button
 						type="button"
-						onClick={() => setPaymentMethod("PAYPAL")}
-						className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all duration-200 text-left group"
+						disabled
+						className="w-full p-4 border-2 border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed opacity-60 text-left"
 					>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
@@ -165,9 +165,11 @@ const BuyerForm = (props: Props) => {
 									<p className="text-sm text-gray-600">
 										Carte bancaire (EUR)
 									</p>
+									<p className="text-xs text-orange-500 font-medium mt-1">
+										Disponible bientôt
+									</p>
 								</div>
 							</div>
-							<ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500" />
 						</div>
 					</button>
 				</div>
