@@ -20,7 +20,7 @@ const Hero: React.FC<HeroProps> = ({ image, category }) => {
 					alt={category}
 					width={1200}
 					height={600}
-					className="w-full h-full object-cover"
+					className="w-full h-full object-cover object-left"
 					priority
 					sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 800px"
 				/>
