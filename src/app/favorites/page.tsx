@@ -1,0 +1,61 @@
+"use client";
+
+import Link from "next/link";
+import EventCard from "@/components/event/EventCard";
+import BottomNav from "@/components/BottomNav";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { mockEvents } from "@/lib/mockData";
+import { Heart } from "lucide-react";
+
+export default function FavoritesPage() {
+  const { favoriteIds } = useFavorites();
+  const favoriteEvents = mockEvents.filter((e) => favoriteIds.includes(e.id));
+
+  return (
+    <div className="min-h-screen bg-muted pb-24 md:pb-8">
+      <header className="bg-card px-4 py-4 shadow-sm sticky top-0 z-40 border-b border-border">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <Link href="/" className="text-xl font-bold text-primary">
+            Tukki Event
+          </Link>
+          <span className="text-sm text-muted-foreground">Favoris</span>
+        </div>
+      </header>
+
+      <main className="max-w-lg mx-auto px-4 py-6">
+        {favoriteEvents.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Heart size={40} className="text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              Aucun favori pour le moment
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Ajoutez des événements à vos favoris en cliquant sur le cœur
+            </p>
+            <Link
+              href="/events"
+              className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 transition-opacity"
+            >
+              Découvrir les événements
+            </Link>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground mb-4">
+              {favoriteEvents.length} événement{favoriteEvents.length !== 1 ? "s" : ""} en favori
+            </p>
+            <div className="grid grid-cols-1 gap-4">
+              {favoriteEvents.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </>
+        )}
+      </main>
+
+      <BottomNav />
+    </div>
+  );
+}

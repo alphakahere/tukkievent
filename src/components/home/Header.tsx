@@ -1,99 +1,45 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Menu, X, Ticket } from "lucide-react";
 
-const Header: React.FC = () => {
-	const [isOpen, setIsOpen] = useState(false);
-	const [scrolled, setScrolled] = useState(false);
+import Link from "next/link";
+import { Search, Bell, SlidersHorizontal } from "lucide-react";
 
-	useEffect(() => {
-		const handleScroll = () => {
-			if (window.scrollY > 10) {
-				setScrolled(true);
-			} else {
-				setScrolled(false);
-			}
-		};
+export default function Header() {
+  return (
+    <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40">
+      <div className="max-w-lg mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-primary">Tukki Event</h1>
+            <p className="text-sm text-muted-foreground">Dakar, Sénégal</p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              className="relative p-2 hover:bg-muted rounded-full transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell size={24} className="text-foreground" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" aria-hidden />
+            </button>
+            <Link
+              href="/profile"
+              className="p-2 hover:bg-muted rounded-full transition-colors"
+              aria-label="Profil"
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full" />
+            </Link>
+          </div>
+        </div>
 
-		window.addEventListener("scroll", handleScroll);
-		return () => window.removeEventListener("scroll", handleScroll);
-	}, []);
-
-	return (
-		<header
-			className={`fixed w-full z-50 transition-all duration-300 ${
-				scrolled ? "bg-white shadhow-sm py-3" : "bg-transparent py-4"
-			}`}
-		>
-			<div className="container mx-auto px-4">
-				<div className="flex justify-between items-center">
-					<div className="flex items-center">
-						<Ticket className="h-8 w-8 text-orange-500 mr-2" />
-						<span
-							className={`text-2xl font-bold ${
-								scrolled ? "text-gray-800" : "text-white"
-							}`}
-						>
-							TukkiEvent
-						</span>
-					</div>
-
-					{/* Desktop Navigation */}
-					<nav className="hidden md:flex items-center space-x-6">
-					</nav>
-
-					{/* Mobile Menu Button */}
-					<button
-						className="md:hidden focus:outline-none"
-						onClick={() => setIsOpen(!isOpen)}
-					>
-						{isOpen ? (
-							<X
-								className={`h-6 w-6 ${
-									scrolled ? "text-gray-800" : "text-white"
-								}`}
-							/>
-						) : (
-							<Menu
-								className={`h-6 w-6 ${
-									scrolled ? "text-gray-800" : "text-white"
-								}`}
-							/>
-						)}
-					</button>
-				</div>
-
-				{/* Mobile Menu */}
-				{isOpen && (
-					<div className="md:hidden absolute left-0 right-0 bg-white shadow-lg mt-4 py-4 px-4 rounded-lg">
-						<nav className="flex flex-col space-y-4">
-							<a
-								href="#features"
-								className="text-gray-700 hover:text-orange-500 transition-colors"
-								onClick={() => setIsOpen(false)}
-							>
-								Fonctionnalités
-							</a>
-							<a
-								href="#how-it-works"
-								className="text-gray-700 hover:text-orange-500 transition-colors"
-								onClick={() => setIsOpen(false)}
-							>
-								Comment ça marche
-							</a>
-							<a
-								href="#pricing"
-								className="text-gray-700 hover:text-orange-500 transition-colors"
-								onClick={() => setIsOpen(false)}
-							>
-								Tarifs
-							</a>
-						</nav>
-					</div>
-				)}
-			</div>
-		</header>
-	);
-};
-
-export default Header;
+        <Link
+          href="/search"
+          className="flex items-center gap-3 bg-muted px-4 py-3 rounded-lg"
+        >
+          <Search size={20} className="text-muted-foreground" />
+          <span className="text-muted-foreground flex-1 text-left">Rechercher un événement...</span>
+          <SlidersHorizontal size={20} className="text-muted-foreground" />
+        </Link>
+      </div>
+    </header>
+  );
+}

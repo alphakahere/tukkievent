@@ -10,17 +10,21 @@ import { formatDate } from "@/lib/utils";
 import { PageLoading } from "@/components/ui/page-loading";
 import { useEffect, useState } from "react";
 import { clearCart } from "@/store/features/cart.slice";
+import { useOrders } from "@/contexts/OrdersContext";
+import ConfirmationScreen from "./ConfirmationScreen";
 
 export default function SuccessPage() {
-	// get order id from url
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get("orderId");
+	const { getOrderById } = useOrders();
+	const localOrder = orderId ? getOrderById(orderId) : undefined;
+
 	const {
 		data: order,
 		isLoading,
 		isError,
 	} = useGetOrderByIdQuery(orderId || "", {
-		skip: !orderId,
+		skip: !orderId || !!localOrder,
 	});
 
 	const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -34,6 +38,10 @@ export default function SuccessPage() {
 		downloadOrderReceipt,
 		{ isLoading: isDownloading },
 	] = useLazyDownloadOrderReceiptQuery();
+
+	if (orderId && localOrder) {
+		return <ConfirmationScreen orderId={orderId} order={localOrder} />;
+	}
 
 	if (isLoading) {
 		return (

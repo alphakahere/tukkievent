@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/Provider";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import { OrdersProvider } from "@/contexts/OrdersContext";
+import { Toaster } from "sonner";
 
 const inter = Inter({
 	variable: "--font-geist-sans",
@@ -26,7 +29,14 @@ export default function RootLayout({
   return (
 		<html lang="en">
 			<body className={`${inter.variable} ${geistMono.variable} antialiased`}>
-				<ReduxProvider>{children}</ReduxProvider>
+			  <ReduxProvider>
+				  <FavoritesProvider>
+					  <OrdersProvider>
+						  {children}
+						  <Toaster richColors position="top-center" />
+					  </OrdersProvider>
+				  </FavoritesProvider>
+			  </ReduxProvider>
 			</body>
 		</html>
   );

@@ -1,9 +1,11 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const EventCardSkeleton: React.FC = () => {
+type Props = { className?: string };
+
+const EventCardSkeleton: React.FC<Props> = ({ className }) => {
 	return (
-		<div className="bg-white rounded-xl shadow-sm overflow-hidden h-full">
+		<div className={`bg-card rounded-xl shadow-sm overflow-hidden h-full border border-border ${className ?? ""}`}>
 			<div className="relative">
 				{/* Image skeleton */}
 				<Skeleton className="h-48 w-full" />

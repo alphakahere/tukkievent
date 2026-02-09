@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
 			"images.unsplash.com",
 			"cloudinary.com",
 			"res.cloudinary.com",
+			"picsum.photos",
 		],
 	},
 };
