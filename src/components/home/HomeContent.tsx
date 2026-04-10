@@ -44,7 +44,7 @@ export default function HomeContent() {
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
       <Header />
 
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg md:max-w-6xl mx-auto">
         <Hero events={events} />
 
         {/* Categories */}
@@ -108,7 +108,7 @@ export default function HomeContent() {
               Voir tout
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {isLoading
               ? Array.from({ length: 4 }).map((_, i) => <EventCardSkeleton key={i} />)
               : popularEvents.map((event) => <EventCard key={event.id} event={event} />)}

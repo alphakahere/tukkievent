@@ -8,6 +8,7 @@ import { ArrowLeft, ShoppingBag, ChevronRight, Receipt } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import BottomNav from "@/components/BottomNav";
+import AccountSidebar from "@/components/AccountSidebar";
 import { useOrders } from "@/contexts/OrdersContext";
 
 export default function HistoryPage() {
@@ -21,7 +22,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border">
+      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:hidden">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-3 mb-6">
             <button
@@ -61,7 +62,37 @@ export default function HistoryPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg md:max-w-5xl mx-auto px-4 py-6">
+        <div className="md:flex md:gap-8">
+        <AccountSidebar />
+        <div className="flex-1">
+        {/* Desktop title */}
+        <h1 className="hidden md:block text-2xl font-bold text-foreground mb-6">Historique</h1>
+        {/* Desktop tabs */}
+        <div className="hidden md:flex gap-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab("purchases")}
+            className={`py-2.5 px-5 rounded-xl font-semibold transition-all ${
+              activeTab === "purchases"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground border border-border"
+            }`}
+          >
+            Achats ({sortedOrders.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("refunds")}
+            className={`py-2.5 px-5 rounded-xl font-semibold transition-all ${
+              activeTab === "refunds"
+                ? "bg-primary text-primary-foreground"
+                : "bg-card text-muted-foreground border border-border"
+            }`}
+          >
+            Remboursements (0)
+          </button>
+        </div>
         {activeTab === "purchases" ? (
           sortedOrders.length === 0 ? (
             <motion.div
@@ -146,6 +177,8 @@ export default function HistoryPage() {
             </p>
           </motion.div>
         )}
+        </div>
+        </div>
       </div>
 
       <BottomNav />

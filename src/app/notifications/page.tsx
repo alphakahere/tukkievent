@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNotifications, type AppNotification, type NotificationType } from "@/contexts/NotificationsContext";
 import BottomNav from "@/components/BottomNav";
+import AccountSidebar from "@/components/AccountSidebar";
 
 function getNotificationIcon(type: NotificationType) {
   switch (type) {
@@ -146,7 +147,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border">
+      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:hidden">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
@@ -179,7 +180,31 @@ export default function NotificationsPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg md:max-w-5xl mx-auto px-4 py-6">
+        <div className="md:flex md:gap-8">
+        <AccountSidebar />
+        <div className="flex-1">
+        {/* Desktop header */}
+        <div className="hidden md:flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+            {unreadCount > 0 && (
+              <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="flex items-center gap-1.5 text-sm text-primary font-semibold hover:opacity-80 transition-opacity"
+            >
+              <CheckCheck size={16} />
+              Tout marquer comme lu
+            </button>
+          )}
+        </div>
         {notifications.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -201,6 +226,8 @@ export default function NotificationsPage() {
             <Section title="Plus ancien" items={older} onMarkRead={markAsRead} onDismiss={dismiss} />
           </>
         )}
+        </div>
+        </div>
       </div>
 
       <BottomNav />

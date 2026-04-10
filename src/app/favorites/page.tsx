@@ -13,7 +13,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 py-4 shadow-sm sticky top-0 z-40 border-b border-border">
+      <header className="bg-card px-4 py-4 shadow-sm sticky top-0 z-40 border-b border-border md:hidden">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <Link href="/" className="text-xl font-bold text-primary">
             Tukki Event
@@ -22,7 +22,7 @@ export default function FavoritesPage() {
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
         {favoriteEvents.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -46,7 +46,7 @@ export default function FavoritesPage() {
             <p className="text-sm text-muted-foreground mb-4">
               {favoriteEvents.length} événement{favoriteEvents.length !== 1 ? "s" : ""} en favori
             </p>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {favoriteEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}

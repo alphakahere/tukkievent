@@ -8,6 +8,7 @@ import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { PaymentMethodsProvider } from "@/contexts/PaymentMethodsContext";
 import { Toaster } from "sonner";
+import AppShell from "@/components/AppShell";
 
 const inter = Inter({
 	variable: "--font-geist-sans",
@@ -38,7 +39,7 @@ export default function RootLayout({
 						  <OrdersProvider>
 							  <NotificationsProvider>
 								  <PaymentMethodsProvider>
-									  {children}
+									  <AppShell>{children}</AppShell>
 									  <Toaster richColors position="top-center" />
 								  </PaymentMethodsProvider>
 							  </NotificationsProvider>

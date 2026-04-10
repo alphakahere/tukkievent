@@ -19,7 +19,7 @@ const ListEvents: React.FC = () => {
 
 	return (
 		<section id="events" className="py-8 sm:py-12 bg-muted">
-			<div className="max-w-lg mx-auto px-4 sm:px-6">
+			<div className="max-w-lg md:max-w-6xl mx-auto px-4 sm:px-6">
 				{/* Header - Mobile first */}
 				<div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8">
 					<h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-2 sm:mb-3">

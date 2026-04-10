@@ -32,8 +32,8 @@ export default function TicketsPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border">
-        <div className="max-w-lg mx-auto">
+      <header className="bg-card px-4 pt-12 md:pt-4 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:top-16">
+        <div className="max-w-lg md:max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground mb-6">Mes Billets</h1>
           <div className="flex gap-2">
             <button
@@ -62,7 +62,7 @@ export default function TicketsPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
         {currentTickets.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -90,7 +90,7 @@ export default function TicketsPage() {
             )}
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {currentTickets.map((ticket, index) => (
               <motion.div
                 key={ticket.id}

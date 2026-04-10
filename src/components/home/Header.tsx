@@ -5,7 +5,7 @@ import { Search, Bell, SlidersHorizontal } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40">
+    <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 md:hidden">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-4">
           <div>

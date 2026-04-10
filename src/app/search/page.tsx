@@ -78,8 +78,8 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border">
-        <div className="max-w-lg mx-auto">
+      <header className="bg-card px-4 pt-12 md:pt-4 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:top-16">
+        <div className="max-w-lg md:max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <button
               type="button"
@@ -141,7 +141,7 @@ export default function SearchPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
         <div className="mb-6">
           <h3 className="font-semibold text-foreground mb-3">Catégories</h3>
           <div className="flex flex-wrap gap-2">
@@ -196,7 +196,7 @@ export default function SearchPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}

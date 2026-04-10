@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { ArrowLeft, Sun, Moon, DollarSign, Bell, BellOff, Mail, MessageSquare } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import BottomNav from "@/components/BottomNav";
+import AccountSidebar from "@/components/AccountSidebar";
 
 function Toggle({
   checked,
@@ -49,7 +50,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border">
+      <header className="bg-card px-4 pt-12 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:hidden">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <button
             type="button"
@@ -63,7 +64,11 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-lg md:max-w-5xl mx-auto px-4 py-6">
+        <div className="md:flex md:gap-8">
+        <AccountSidebar />
+        <div className="flex-1 space-y-6">
+        <h1 className="hidden md:block text-2xl font-bold text-foreground">Paramètres</h1>
         {/* Apparence */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <SectionTitle>Apparence</SectionTitle>
@@ -245,6 +250,8 @@ export default function SettingsPage() {
             Cette action est irréversible. Toutes vos données seront effacées.
           </p>
         </motion.div>
+        </div>
+        </div>
       </div>
 
       <BottomNav />
