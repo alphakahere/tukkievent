@@ -4,6 +4,9 @@ import "./globals.css";
 import ReduxProvider from "@/store/Provider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import { OrdersProvider } from "@/contexts/OrdersContext";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
+import { PaymentMethodsProvider } from "@/contexts/PaymentMethodsContext";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -30,12 +33,18 @@ export default function RootLayout({
 		<html lang="en">
 			<body className={`${inter.variable} ${geistMono.variable} antialiased`}>
 			  <ReduxProvider>
-				  <FavoritesProvider>
-					  <OrdersProvider>
-						  {children}
-						  <Toaster richColors position="top-center" />
-					  </OrdersProvider>
-				  </FavoritesProvider>
+				  <SettingsProvider>
+					  <FavoritesProvider>
+						  <OrdersProvider>
+							  <NotificationsProvider>
+								  <PaymentMethodsProvider>
+									  {children}
+									  <Toaster richColors position="top-center" />
+								  </PaymentMethodsProvider>
+							  </NotificationsProvider>
+						  </OrdersProvider>
+					  </FavoritesProvider>
+				  </SettingsProvider>
 			  </ReduxProvider>
 			</body>
 		</html>
