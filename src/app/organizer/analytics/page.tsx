@@ -7,16 +7,16 @@ import { useOrganizer } from "@/contexts/OrganizerContext";
 // Simple bar chart component (no external dependency)
 function BarChart({ data }: { data: { label: string; value: number; max: number }[] }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {data.map((item) => {
         const pct = item.max > 0 ? (item.value / item.max) * 100 : 0;
         return (
           <div key={item.label}>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-muted-foreground">{item.label}</span>
-              <span className="font-semibold text-foreground">{item.value.toLocaleString()} F</span>
+            <div className="flex items-center justify-between text-sm mb-1.5">
+              <span className="text-gray-500 truncate mr-4">{item.label}</span>
+              <span className="font-semibold text-gray-900 shrink-0">{item.value.toLocaleString()} F</span>
             </div>
-            <div className="h-3 bg-muted rounded-full overflow-hidden">
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-500"
                 style={{ width: `${pct}%` }}
@@ -60,17 +60,17 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">{total}</p>
-            <p className="text-[10px] text-muted-foreground">vendus</p>
+            <p className="text-lg font-bold text-gray-900">{total}</p>
+            <p className="text-[10px] text-gray-400">vendus</p>
           </div>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {segments.map((seg) => (
           <div key={seg.label} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
-            <span className="text-sm text-muted-foreground">{seg.label}</span>
-            <span className="text-sm font-semibold text-foreground ml-auto">{seg.value}</span>
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+            <span className="text-sm text-gray-500">{seg.label}</span>
+            <span className="text-sm font-semibold text-gray-900 ml-auto">{seg.value}</span>
           </div>
         ))}
       </div>
@@ -112,114 +112,114 @@ export default function AnalyticsPage() {
     .slice(0, 5);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Analytiques</h1>
+    <div className="p-5 md:p-8 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Analytiques</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl border border-border p-5 shadow-sm"
+          className="bg-white rounded-2xl border border-gray-100 p-5"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-              <TrendingUp size={20} className="text-green-500" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <TrendingUp size={20} className="text-emerald-600" />
             </div>
-            <span className="flex items-center gap-1 text-xs text-green-600 font-semibold">
-              <ArrowUpRight size={14} /> +12%
+            <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-1 rounded-full">
+              <ArrowUpRight size={12} /> +12%
             </span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{totalRevenue.toLocaleString()} F</p>
-          <p className="text-xs text-muted-foreground">Revenu total</p>
+          <p className="text-2xl font-bold text-gray-900">{totalRevenue.toLocaleString()} F</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Revenu total</p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="bg-card rounded-2xl border border-border p-5 shadow-sm"
+          className="bg-white rounded-2xl border border-gray-100 p-5"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
               <Ticket size={20} className="text-blue-500" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{totalTicketsSold}</p>
-          <p className="text-xs text-muted-foreground">Billets vendus</p>
+          <p className="text-2xl font-bold text-gray-900">{totalTicketsSold}</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Billets vendus</p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl border border-border p-5 shadow-sm"
+          className="bg-white rounded-2xl border border-gray-100 p-5"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Award size={20} className="text-primary" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">
+          <p className="text-2xl font-bold text-gray-900">
             {totalTicketsSold > 0 ? Math.round(totalRevenue / totalTicketsSold).toLocaleString() : 0} F
           </p>
-          <p className="text-xs text-muted-foreground">Prix moyen / billet</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Prix moyen / billet</p>
         </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue by event */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-card rounded-2xl border border-border shadow-sm p-5"
+          className="bg-white rounded-2xl border border-gray-100 p-6"
         >
-          <h2 className="font-bold text-foreground mb-4">Revenu par événement</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-5">Revenu par événement</h2>
           <BarChart data={revenueData} />
         </motion.div>
 
         {/* Tickets by type */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-card rounded-2xl border border-border shadow-sm p-5"
+          className="bg-white rounded-2xl border border-gray-100 p-6"
         >
-          <h2 className="font-bold text-foreground mb-4">Billets vendus par type</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-5">Billets vendus par type</h2>
           <DonutChart segments={ticketSegments} />
         </motion.div>
       </div>
 
       {/* Top events table */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
-        className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+        className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
       >
-        <div className="p-5 border-b border-border">
-          <h2 className="font-bold text-foreground">Top événements par revenu</h2>
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">Top événements par revenu</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-5 py-3 font-semibold text-muted-foreground">#</th>
-                <th className="text-left px-5 py-3 font-semibold text-muted-foreground">Événement</th>
-                <th className="text-left px-5 py-3 font-semibold text-muted-foreground">Ville</th>
-                <th className="text-right px-5 py-3 font-semibold text-muted-foreground">Vendus</th>
-                <th className="text-right px-5 py-3 font-semibold text-muted-foreground">Revenu</th>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left px-6 py-3 font-semibold text-gray-400 text-xs uppercase tracking-wide">#</th>
+                <th className="text-left px-6 py-3 font-semibold text-gray-400 text-xs uppercase tracking-wide">Événement</th>
+                <th className="text-left px-6 py-3 font-semibold text-gray-400 text-xs uppercase tracking-wide">Ville</th>
+                <th className="text-right px-6 py-3 font-semibold text-gray-400 text-xs uppercase tracking-wide">Vendus</th>
+                <th className="text-right px-6 py-3 font-semibold text-gray-400 text-xs uppercase tracking-wide">Revenu</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-gray-100">
               {topEvents.map((oe, i) => (
-                <tr key={oe.event.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-5 py-3 text-muted-foreground">{i + 1}</td>
-                  <td className="px-5 py-3 font-medium text-foreground">{oe.event.title}</td>
-                  <td className="px-5 py-3 text-muted-foreground">{oe.event.city}</td>
-                  <td className="px-5 py-3 text-right text-foreground">{oe.totalSold}</td>
-                  <td className="px-5 py-3 text-right font-semibold text-primary">{oe.totalRevenue.toLocaleString()} F</td>
+                <tr key={oe.event.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4 text-gray-400">{i + 1}</td>
+                  <td className="px-6 py-4 font-medium text-gray-900">{oe.event.title}</td>
+                  <td className="px-6 py-4 text-gray-500">{oe.event.city}</td>
+                  <td className="px-6 py-4 text-right text-gray-700">{oe.totalSold}</td>
+                  <td className="px-6 py-4 text-right font-semibold text-primary">{oe.totalRevenue.toLocaleString()} F</td>
                 </tr>
               ))}
             </tbody>

@@ -9,7 +9,6 @@ import {
   MapPin,
   Calendar,
   Users,
-  MoreVertical,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -19,13 +18,13 @@ type TabId = "all" | "PUBLISHED" | "ENDED" | "DRAFT";
 
 function StatusBadge({ status }: { status: OrgEventStatus }) {
   const styles: Record<OrgEventStatus, string> = {
-    PUBLISHED: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    DRAFT: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
-    ENDED: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+    PUBLISHED: "bg-emerald-50 text-emerald-700",
+    DRAFT: "bg-amber-50 text-amber-700",
+    ENDED: "bg-gray-100 text-gray-500",
   };
   const labels: Record<OrgEventStatus, string> = { PUBLISHED: "Publié", DRAFT: "Brouillon", ENDED: "Terminé" };
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${styles[status]}`}>
       {labels[status]}
     </span>
   );
@@ -46,12 +45,12 @@ export default function OrganizerEventsPage() {
   ];
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-5 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Événements</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Événements</h1>
         <Link
           href="/organizer/events/new"
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"
         >
           <Plus size={16} />
           <span className="hidden sm:inline">Créer un événement</span>
@@ -66,10 +65,10 @@ export default function OrganizerEventsPage() {
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground border border-border hover:bg-muted"
+                ? "bg-primary text-white"
+                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
             }`}
           >
             {tab.label} ({tab.count})
@@ -79,13 +78,13 @@ export default function OrganizerEventsPage() {
 
       {/* Events list */}
       {filteredEvents.length === 0 ? (
-        <div className="text-center py-12">
-          <Calendar size={48} className="mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Aucun événement</h3>
-          <p className="text-muted-foreground mb-4">Commencez par créer votre premier événement</p>
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <Calendar size={48} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun événement</h3>
+          <p className="text-gray-500 mb-6">Commencez par créer votre premier événement</p>
           <Link
             href="/organizer/events/new"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
           >
             <Plus size={16} />
             Créer un événement
@@ -101,37 +100,33 @@ export default function OrganizerEventsPage() {
             return (
               <motion.div
                 key={oe.event.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-card rounded-xl border border-border shadow-sm overflow-hidden"
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
               >
-                <div className="p-4 md:flex md:items-center md:gap-4">
+                <div className="p-5 md:flex md:items-center md:gap-5">
                   {/* Info */}
-                  <div className="flex-1 min-w-0 mb-3 md:mb-0">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-semibold text-foreground line-clamp-1">{oe.event.title}</h3>
-                          <StatusBadge status={oe.status} />
-                        </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1"><Calendar size={14} />{dateStr}</span>
-                          <span className="flex items-center gap-1"><MapPin size={14} />{oe.event.city}</span>
-                          <span className="flex items-center gap-1"><Users size={14} />{oe.totalSold} vendus</span>
-                        </div>
-                      </div>
+                  <div className="flex-1 min-w-0 mb-4 md:mb-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <p className="text-sm font-semibold text-gray-900 line-clamp-1">{oe.event.title}</p>
+                      <StatusBadge status={oe.status} />
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                      <span className="flex items-center gap-1.5"><Calendar size={13} />{dateStr}</span>
+                      <span className="flex items-center gap-1.5"><MapPin size={13} />{oe.event.city}</span>
+                      <span className="flex items-center gap-1.5"><Users size={13} />{oe.totalSold} vendus</span>
                     </div>
                   </div>
 
                   {/* Revenue + progress */}
-                  <div className="flex items-center gap-4 md:shrink-0">
-                    <div className="flex-1 md:w-40">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <div className="flex items-center gap-5 md:shrink-0">
+                    <div className="flex-1 md:w-36">
+                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
                         <span>Remplissage</span>
-                        <span>{capacityPct}%</span>
+                        <span className="font-medium text-gray-600">{capacityPct}%</span>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${capacityPct}%` }}
@@ -139,18 +134,16 @@ export default function OrganizerEventsPage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-foreground text-sm">{oe.totalRevenue.toLocaleString()} F</p>
-                      <p className="text-xs text-muted-foreground">Revenu</p>
+                      <p className="font-bold text-gray-900 text-sm">{oe.totalRevenue.toLocaleString()} F</p>
+                      <p className="text-xs text-gray-400">Revenu</p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Link
-                        href={`/organizer/events/${oe.event.id}/attendees`}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
-                        aria-label="Voir"
-                      >
-                        <ChevronRight size={18} className="text-muted-foreground" />
-                      </Link>
-                    </div>
+                    <Link
+                      href={`/organizer/events/${oe.event.id}/attendees`}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Voir"
+                    >
+                      <ChevronRight size={18} className="text-gray-400" />
+                    </Link>
                   </div>
                 </div>
               </motion.div>

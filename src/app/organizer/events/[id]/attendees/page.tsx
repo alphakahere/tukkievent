@@ -28,12 +28,12 @@ export default function AttendeesPage() {
   if (!orgEvent) {
     return (
       <div className="p-6 text-center">
-        <AlertCircle size={48} className="mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold text-foreground mb-2">Événement introuvable</h2>
+        <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Événement introuvable</h2>
         <button
           type="button"
           onClick={() => router.push("/organizer/events")}
-          className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-xl font-semibold"
+          className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
         >
           Retour aux événements
         </button>
@@ -61,53 +61,53 @@ export default function AttendeesPage() {
   const handleExport = () => toast.success("Export CSV en cours...");
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-5 md:p-8 space-y-6">
       {/* Header */}
       <div>
         <button
           type="button"
           onClick={() => router.push("/organizer/events")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-3"
         >
           <ArrowLeft size={16} />
           Retour aux événements
         </button>
-        <h1 className="text-2xl font-bold text-foreground">{orgEvent.event.title}</h1>
-        <p className="text-muted-foreground">Gestion des participants</p>
+        <h1 className="text-2xl font-bold text-gray-900">{orgEvent.event.title}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Gestion des participants</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl border border-border p-4 text-center">
-          <p className="text-2xl font-bold text-foreground">{attendees.length}</p>
-          <p className="text-xs text-muted-foreground">Total participants</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+          <p className="text-2xl font-bold text-gray-900">{attendees.length}</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Total participants</p>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">{checkedIn}</p>
-          <p className="text-xs text-muted-foreground">Enregistrés</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+          <p className="text-2xl font-bold text-emerald-600">{checkedIn}</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Enregistrés</p>
         </div>
-        <div className="bg-card rounded-xl border border-border p-4 text-center">
-          <p className="text-2xl font-bold text-amber-600">{attendees.length - checkedIn}</p>
-          <p className="text-xs text-muted-foreground">En attente</p>
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
+          <p className="text-2xl font-bold text-amber-500">{attendees.length - checkedIn}</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">En attente</p>
         </div>
       </div>
 
       {/* Search + export */}
       <div className="flex gap-3 flex-col sm:flex-row">
         <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par nom, email, numéro..."
-            className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
           />
         </div>
         <button
           type="button"
           onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors shrink-0"
+          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors shrink-0"
         >
           <Download size={16} />
           Exporter CSV
@@ -115,9 +115,9 @@ export default function AttendeesPage() {
       </div>
 
       {/* Attendees table / list */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {/* Desktop table header */}
-        <div className="hidden md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] gap-4 px-5 py-3 bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
+        <div className="hidden md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
           <span>Participant</span>
           <span>Email</span>
           <span>Billet</span>
@@ -126,44 +126,44 @@ export default function AttendeesPage() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="p-8 text-center">
-            <Users size={40} className="mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">Aucun participant trouvé</p>
+          <div className="p-10 text-center">
+            <Users size={40} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-500">Aucun participant trouvé</p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-gray-100">
             {filtered.map((attendee, index) => (
               <motion.div
                 key={attendee.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: index * 0.02 }}
-                className="p-4 md:px-5 md:py-3 md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] md:gap-4 md:items-center"
+                className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] md:gap-4 md:items-center"
               >
                 {/* Mobile layout */}
-                <div className="md:hidden flex items-center justify-between mb-2">
+                <div className="md:hidden flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-foreground">{attendee.holderName}</p>
-                    <p className="text-xs text-muted-foreground">{attendee.email}</p>
-                    <p className="text-xs text-muted-foreground font-mono mt-1">{attendee.ticketNumber} · {attendee.ticketType}</p>
+                    <p className="font-semibold text-gray-900">{attendee.holderName}</p>
+                    <p className="text-xs text-gray-500">{attendee.email}</p>
+                    <p className="text-xs text-gray-400 font-mono mt-1">{attendee.ticketNumber} · {attendee.ticketType}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {attendee.status === "used" ? (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                         <CheckCircle size={14} /> Entré
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-amber-600">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
                         <XCircle size={14} /> Valide
                       </span>
                     )}
                     <button
                       type="button"
                       onClick={() => handleCheckIn(attendee.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                         attendee.status === "used"
-                          ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                          ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                       }`}
                     >
                       {attendee.status === "used" ? "Annuler" : "Check-in"}
@@ -177,19 +177,19 @@ export default function AttendeesPage() {
                     {attendee.holderName.split(" ").map((n) => n[0]).join("")}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{attendee.holderName}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{attendee.ticketNumber}</p>
+                    <p className="font-semibold text-gray-900 text-sm truncate">{attendee.holderName}</p>
+                    <p className="text-xs text-gray-400 font-mono">{attendee.ticketNumber}</p>
                   </div>
                 </div>
-                <p className="hidden md:block text-sm text-muted-foreground truncate">{attendee.email}</p>
-                <p className="hidden md:block text-sm text-foreground">{attendee.ticketType}</p>
+                <p className="hidden md:block text-sm text-gray-500 truncate">{attendee.email}</p>
+                <p className="hidden md:block text-sm text-gray-700">{attendee.ticketType}</p>
                 <div className="hidden md:block">
                   {attendee.status === "used" ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
                       <CheckCircle size={14} /> Entré
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-600">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
                       <XCircle size={14} /> Valide
                     </span>
                   )}
@@ -197,10 +197,10 @@ export default function AttendeesPage() {
                 <button
                   type="button"
                   onClick={() => handleCheckIn(attendee.id)}
-                  className={`hidden md:inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`hidden md:inline-flex px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
                     attendee.status === "used"
-                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                   }`}
                 >
                   {attendee.status === "used" ? "Annuler" : "Check-in"}

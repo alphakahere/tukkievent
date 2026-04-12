@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/Provider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
@@ -10,9 +10,10 @@ import { PaymentMethodsProvider } from "@/contexts/PaymentMethodsContext";
 import { Toaster } from "sonner";
 import AppShell from "@/components/AppShell";
 
-const inter = Inter({
-	variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+	variable: "--font-sans",
 	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -32,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
 		<html lang="en">
-			<body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+			<body className={`${dmSans.variable} ${geistMono.variable} antialiased`}>
 			  <ReduxProvider>
 				  <SettingsProvider>
 					  <FavoritesProvider>

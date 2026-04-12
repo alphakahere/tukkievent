@@ -16,12 +16,12 @@ export default function EditEventPage() {
   if (!orgEvent) {
     return (
       <div className="p-6 text-center">
-        <AlertCircle size={48} className="mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold text-foreground mb-2">Événement introuvable</h2>
+        <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Événement introuvable</h2>
         <button
           type="button"
           onClick={() => router.push("/organizer/events")}
-          className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-xl font-semibold"
+          className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
         >
           Retour aux événements
         </button>
@@ -34,43 +34,45 @@ export default function EditEventPage() {
     router.push("/organizer/events");
   };
 
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors";
+
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-5 md:p-8 max-w-2xl mx-auto space-y-6">
       <div>
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-3"
         >
           <ArrowLeft size={16} />
           Retour
         </button>
-        <h1 className="text-2xl font-bold text-foreground">Modifier l&apos;événement</h1>
-        <p className="text-muted-foreground">{orgEvent.event.title}</p>
+        <h1 className="text-2xl font-bold text-gray-900">Modifier l&apos;événement</h1>
+        <p className="text-sm text-gray-500 mt-0.5">{orgEvent.event.title}</p>
       </div>
 
-      <div className="bg-card rounded-2xl border border-border shadow-sm p-6 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
         <div>
-          <label htmlFor="editTitle" className="text-sm font-medium text-foreground block mb-1.5">Titre</label>
-          <input id="editTitle" type="text" defaultValue={orgEvent.event.title} className="w-full px-4 py-3 rounded-xl border border-border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          <label htmlFor="editTitle" className="text-sm font-medium text-gray-700 block mb-1.5">Titre</label>
+          <input id="editTitle" type="text" defaultValue={orgEvent.event.title} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="editDesc" className="text-sm font-medium text-foreground block mb-1.5">Description</label>
-          <textarea id="editDesc" defaultValue={orgEvent.event.description} rows={4} className="w-full px-4 py-3 rounded-xl border border-border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+          <label htmlFor="editDesc" className="text-sm font-medium text-gray-700 block mb-1.5">Description</label>
+          <textarea id="editDesc" defaultValue={orgEvent.event.description} rows={4} className={`${inputClass} resize-none`} />
         </div>
         <div>
-          <label htmlFor="editCity" className="text-sm font-medium text-foreground block mb-1.5">Ville</label>
-          <input id="editCity" type="text" defaultValue={orgEvent.event.city} className="w-full px-4 py-3 rounded-xl border border-border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          <label htmlFor="editCity" className="text-sm font-medium text-gray-700 block mb-1.5">Ville</label>
+          <input id="editCity" type="text" defaultValue={orgEvent.event.city} className={inputClass} />
         </div>
         <div>
-          <label htmlFor="editCover" className="text-sm font-medium text-foreground block mb-1.5">Image de couverture (URL)</label>
-          <input id="editCover" type="url" defaultValue={orgEvent.event.coverImageUrl} className="w-full px-4 py-3 rounded-xl border border-border bg-muted text-foreground focus:outline-none focus:ring-2 focus:ring-primary" />
+          <label htmlFor="editCover" className="text-sm font-medium text-gray-700 block mb-1.5">Image de couverture (URL)</label>
+          <input id="editCover" type="url" defaultValue={orgEvent.event.coverImageUrl} className={inputClass} />
         </div>
 
         <button
           type="button"
           onClick={handleSave}
-          className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition-opacity"
+          className="w-full py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
         >
           Enregistrer les modifications
         </button>
