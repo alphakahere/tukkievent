@@ -29,10 +29,10 @@ export default async function EventDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-4">
       <div className="text-center">
-        <p className="text-muted-foreground mb-4">Événement non trouvé</p>
-        <Link href="/" className="text-primary font-semibold">
+        <p className="text-gray-500 mb-4">Événement non trouvé</p>
+        <Link href="/" className="text-primary font-semibold hover:opacity-80 transition-opacity">
           Retour à l&apos;accueil
         </Link>
       </div>

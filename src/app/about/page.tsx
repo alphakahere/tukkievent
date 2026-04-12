@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Ticket,
   CalendarDays,
   MapPin,
   Shield,
   Zap,
+  Plus,
+  Minus,
   Users,
   TrendingUp,
   BarChart3,
@@ -113,6 +116,44 @@ const testimonials = [
   },
 ];
 
+const faqs = [
+  {
+    question: "Comment acheter un billet sur Tukki Event ?",
+    answer:
+      "Parcourez les événements disponibles, sélectionnez le type de billet souhaité et indiquez la quantité. Renseignez ensuite vos coordonnées et choisissez votre mode de paiement (Wave, Orange Money ou carte bancaire). Votre billet vous sera envoyé par email et SMS.",
+  },
+  {
+    question: "Quels moyens de paiement sont acceptés ?",
+    answer:
+      "Nous acceptons Wave, Orange Money et les cartes bancaires (Visa, Mastercard). Tous les paiements sont sécurisés et vos données sont chiffrées.",
+  },
+  {
+    question: "Comment accéder à mon billet le jour de l'événement ?",
+    answer:
+      "Votre billet est accessible depuis la section « Mes Billets » de votre compte. Présentez le QR code à l'entrée — il fonctionne même sans connexion internet.",
+  },
+  {
+    question: "Puis-je obtenir un remboursement ?",
+    answer:
+      "Les conditions de remboursement dépendent de la politique de chaque organisateur. En cas d'annulation d'un événement, un remboursement intégral est effectué automatiquement sous 5 à 7 jours ouvrés.",
+  },
+  {
+    question: "Comment créer et publier un événement ?",
+    answer:
+      "Accédez au Dashboard Organisateur depuis votre profil, puis cliquez sur « Créer un événement ». Remplissez les informations (titre, date, lieu, types de billets) et publiez. Votre événement sera visible par tous les utilisateurs de la plateforme.",
+  },
+  {
+    question: "Comment suivre les ventes de mon événement ?",
+    answer:
+      "Le tableau de bord organisateur affiche en temps réel le nombre de billets vendus, les revenus générés et le taux de remplissage. Vous pouvez également gérer les check-ins à l'entrée en scannant les QR codes des participants.",
+  },
+  {
+    question: "Tukki Event est-il disponible dans d'autres pays ?",
+    answer:
+      "Tukki Event est actuellement disponible au Sénégal. Nous travaillons activement à notre expansion dans d'autres pays d'Afrique de l'Ouest dans les prochains mois.",
+  },
+];
+
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
@@ -126,6 +167,8 @@ const stagger = (delayBase = 0) => ({
 const viewportOpts = { once: true, margin: "-80px" };
 
 export default function AboutPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
   return (
     <div className="bg-[#F7F7F7]">
 
@@ -374,6 +417,62 @@ export default function AboutPage() {
                     <p className="text-xs text-gray-500">{role}</p>
                   </div>
                 </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-20">
+        <div className="max-w-3xl mx-auto px-6">
+          <motion.div
+            variants={stagger()}
+            initial="hidden"
+            whileInView="show"
+            viewport={viewportOpts}
+            className="text-center mb-14"
+          >
+            <motion.p variants={fadeUp} className="text-sm font-semibold text-primary uppercase tracking-wider mb-3">FAQ</motion.p>
+            <motion.h2 variants={fadeUp} className="text-3xl font-bold text-gray-900">Questions fréquentes</motion.h2>
+          </motion.div>
+
+          <motion.div
+            variants={stagger()}
+            initial="hidden"
+            whileInView="show"
+            viewport={viewportOpts}
+            className="space-y-3"
+          >
+            {faqs.map((faq, index) => (
+              <motion.div key={index} variants={fadeUp} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="w-full flex items-center justify-between px-6 py-5 text-left gap-4"
+                >
+                  <span className="text-sm font-semibold text-gray-900">{faq.question}</span>
+                  <span className="shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center transition-colors">
+                    {openFaq === index
+                      ? <Minus size={13} className="text-primary" />
+                      : <Plus size={13} className="text-gray-500" />
+                    }
+                  </span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {openFaq === index && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <p className="px-6 pb-5 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
+                        {faq.answer}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ))}
           </motion.div>

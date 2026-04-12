@@ -13,6 +13,7 @@ import {
   CreditCard,
   Smartphone,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useOrders } from "@/contexts/OrdersContext";
@@ -28,6 +29,9 @@ interface TicketSelection {
 }
 
 type Props = { event: Event };
+
+const inputClass =
+  "w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition-all";
 
 export default function CheckoutEventScreen({ event }: Props) {
   const router = useRouter();
@@ -47,20 +51,13 @@ export default function CheckoutEventScreen({ event }: Props) {
   const serviceFee = Math.round(totalPrice * 0.05);
   const grandTotal = totalPrice + serviceFee;
 
-  const handleTicketQuantityChange = (
-    ticketId: string,
-    name: string,
-    price: number,
-    delta: number
-  ) => {
+  const handleTicketQuantityChange = (ticketId: string, name: string, price: number, delta: number) => {
     setTicketSelections((prev) => {
       const existing = prev.find((ts) => ts.ticketId === ticketId);
       if (existing) {
         const newQuantity = Math.max(0, Math.min(10, existing.quantity + delta));
         if (newQuantity === 0) return prev.filter((ts) => ts.ticketId !== ticketId);
-        return prev.map((ts) =>
-          ts.ticketId === ticketId ? { ...ts, quantity: newQuantity } : ts
-        );
+        return prev.map((ts) => ts.ticketId === ticketId ? { ...ts, quantity: newQuantity } : ts);
       }
       if (delta > 0) return [...prev, { ticketId, name, price, quantity: 1 }];
       return prev;
@@ -84,10 +81,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 
   const handleNextStep = () => {
     if (currentStep === 1) {
-      if (totalTickets === 0) {
-        toast.error("Veuillez sélectionner au moins un billet");
-        return;
-      }
+      if (totalTickets === 0) { toast.error("Veuillez sélectionner au moins un billet"); return; }
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (validateStep2()) setCurrentStep(3);
@@ -104,253 +98,211 @@ export default function CheckoutEventScreen({ event }: Props) {
     setTimeout(() => {
       toast.dismiss();
       const orderId = `ORD-${Date.now()}`;
-      addOrder({
-        orderId,
-        event,
-        tickets: ticketSelections,
-        total: grandTotal,
-        formData,
-        createdAt: new Date().toISOString(),
-      });
+      addOrder({ orderId, event, tickets: ticketSelections, total: grandTotal, formData, createdAt: new Date().toISOString() });
       toast.success("Paiement confirmé !");
       router.push(`/checkout/success?orderId=${orderId}`);
     }, 2000);
   };
 
-  const progressPercentage = (currentStep / 3) * 100;
   const tickets = event.ticketTypes || [];
   const available = (tt: { availableQuantity?: number }) => tt.availableQuantity ?? 99;
+  const stepLabels = ["Billets", "Informations", "Paiement"];
+
+  const paymentMethods = [
+    { id: "wave", label: "Wave", sub: "Paiement mobile", icon: Smartphone, color: "#00A9E0", bg: "#E0F7FD" },
+    { id: "orange", label: "Orange Money", sub: "Paiement mobile", icon: Smartphone, color: "#FF7900", bg: "#FFF3E0" },
+    { id: "card", label: "Carte Bancaire", sub: "Visa, Mastercard", icon: CreditCard, color: "#6B7280", bg: "#F3F4F6" },
+  ];
 
   return (
-    <div className="min-h-screen bg-muted pb-32">
-      <header className="bg-card px-4 pt-12 pb-4 sticky top-0 z-50 shadow-sm border-b border-border">
+    <div className="min-h-screen bg-[#F7F7F7] pb-32">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-50">
         <div className="max-w-lg mx-auto">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-3 mb-4">
             <button
               type="button"
-              onClick={() => (currentStep === 1 ? router.back() : handlePreviousStep())}
-              className="p-2 hover:bg-muted rounded-full"
+              onClick={() => currentStep === 1 ? router.back() : handlePreviousStep()}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             >
-              <ArrowLeft size={24} className="text-foreground" />
+              <ArrowLeft size={20} className="text-gray-700" />
             </button>
             <div className="flex-1">
-              <h1 className="font-bold text-lg text-foreground">Réservation</h1>
-              <p className="text-sm text-muted-foreground">
-                Étape {currentStep}/3 -{" "}
-                {currentStep === 1 ? "Billets" : currentStep === 2 ? "Informations" : "Paiement"}
-              </p>
+              <p className="font-bold text-gray-900">Réservation</p>
+              <p className="text-xs text-gray-500">Étape {currentStep}/3 — {stepLabels[currentStep - 1]}</p>
+            </div>
+            {/* Step pills */}
+            <div className="flex gap-1.5">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`h-1.5 rounded-full transition-all ${
+                    s === currentStep ? "w-6 bg-primary" : s < currentStep ? "w-4 bg-primary/40" : "w-4 bg-gray-200"
+                  }`}
+                />
+              ))}
             </div>
           </div>
-          <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+          {/* Progress bar */}
+          <div className="relative h-1 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              animate={{ width: `${(currentStep / 3) * 100}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               className="absolute h-full bg-primary rounded-full"
             />
           </div>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 py-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-4 mb-6 shadow-sm border border-border"
-        >
+      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        {/* Event summary card */}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-100 p-4">
           <div className="flex gap-4">
             <Image
               src={event.coverImageUrl}
               alt={event.title}
-              width={80}
-              height={80}
-              className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+              width={72}
+              height={72}
+              className="w-[72px] h-[72px] rounded-xl object-cover flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-foreground mb-1 line-clamp-1">{event.title}</h3>
-              <p className="text-sm text-muted-foreground mb-1">
+              <p className="font-semibold text-gray-900 mb-1 line-clamp-1">{event.title}</p>
+              <p className="text-xs text-gray-500 mb-0.5">
                 {format(new Date(event.startDatetime), "EEEE d MMMM · HH:mm", { locale: fr })}
               </p>
-              <p className="text-sm text-muted-foreground">
-                {event.city || event.address}
-              </p>
+              <p className="text-xs text-gray-400">{event.city || event.address}</p>
             </div>
           </div>
         </motion.div>
 
+        {/* Steps */}
         <AnimatePresence mode="wait">
+          {/* Step 1 — Ticket selection */}
           {currentStep === 1 && (
             <motion.div
               key="step1"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
+              transition={{ duration: 0.25 }}
+              className="space-y-3"
             >
-              <h2 className="font-bold text-xl text-foreground mb-4">Sélectionnez vos billets</h2>
+              <p className="text-base font-semibold text-gray-900">Sélectionnez vos billets</p>
               {tickets.map((ticket) => {
                 const quantity = getTicketQuantity(ticket.id);
                 return (
-                  <motion.div
-                    key={ticket.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-card rounded-xl p-4 shadow-sm border border-border"
-                  >
+                  <div key={ticket.id} className="bg-white rounded-2xl border border-gray-100 p-4">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-foreground mb-1">{ticket.name}</h3>
+                        <p className="text-sm font-semibold text-gray-900 mb-0.5">{ticket.name}</p>
                         {ticket.description && (
-                          <p className="text-sm text-muted-foreground mb-2">{ticket.description}</p>
+                          <p className="text-xs text-gray-500 mb-1">{ticket.description}</p>
                         )}
-                        <p className="font-bold text-primary">
-                          {ticket.price === 0
-                            ? "Gratuit"
-                            : `${ticket.price.toLocaleString()} FCFA`}
-                        </p>
+                        <p className="text-xs text-gray-400">{available(ticket)} disponibles</p>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {available(ticket)} disponibles
-                      </div>
+                      <p className="text-base font-bold text-primary ml-3">
+                        {ticket.price === 0 ? "Gratuit" : `${ticket.price.toLocaleString()} FCFA`}
+                      </p>
                     </div>
-                    <div className="flex items-center justify-between bg-muted rounded-lg p-2">
-                      <span className="text-sm font-medium text-muted-foreground">Quantité</span>
+                    <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+                      <span className="text-sm text-gray-500">Quantité</span>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() =>
-                            handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, -1)
-                          }
+                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, -1)}
                           disabled={quantity === 0}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-card border border-border disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 disabled:opacity-40"
                         >
-                          <Minus size={16} className="text-primary" />
+                          <Minus size={15} className="text-gray-600" />
                         </button>
-                        <span className="w-8 text-center font-semibold text-foreground">
-                          {quantity}
-                        </span>
+                        <span className="w-6 text-center text-sm font-semibold text-gray-900">{quantity}</span>
                         <button
                           type="button"
-                          onClick={() =>
-                            handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, 1)
-                          }
-                          disabled={
-                            quantity >= 10 || quantity >= available(ticket)
-                          }
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, 1)}
+                          disabled={quantity >= 10 || quantity >= available(ticket)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white disabled:opacity-40"
                         >
-                          <Plus size={16} />
+                          <Plus size={15} />
                         </button>
                       </div>
                     </div>
                     {quantity > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Sous-total</span>
-                        <span className="font-bold text-foreground">
-                          {(ticket.price * quantity).toLocaleString()} FCFA
-                        </span>
+                      <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <span className="text-xs text-gray-400">Sous-total</span>
+                        <span className="text-sm font-bold text-gray-900">{(ticket.price * quantity).toLocaleString()} FCFA</span>
                       </div>
                     )}
-                  </motion.div>
+                  </div>
                 );
               })}
             </motion.div>
           )}
 
+          {/* Step 2 — Buyer info */}
           {currentStep === 2 && (
             <motion.div
               key="step2"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25 }}
               className="space-y-4"
             >
-              <h2 className="font-bold text-xl text-foreground mb-4">Vos informations</h2>
-              <div className="bg-card rounded-xl p-4 shadow-sm border border-border space-y-4">
+              <p className="text-base font-semibold text-gray-900">Vos informations</p>
+              <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Nom complet *
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Nom complet *</label>
                   <input
                     type="text"
                     value={formData.fullName}
-                    onChange={(e) => {
-                      setFormData({ ...formData, fullName: e.target.value });
-                      setErrors({ ...errors, fullName: "" });
-                    }}
+                    onChange={(e) => { setFormData({ ...formData, fullName: e.target.value }); setErrors({ ...errors, fullName: "" }); }}
                     placeholder="Ex: Amadou Diallo"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground ${
-                      errors.fullName ? "border-destructive" : "border-border"
-                    }`}
+                    className={`${inputClass} ${errors.fullName ? "border-red-300" : "border-gray-200"}`}
                   />
                   {errors.fullName && (
-                    <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={14} />
-                      {errors.fullName}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} />{errors.fullName}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Email *</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Email *</label>
                   <input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => {
-                      setFormData({ ...formData, email: e.target.value });
-                      setErrors({ ...errors, email: "" });
-                    }}
+                    onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setErrors({ ...errors, email: "" }); }}
                     placeholder="exemple@email.com"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground ${
-                      errors.email ? "border-destructive" : "border-border"
-                    }`}
+                    className={`${inputClass} ${errors.email ? "border-red-300" : "border-gray-200"}`}
                   />
                   {errors.email && (
-                    <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={14} />
-                      {errors.email}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} />{errors.email}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Téléphone *
-                  </label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">Téléphone *</label>
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => {
-                      setFormData({ ...formData, phone: e.target.value });
-                      setErrors({ ...errors, phone: "" });
-                    }}
+                    onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); setErrors({ ...errors, phone: "" }); }}
                     placeholder="+221 77 123 45 67"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground ${
-                      errors.phone ? "border-destructive" : "border-border"
-                    }`}
+                    className={`${inputClass} ${errors.phone ? "border-red-300" : "border-gray-200"}`}
                   />
                   {errors.phone && (
-                    <p className="text-destructive text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle size={14} />
-                      {errors.phone}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><AlertCircle size={12} />{errors.phone}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Votre billet sera envoyé par SMS et email
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Votre billet sera envoyé par SMS et email</p>
                 </div>
               </div>
-              <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
-                <h3 className="font-semibold text-foreground mb-3">Récapitulatif</h3>
-                <div className="space-y-2">
+
+              {/* Recap */}
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-900">Récapitulatif</p>
+                </div>
+                <div className="px-5 py-4 space-y-2">
                   {ticketSelections.map((ts) => (
                     <div key={ts.ticketId} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {ts.name} × {ts.quantity}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {(ts.price * ts.quantity).toLocaleString()} FCFA
-                      </span>
+                      <span className="text-gray-500">{ts.name} × {ts.quantity}</span>
+                      <span className="font-medium text-gray-900">{(ts.price * ts.quantity).toLocaleString()} FCFA</span>
                     </div>
                   ))}
                 </div>
@@ -358,106 +310,76 @@ export default function CheckoutEventScreen({ event }: Props) {
             </motion.div>
           )}
 
+          {/* Step 3 — Payment */}
           {currentStep === 3 && (
             <motion.div
               key="step3"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.25 }}
               className="space-y-4"
             >
-              <h2 className="font-bold text-xl text-foreground mb-4">Mode de paiement</h2>
-              {["wave", "orange", "card"].map((method) => (
-                <button
-                  key={method}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, paymentMethod: method })}
-                  className={`w-full bg-card rounded-xl p-4 shadow-sm border-2 transition-all text-left ${
-                    formData.paymentMethod === method
-                      ? "border-primary bg-primary/5"
-                      : "border-border"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        method === "wave"
-                          ? "bg-[#00A9E0]/10"
-                          : method === "orange"
-                            ? "bg-[#FF7900]/10"
-                            : "bg-secondary/10"
-                      }`}
-                    >
-                      {method === "card" ? (
-                        <CreditCard size={24} className="text-secondary" />
-                      ) : (
-                        <Smartphone
-                          size={24}
-                          className={
-                            method === "wave" ? "text-[#00A9E0]" : "text-[#FF7900]"
-                          }
-                        />
-                      )}
+              <p className="text-base font-semibold text-gray-900">Mode de paiement</p>
+              <div className="space-y-3">
+                {paymentMethods.map(({ id, label, sub, icon: Icon, color, bg }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, paymentMethod: id })}
+                    className={`w-full bg-white rounded-2xl p-4 border-2 transition-all text-left flex items-center gap-4 ${
+                      formData.paymentMethod === id ? "border-primary bg-primary/[0.02]" : "border-gray-100 hover:border-gray-200"
+                    }`}
+                  >
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
+                      <Icon size={20} style={{ color }} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-foreground">
-                        {method === "wave"
-                          ? "Wave"
-                          : method === "orange"
-                            ? "Orange Money"
-                            : "Carte Bancaire"}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {method === "card" ? "Visa, Mastercard" : "Paiement mobile"}
-                      </p>
+                      <p className="text-sm font-semibold text-gray-900">{label}</p>
+                      <p className="text-xs text-gray-500">{sub}</p>
                     </div>
-                    {formData.paymentMethod === method && (
-                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                        <Check size={16} className="text-primary-foreground" />
+                    {formData.paymentMethod === id && (
+                      <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
+                        <Check size={12} className="text-white" />
                       </div>
                     )}
-                  </div>
-                </button>
-              ))}
-              <div className="bg-card rounded-xl p-4 shadow-sm border border-border">
-                <h3 className="font-semibold text-foreground mb-4">Détails de la commande</h3>
-                <div className="space-y-3">
+                  </button>
+                ))}
+              </div>
+
+              {/* Order summary */}
+              <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                <div className="px-5 py-4 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-900">Détails de la commande</p>
+                </div>
+                <div className="px-5 py-4 space-y-2">
                   {ticketSelections.map((ts) => (
                     <div key={ts.ticketId} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {ts.name} × {ts.quantity}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {(ts.price * ts.quantity).toLocaleString()} FCFA
-                      </span>
+                      <span className="text-gray-500">{ts.name} × {ts.quantity}</span>
+                      <span className="font-medium text-gray-900">{(ts.price * ts.quantity).toLocaleString()} FCFA</span>
                     </div>
                   ))}
-                  <div className="border-t border-border pt-3">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Frais de service (5%)</span>
-                      <span className="font-medium text-foreground">
-                        {serviceFee.toLocaleString()} FCFA
-                      </span>
+                  <div className="border-t border-gray-100 pt-3 mt-2 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Frais de service (5%)</span>
+                      <span className="text-gray-900">{serviceFee.toLocaleString()} FCFA</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-semibold text-foreground">Total</span>
-                      <span className="font-bold text-primary text-lg">
-                        {grandTotal.toLocaleString()} FCFA
-                      </span>
+                      <span className="text-sm font-semibold text-gray-900">Total</span>
+                      <span className="text-base font-bold text-primary">{grandTotal.toLocaleString()} FCFA</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-tukki-success/10 rounded-xl p-4 flex gap-3 border border-tukki-success/20">
-                <div className="w-10 h-10 bg-tukki-success rounded-full flex items-center justify-center shrink-0">
-                  <Check size={20} className="text-white" />
+
+              {/* Security badge */}
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-3">
+                <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+                  <Shield size={16} className="text-emerald-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-foreground mb-1">Paiement sécurisé</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Vos informations sont cryptées. Vos billets seront envoyés après confirmation.
-                  </p>
+                  <p className="text-sm font-semibold text-emerald-900 mb-0.5">Paiement sécurisé</p>
+                  <p className="text-xs text-emerald-700">Vos informations sont cryptées. Vos billets seront envoyés après confirmation.</p>
                 </div>
               </div>
             </motion.div>
@@ -465,37 +387,30 @@ export default function CheckoutEventScreen({ event }: Props) {
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-4 z-40">
-        <div className="max-w-lg mx-auto">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Total ({totalTickets} billet{totalTickets > 1 ? "s" : ""})
-              </p>
-              <p className="font-bold text-xl text-foreground">
-                {grandTotal.toLocaleString()} FCFA
-              </p>
-            </div>
-            {currentStep < 3 ? (
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity"
-              >
-                Continuer
-                <ChevronRight size={20} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleConfirmPayment}
-                className="px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold flex items-center gap-2 shadow-lg hover:opacity-90 transition-opacity"
-              >
-                Confirmer le paiement
-                <Check size={20} />
-              </button>
-            )}
+      {/* Fixed footer */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-40 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-gray-400">Total ({totalTickets} billet{totalTickets > 1 ? "s" : ""})</p>
+            <p className="text-xl font-bold text-gray-900">{grandTotal.toLocaleString()} FCFA</p>
           </div>
+          {currentStep < 3 ? (
+            <button
+              type="button"
+              onClick={handleNextStep}
+              className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              Continuer <ChevronRight size={18} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConfirmPayment}
+              className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+            >
+              Confirmer <Check size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>
