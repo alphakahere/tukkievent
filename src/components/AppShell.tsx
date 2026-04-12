@@ -2,17 +2,19 @@
 
 import { usePathname } from "next/navigation";
 import DesktopNavbar from "./DesktopNavbar";
+import Footer from "./Footer";
 
-const HIDE_NAVBAR_PREFIXES = ["/organizer", "/checkout"];
+const HIDE_PREFIXES = ["/organizer", "/checkout"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNavbar = HIDE_NAVBAR_PREFIXES.some((p) => pathname.startsWith(p));
+  const hideChrome = HIDE_PREFIXES.some((p) => pathname.startsWith(p));
 
   return (
     <>
-      {!hideNavbar && <DesktopNavbar />}
+      {!hideChrome && <DesktopNavbar />}
       {children}
+      {!hideChrome && <Footer />}
     </>
   );
 }

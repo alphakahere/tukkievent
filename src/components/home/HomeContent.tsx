@@ -41,7 +41,7 @@ export default function HomeContent() {
   const newEvents = sortedByDate.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-muted pb-24 md:pb-8">
+    <div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
       <Header />
 
       <div className="max-w-lg md:max-w-6xl mx-auto">
@@ -49,11 +49,11 @@ export default function HomeContent() {
 
         {/* Categories */}
         <section className="px-4 py-4">
-          <h2 className="font-bold text-xl mb-4 text-foreground">🎭 Par catégorie</h2>
+          <p className="font-bold text-xl mb-4 text-gray-900">Par catégorie</p>
           <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
             {categoriesLoading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-10 w-24 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                <div key={i} className="h-10 w-24 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
                 ))
               : categories.map((category) => (
                   <button
@@ -64,8 +64,8 @@ export default function HomeContent() {
                     }
                     className={`flex-shrink-0 px-4 py-2 rounded-full border transition-all whitespace-nowrap ${
                       selectedCategory === category.id
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-card border-border hover:border-primary hover:bg-primary/5"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white border-gray-200 text-gray-600 hover:border-primary hover:bg-primary/5"
                     }`}
                   >
                     <span className="mr-2">{getCategoryIcon(category.name)}</span>
@@ -78,15 +78,15 @@ export default function HomeContent() {
         {/* Nearby Events */}
         <section className="px-4 py-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-xl text-foreground">📍 Près de chez vous</h2>
+            <p className="font-bold text-xl text-gray-900">Près de chez vous</p>
             <Link href="/events" className="text-primary text-sm font-semibold">
               Voir tout
             </Link>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="w-44 flex-shrink-0 rounded-xl overflow-hidden bg-card border border-border">
+                <div key={i} className="w-44 flex-shrink-0 rounded-2xl overflow-hidden bg-white border border-gray-100">
                     <Skeleton className="h-28 w-full" />
                     <div className="p-2 space-y-2">
                       <Skeleton className="h-4 w-full" />
@@ -103,7 +103,7 @@ export default function HomeContent() {
         {/* Popular Events */}
         <section className="px-4 py-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-xl text-foreground">🔥 Événements populaires</h2>
+            <p className="font-bold text-xl text-gray-900">Événements populaires</p>
             <Link href="/events" className="text-primary text-sm font-semibold">
               Voir tout
             </Link>
@@ -118,20 +118,20 @@ export default function HomeContent() {
         {/* New Events */}
         <section className="px-4 py-4 mb-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-xl text-foreground">✨ Nouveautés</h2>
+            <p className="font-bold text-xl text-gray-900">Nouveautés</p>
             <Link href="/events" className="text-primary text-sm font-semibold">
               Voir tout
             </Link>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {isLoading
               ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex gap-4 bg-card rounded-xl p-3">
-                    <div className="w-24 h-24 rounded-lg bg-muted animate-pulse shrink-0" />
+                <div key={i} className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100">
+                  <div className="w-24 h-24 rounded-xl bg-gray-100 animate-pulse shrink-0" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
-                      <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
-                      <div className="h-4 w-1/4 bg-muted rounded animate-pulse" />
+                    <div className="h-4 w-3/4 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-3 w-1/2 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-4 w-1/4 bg-gray-100 rounded animate-pulse" />
                     </div>
                   </div>
                 ))
@@ -139,23 +139,23 @@ export default function HomeContent() {
                   <Link
                     key={event.id}
                     href={`/events/${event.slug}`}
-                    className="flex gap-4 bg-card rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow border border-border"
+                  className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100 hover:border-gray-200 transition-colors"
                   >
                     <Image
                       src={event.coverImageUrl}
                       alt={event.title}
                       width={96}
                       height={96}
-                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                    className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <span className="inline-block px-2 py-1 bg-tukki-success/10 text-tukki-success rounded-full text-xs font-semibold mb-1">
                         NOUVEAU
                       </span>
-                      <h3 className="font-semibold text-sm mb-1 line-clamp-1 text-foreground">
+                    <p className="font-semibold text-sm mb-1 line-clamp-1 text-gray-900">
                         {event.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mb-1">
+                    </p>
+                    <p className="text-xs text-gray-500 mb-1">
                         {new Date(event.startDatetime).toLocaleDateString("fr-FR", {
                           day: "numeric",
                           month: "short",

@@ -11,7 +11,6 @@ import {
   CreditCard,
   BarChart3,
   HelpCircle,
-  Briefcase,
   LogOut,
 } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -19,13 +18,12 @@ import { useNotifications } from "@/contexts/NotificationsContext";
 
 const menuItems = [
   { icon: User, label: "Mon profil", path: "/profile", color: "#FF6B35" },
-  { icon: Briefcase, label: "Dashboard Organisateur", path: "/organizer/dashboard", color: "#FF6B35" },
   { icon: Ticket, label: "Mes billets", path: "/tickets", color: "#FF6B35" },
   { icon: Heart, label: "Favoris", path: "/favorites", color: "#EF4444", badge: "favorites" as const },
   { icon: Bell, label: "Notifications", path: "/notifications", color: "#F59E0B", badge: "notifications" as const },
-  { icon: BarChart3, label: "Historique", path: "/history", color: "#3B82F6" },
-  { icon: CreditCard, label: "Moyens de paiement", path: "/payment-methods", color: "#10B981" },
   { icon: Settings, label: "Paramètres", path: "/settings", color: "#6B7280" },
+  { icon: CreditCard, label: "Moyens de paiement", path: "/payment-methods", color: "#10B981" },
+  { icon: BarChart3, label: "Historique", path: "/history", color: "#3B82F6" },
   { icon: HelpCircle, label: "Aide & Support", path: "/support", color: "#8B5CF6" },
 ];
 
@@ -86,6 +84,22 @@ export default function AccountSidebar() {
             );
           })}
         </nav>
+
+        {/* Switch mode */}
+        <div className="p-2 border-t border-gray-100">
+          <Link
+            href="/organizer/dashboard"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+          >
+            <div className="w-5 h-5 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+              </svg>
+            </div>
+            Passer en mode organisateur
+          </Link>
+        </div>
 
         {/* Logout */}
         <div className="p-2 border-t border-gray-100">

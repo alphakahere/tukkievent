@@ -33,6 +33,7 @@ const mobileNavItems = [
   { href: "/organizer/events", label: "Événements", icon: CalendarDays },
   { href: "/organizer/analytics", label: "Stats", icon: BarChart3 },
   { href: "/organizer/settings", label: "Config", icon: Settings },
+  { href: "/", label: "Utilisateur", icon: Home },
 ];
 
 function ProfileDropdown() {
@@ -171,7 +172,7 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Right: notifications + profile dropdown */}
+          {/* Right: notifications + switch + profile dropdown */}
           <div className="flex items-center gap-1">
             <Link
               href="/notifications"
@@ -184,6 +185,14 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
                   {unreadCount}
                 </span>
               )}
+            </Link>
+            {/* Switch to user mode — desktop */}
+            <Link
+              href="/"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors ml-1"
+            >
+              <Home size={15} />
+              <span className="hidden lg:inline">Mode utilisateur</span>
             </Link>
             <div className="w-px h-6 bg-gray-200 mx-1 hidden lg:block" />
             <ProfileDropdown />
@@ -224,13 +233,13 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Sidebar footer */}
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-4 border-t border-gray-100 space-y-1">
             <Link
               href="/"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
             >
               <Home size={18} strokeWidth={2} />
-              Retour au site
+              Mode utilisateur
             </Link>
           </div>
         </aside>

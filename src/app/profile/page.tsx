@@ -13,14 +13,13 @@ import {
   HelpCircle,
   LogOut,
   Edit,
-  Briefcase,
+  RefreshCw,
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import AccountSidebar from "@/components/AccountSidebar";
 import { useFavorites } from "@/contexts/FavoritesContext";
 
 const menuItems = [
-  { icon: Briefcase, label: "Dashboard Organisateur", path: "/organizer/dashboard", color: "#FF6B35", highlight: true },
   { icon: Ticket, label: "Mes billets", path: "/tickets", color: "#FF6B35" },
   { icon: Heart, label: "Favoris", path: "/favorites", color: "#EF4444", count: true },
   { icon: Bell, label: "Notifications", path: "/notifications", color: "#F59E0B" },
@@ -35,7 +34,7 @@ export default function ProfilePage() {
   const favoritesCount = favoriteIds.length;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
+    <div className="min-h-screen bg-[#F7F7F7] pb-36 md:pb-8">
       {/* Mobile header */}
       <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-6 md:hidden">
         <div className="max-w-lg mx-auto">
@@ -221,6 +220,17 @@ export default function ProfilePage() {
             </motion.div>
           </div>
         </div>
+      </div>
+
+      {/* Fixed switch mode button — mobile only, sits above BottomNav */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-3 md:hidden">
+        <Link
+          href="/organizer/dashboard"
+          className="flex items-center gap-2.5 bg-gray-900 text-white px-6 py-3.5 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-800 transition-colors"
+        >
+          <RefreshCw size={16} />
+          Passer en mode organisateur
+        </Link>
       </div>
 
       <BottomNav />
