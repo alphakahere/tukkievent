@@ -3,21 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "motion/react";
-import {
-  ArrowLeft,
-  MapPin,
-  Calendar,
-  Clock,
-  User,
-  Ticket,
-  Download,
-  Share2,
-  CheckCircle,
-  XCircle,
-  Mail,
-  Phone,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Clock, User, Ticket, Download, Share2, CheckCircle, XCircle, Mail, Phone, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useOrders } from "@/contexts/OrdersContext";
 import { mockBookedTickets } from "@/lib/mockData";
@@ -34,18 +20,12 @@ export default function TicketDetailPage() {
 
   if (!ticket) {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-4">
         <div className="text-center">
-          <AlertCircle size={64} className="mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">Billet introuvable</h2>
-          <p className="text-muted-foreground mb-6">
-            Ce billet n&apos;existe pas ou a été supprimé.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push("/tickets")}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90"
-          >
+          <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-xl font-bold text-gray-900 mb-2">Billet introuvable</p>
+          <p className="text-sm text-gray-500 mb-6">Ce billet n&apos;existe pas ou a été supprimé.</p>
+          <button type="button" onClick={() => router.push("/tickets")} className="px-6 py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90">
             Retour aux billets
           </button>
         </div>
@@ -56,14 +36,8 @@ export default function TicketDetailPage() {
   const handleDownload = () => toast.success("Téléchargement du billet en cours...");
   const handleShare = () => {
     if (navigator.share) {
-      navigator
-        .share({
-          title: ticket.eventTitle,
-          text: `Mon billet pour ${ticket.eventTitle}`,
-          url: window.location.href,
-        })
-        .then(() => toast.success("Billet partagé !"))
-        .catch(() => {});
+      navigator.share({ title: ticket.eventTitle, text: `Mon billet pour ${ticket.eventTitle}`, url: window.location.href })
+        .then(() => toast.success("Billet partagé !")).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Lien copié dans le presse-papiers !");
@@ -72,214 +46,140 @@ export default function TicketDetailPage() {
   const handleAddToCalendar = () => toast.success("Ajouté au calendrier !");
 
   return (
-    <div className="min-h-screen bg-muted pb-24">
-      <header className="bg-gradient-to-br from-primary to-secondary px-4 pt-12 pb-8">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30"
-            >
-              <ArrowLeft size={24} className="text-white" />
-            </button>
-            <h1 className="text-2xl font-bold text-white">Détails du billet</h1>
-          </div>
+    <div className="min-h-screen bg-[#F7F7F7] pb-24">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-40">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <button type="button" onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <ArrowLeft size={20} className="text-gray-700" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">Détails du billet</h1>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4">
+      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
+        {/* Main ticket card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-3xl shadow-xl overflow-hidden mb-6 border border-border"
+          className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
         >
-          <div className="relative h-48">
-            <Image
-              src={ticket.eventImage}
-              alt={ticket.eventTitle}
-              fill
-              className="object-cover"
-              sizes="(max-width: 512px) 100vw, 512px"
-            />
+          {/* Cover image */}
+          <div className="relative h-44">
+            <Image src={ticket.eventImage} alt={ticket.eventTitle} fill className="object-cover" sizes="(max-width: 512px) 100vw, 512px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute bottom-4 left-4 right-4">
-              <h2 className="font-bold text-xl text-white mb-1">{ticket.eventTitle}</h2>
-              <p className="text-white/90 text-sm">{ticket.eventLocation}</p>
+              <p className="font-bold text-lg text-white mb-0.5">{ticket.eventTitle}</p>
+              <p className="text-white/80 text-sm">{ticket.eventLocation}</p>
             </div>
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-3 right-3">
               {ticket.status === "valid" ? (
-                <div className="bg-tukki-success text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
-                  <CheckCircle size={14} />
-                  Valide
+                <div className="bg-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1">
+                  <CheckCircle size={13} /> Valide
                 </div>
               ) : (
-                <div className="bg-muted-foreground text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
-                  <XCircle size={14} />
-                  Utilisé
+                <div className="bg-gray-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1">
+                  <XCircle size={13} /> Utilisé
                 </div>
               )}
             </div>
           </div>
 
-          <div className="p-6 border-b border-border">
-            <p className="text-sm text-muted-foreground mb-3 text-center">
-              Présentez ce QR code à l&apos;entrée
-            </p>
-            <div className="w-64 h-64 mx-auto bg-card border-4 border-primary rounded-2xl flex flex-col items-center justify-center p-4 mb-4 shadow-lg">
-              <QRCodeSVG
-                value={ticket.qrCode}
-                size={200}
-                level="H"
-                includeMargin={false}
-              />
+          {/* QR Code */}
+          <div className="p-6 border-b border-gray-100 text-center">
+            <p className="text-sm text-gray-500 mb-4">Présentez ce QR code à l&apos;entrée</p>
+            <div className="w-56 h-56 mx-auto bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center p-4 mb-3">
+              <QRCodeSVG value={ticket.qrCode} size={200} level="H" includeMargin={false} />
             </div>
-            <p className="text-xs text-muted-foreground font-mono text-center mb-4">
-              {ticket.qrCode}
-            </p>
-            <div className="bg-muted rounded-xl p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Numéro de billet</p>
-              <p className="font-mono font-bold text-foreground">{ticket.ticketNumber}</p>
+            <p className="text-xs text-gray-400 font-mono mb-4">{ticket.qrCode}</p>
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-400 mb-0.5">Numéro de billet</p>
+              <p className="font-mono font-bold text-gray-900 text-sm">{ticket.ticketNumber}</p>
             </div>
           </div>
 
+          {/* Event info */}
           <div className="p-6 space-y-4">
-            <h3 className="font-bold text-foreground mb-4">Informations de l&apos;événement</h3>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Calendar size={20} className="text-primary" />
+            <p className="text-base font-semibold text-gray-900">Informations de l&apos;événement</p>
+            {[
+              { icon: Calendar, color: "#FF6B35", bg: "#FFF1EC", label: "Date", value: ticket.eventDate },
+              { icon: Clock, color: "#004E89", bg: "#EFF6FF", label: "Heure", value: ticket.eventTime },
+              { icon: MapPin, color: "#8B5CF6", bg: "#F5F3FF", label: "Lieu", value: ticket.eventLocation },
+              { icon: Ticket, color: "#10B981", bg: "#ECFDF5", label: "Type de billet", value: ticket.ticketType },
+            ].map(({ icon: Icon, color, bg, label, value }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
+                  <Icon size={16} style={{ color }} />
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900">{value}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Date</p>
-                <p className="font-semibold text-foreground">{ticket.eventDate}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                <Clock size={20} className="text-secondary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Heure</p>
-                <p className="font-semibold text-foreground">{ticket.eventTime}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
-                <MapPin size={20} className="text-purple-500" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Lieu</p>
-                <p className="font-semibold text-foreground">{ticket.eventLocation}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-tukki-success/10 flex items-center justify-center shrink-0">
-                <Ticket size={20} className="text-tukki-success" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Type de billet</p>
-                <p className="font-semibold text-foreground">{ticket.ticketType}</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="p-6 bg-muted/50 space-y-4">
-            <h3 className="font-bold text-foreground mb-4">Détenteur</h3>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <User size={20} className="text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Nom</p>
-                <p className="font-semibold text-foreground">{ticket.holderName}</p>
-              </div>
-            </div>
-            {ticket.buyerEmail && (
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                  <Mail size={20} className="text-secondary" />
+          {/* Holder info */}
+          <div className="p-6 bg-gray-50 space-y-4 border-t border-gray-100">
+            <p className="text-base font-semibold text-gray-900">Détenteur</p>
+            {[
+              { icon: User, color: "#FF6B35", bg: "#FFF1EC", label: "Nom", value: ticket.holderName },
+              ...(ticket.buyerEmail ? [{ icon: Mail, color: "#004E89", bg: "#EFF6FF", label: "Email", value: ticket.buyerEmail }] : []),
+              ...(ticket.buyerPhone ? [{ icon: Phone, color: "#8B5CF6", bg: "#F5F3FF", label: "Téléphone", value: ticket.buyerPhone }] : []),
+            ].map(({ icon: Icon, color, bg, label, value }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
+                  <Icon size={16} style={{ color }} />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground mb-1">Email</p>
-                  <p className="font-semibold text-foreground">{ticket.buyerEmail}</p>
+                <div>
+                  <p className="text-xs text-gray-400">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900">{value}</p>
                 </div>
               </div>
-            )}
-            {ticket.buyerPhone && (
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <Phone size={20} className="text-purple-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground mb-1">Téléphone</p>
-                  <p className="font-semibold text-foreground">{ticket.buyerPhone}</p>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
 
-          <div className="p-6 border-t border-border">
+          {/* Price summary */}
+          <div className="p-6 border-t border-gray-100">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Quantité</p>
-                <p className="font-bold text-foreground text-lg">{ticket.quantity}</p>
+                <p className="text-xs text-gray-400 mb-0.5">Quantité</p>
+                <p className="text-lg font-bold text-gray-900">{ticket.quantity}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Prix total</p>
-                <p className="font-bold text-primary text-lg">
-                  {ticket.totalPrice.toLocaleString()} FCFA
-                </p>
+                <p className="text-xs text-gray-400 mb-0.5">Prix total</p>
+                <p className="text-lg font-bold text-primary">{ticket.totalPrice.toLocaleString()} FCFA</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-muted-foreground mb-1">Date d&apos;achat</p>
-                <p className="font-semibold text-foreground">{ticket.purchaseDate}</p>
+                <p className="text-xs text-gray-400 mb-0.5">Date d&apos;achat</p>
+                <p className="text-sm font-semibold text-gray-900">{ticket.purchaseDate}</p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="bg-card border-2 border-primary text-primary py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-primary/5"
-          >
-            <Download size={20} />
-            Télécharger
+        {/* Action buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button type="button" onClick={handleDownload} className="bg-white border border-gray-200 text-gray-700 py-3.5 px-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors text-sm">
+            <Download size={17} /> Télécharger
           </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="bg-card border-2 border-secondary text-secondary py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-secondary/5"
-          >
-            <Share2 size={20} />
-            Partager
+          <button type="button" onClick={handleShare} className="bg-white border border-gray-200 text-gray-700 py-3.5 px-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors text-sm">
+            <Share2 size={17} /> Partager
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAddToCalendar}
-          className="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg mb-6"
-        >
-          <Calendar size={20} />
-          Ajouter au calendrier
+        <button type="button" onClick={handleAddToCalendar} className="w-full bg-primary text-white py-4 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+          <Calendar size={18} /> Ajouter au calendrier
         </button>
 
-        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-2xl p-4 mb-6">
+        {/* Help notice */}
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
           <div className="flex gap-3">
-            <AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" />
+            <AlertCircle size={18} className="text-blue-500 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                Besoin d&apos;aide ?
-              </h4>
-              <p className="text-sm text-blue-700 dark:text-blue-200 mb-3">
-                Présentez ce QR code à l&apos;entrée. Assurez-vous que l&apos;écran est bien
-                lumineux.
-              </p>
-              <button type="button" className="text-sm font-semibold text-blue-600">
-                Contacter le support →
-              </button>
+              <p className="text-sm font-semibold text-blue-900 mb-1">Besoin d&apos;aide ?</p>
+              <p className="text-sm text-blue-600 mb-2">Présentez ce QR code à l&apos;entrée. Assurez-vous que l&apos;écran est bien lumineux.</p>
+              <button type="button" className="text-sm font-semibold text-blue-600">Contacter le support →</button>
             </div>
           </div>
         </div>

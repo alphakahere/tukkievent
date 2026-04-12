@@ -138,7 +138,7 @@ export default function OrganizerEventsPage() {
                       <p className="text-xs text-gray-400">Revenu</p>
                     </div>
                     <Link
-                      href={`/organizer/events/${oe.event.id}/attendees`}
+                      href={`/organizer/events/${oe.event.id}`}
                       className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                       aria-label="Voir"
                     >

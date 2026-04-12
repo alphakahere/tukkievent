@@ -2,18 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import {
-  ArrowLeft,
-  Calendar,
-  MapPin,
-  CreditCard,
-  User,
-  Mail,
-  Phone,
-  Download,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, CreditCard, User, Mail, Phone, Download, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -30,18 +19,12 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-4">
         <div className="text-center">
-          <AlertCircle size={64} className="mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold text-foreground mb-2">Commande introuvable</h2>
-          <p className="text-muted-foreground mb-6">
-            Cette commande n&apos;existe pas ou a été supprimée.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push("/history")}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90"
-          >
+          <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-xl font-bold text-gray-900 mb-2">Commande introuvable</p>
+          <p className="text-sm text-gray-500 mb-6">Cette commande n&apos;existe pas ou a été supprimée.</p>
+          <button type="button" onClick={() => router.push("/history")} className="px-6 py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90">
             Retour à l&apos;historique
           </button>
         </div>
@@ -51,153 +34,109 @@ export default function OrderDetailPage() {
 
   const purchaseDate = format(new Date(order.createdAt), "d MMMM yyyy 'à' HH:mm", { locale: fr });
   const eventDate = format(new Date(order.event.startDatetime), "d MMMM yyyy", { locale: fr });
-
   const handleDownload = () => toast.success("Téléchargement du reçu en cours...");
 
   return (
-    <div className="min-h-screen bg-muted pb-24">
-      <header className="bg-gradient-to-br from-primary to-secondary px-4 pt-12 pb-8">
-        <div className="max-w-lg mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30"
-            >
-              <ArrowLeft size={24} className="text-white" />
-            </button>
-            <h1 className="text-2xl font-bold text-white">Détails de la commande</h1>
-          </div>
+    <div className="min-h-screen bg-[#F7F7F7] pb-24">
+      <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-40">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <button type="button" onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+            <ArrowLeft size={20} className="text-gray-700" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">Détails de la commande</h1>
         </div>
       </header>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-4">
+      <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* Status card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-5 shadow-sm border border-border"
-        >
-          <div className="flex items-center justify-between mb-4">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-5 border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Numéro de commande</p>
-              <p className="font-mono font-bold text-foreground text-sm">#{order.orderId.slice(-8).toUpperCase()}</p>
+              <p className="text-xs text-gray-400 mb-0.5">Numéro de commande</p>
+              <p className="font-mono font-bold text-gray-900 text-sm">#{order.orderId.slice(-8).toUpperCase()}</p>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 rounded-full">
-              <CheckCircle size={16} className="text-green-600 dark:text-green-400" />
-              <span className="text-green-700 dark:text-green-400 text-sm font-semibold">Confirmé</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-full">
+              <CheckCircle size={14} className="text-emerald-600" />
+              <span className="text-emerald-700 text-sm font-semibold">Confirmé</span>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Acheté le {purchaseDate}</p>
+          <p className="text-sm text-gray-500">Acheté le {purchaseDate}</p>
         </motion.div>
 
         {/* Event info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="bg-card rounded-2xl p-5 shadow-sm border border-border"
-        >
-          <h3 className="font-bold text-foreground mb-4">Événement</h3>
-          <h4 className="font-semibold text-foreground text-lg mb-3">{order.event.title}</h4>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="bg-white rounded-2xl p-5 border border-gray-100">
+          <p className="text-base font-semibold text-gray-900 mb-4">Événement</p>
+          <p className="text-sm font-bold text-gray-900 mb-3">{order.event.title}</p>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Calendar size={18} className="text-primary" />
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Calendar size={16} className="text-primary" />
               </div>
-              <span className="text-sm text-foreground">{eventDate}</span>
+              <span className="text-sm text-gray-700">{eventDate}</span>
             </div>
             {(order.event.city || order.event.address) && (
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <MapPin size={18} className="text-purple-500" />
+                <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
+                  <MapPin size={16} className="text-purple-500" />
                 </div>
-                <span className="text-sm text-foreground">
-                  {order.event.city || order.event.address}
-                </span>
+                <span className="text-sm text-gray-700">{order.event.city || order.event.address}</span>
               </div>
             )}
           </div>
         </motion.div>
 
         {/* Tickets breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl overflow-hidden shadow-sm border border-border"
-        >
-          <div className="p-5 border-b border-border">
-            <h3 className="font-bold text-foreground">Billets</h3>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <p className="text-base font-semibold text-gray-900">Billets</p>
           </div>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-gray-100">
             {order.tickets.map((ticket) => (
               <div key={ticket.ticketId} className="px-5 py-4 flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-foreground">{ticket.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {ticket.price.toLocaleString()} FCFA × {ticket.quantity}
-                  </p>
+                  <p className="text-sm font-semibold text-gray-900">{ticket.name}</p>
+                  <p className="text-xs text-gray-500">{ticket.price.toLocaleString()} FCFA × {ticket.quantity}</p>
                 </div>
-                <p className="font-semibold text-foreground">
-                  {(ticket.price * ticket.quantity).toLocaleString()} FCFA
-                </p>
+                <p className="text-sm font-bold text-gray-900">{(ticket.price * ticket.quantity).toLocaleString()} FCFA</p>
               </div>
             ))}
           </div>
-          <div className="px-5 py-4 bg-muted/50 flex items-center justify-between border-t border-border">
-            <p className="font-bold text-foreground">Total</p>
-            <p className="font-bold text-primary text-lg">{order.total.toLocaleString()} FCFA</p>
+          <div className="px-5 py-4 bg-gray-50 flex items-center justify-between border-t border-gray-100">
+            <p className="text-sm font-bold text-gray-900">Total</p>
+            <p className="text-base font-bold text-primary">{order.total.toLocaleString()} FCFA</p>
           </div>
         </motion.div>
 
         {/* Buyer info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-card rounded-2xl p-5 shadow-sm border border-border"
-        >
-          <h3 className="font-bold text-foreground mb-4">Acheteur</h3>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white rounded-2xl p-5 border border-gray-100">
+          <p className="text-base font-semibold text-gray-900 mb-4">Acheteur</p>
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <User size={18} className="text-primary" />
+            {[
+              { icon: User, color: "#FF6B35", bg: "#FFF1EC", value: order.formData.fullName },
+              { icon: Mail, color: "#004E89", bg: "#EFF6FF", value: order.formData.email },
+              { icon: Phone, color: "#8B5CF6", bg: "#F5F3FF", value: order.formData.phone },
+              { icon: CreditCard, color: "#10B981", bg: "#ECFDF5", value: order.formData.paymentMethod },
+            ].map(({ icon: Icon, color, bg, value }) => (
+              <div key={value} className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
+                  <Icon size={16} style={{ color }} />
+                </div>
+                <span className="text-sm text-gray-700">{value}</span>
               </div>
-              <span className="text-sm text-foreground">{order.formData.fullName}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
-                <Mail size={18} className="text-secondary" />
-              </div>
-              <span className="text-sm text-foreground">{order.formData.email}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
-                <Phone size={18} className="text-purple-500" />
-              </div>
-              <span className="text-sm text-foreground">{order.formData.phone}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
-                <CreditCard size={18} className="text-green-500" />
-              </div>
-              <span className="text-sm text-foreground">{order.formData.paymentMethod}</span>
-            </div>
+            ))}
           </div>
         </motion.div>
 
-        {/* Download receipt */}
+        {/* Download */}
         <motion.button
           type="button"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          whileTap={{ scale: 0.97 }}
           onClick={handleDownload}
-          className="w-full bg-card border-2 border-primary text-primary py-4 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-sm hover:bg-primary/5 transition-colors"
+          className="w-full bg-white border border-gray-200 text-gray-700 py-4 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
         >
-          <Download size={20} />
+          <Download size={18} />
           Télécharger le reçu
         </motion.button>
       </div>

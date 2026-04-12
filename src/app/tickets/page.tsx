@@ -26,142 +26,107 @@ export default function TicketsPage() {
     bookedTickets.forEach((t) => byId.set(t.id, t));
     return Array.from(byId.values());
   }, [bookedTickets]);
+
   const upcomingTickets = allTickets.filter(isUpcoming);
   const pastTickets = allTickets.filter((t) => !isUpcoming(t));
   const currentTickets = activeTab === "upcoming" ? upcomingTickets : pastTickets;
 
   return (
-    <div className="min-h-screen bg-muted pb-24 md:pb-8">
-      <header className="bg-card px-4 pt-12 md:pt-4 pb-4 shadow-sm sticky top-0 z-40 border-b border-border md:top-16">
+    <div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
+      <header className="bg-white border-b border-gray-100 px-4 pt-12 md:pt-4 pb-4 sticky top-0 z-40 md:top-16">
         <div className="max-w-lg md:max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold text-foreground mb-6">Mes Billets</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Mes Billets</h1>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab("upcoming")}
-              className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                activeTab === "upcoming"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              À venir ({upcomingTickets.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("past")}
-              className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                activeTab === "past"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              Passés ({pastTickets.length})
-            </button>
+            {[
+              { id: "upcoming" as const, label: `À venir (${upcomingTickets.length})` },
+              { id: "past" as const, label: `Passés (${pastTickets.length})` },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 py-2.5 px-4 rounded-full text-sm font-semibold transition-all ${
+                  activeTab === tab.id ? "bg-primary text-white" : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       </header>
 
       <div className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
         {currentTickets.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
-          >
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <TicketIcon size={40} className="text-muted-foreground" />
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TicketIcon size={36} className="text-gray-300" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
+            <p className="text-base font-semibold text-gray-900 mb-1">
               Aucun billet {activeTab === "upcoming" ? "à venir" : "passé"}
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {activeTab === "upcoming"
-                ? "Réservez vos prochains événements dès maintenant"
-                : "Vos billets passés apparaîtront ici"}
+            </p>
+            <p className="text-sm text-gray-500 mb-6">
+              {activeTab === "upcoming" ? "Réservez vos prochains événements dès maintenant" : "Vos billets passés apparaîtront ici"}
             </p>
             {activeTab === "upcoming" && (
-              <Link
-                href="/"
-                className="inline-block bg-primary text-primary-foreground py-3 px-8 rounded-xl font-semibold hover:opacity-90 transition-opacity"
-              >
+              <Link href="/" className="inline-block bg-primary text-white py-3 px-8 rounded-full font-semibold hover:opacity-90 transition-opacity">
                 Découvrir les événements
               </Link>
             )}
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {currentTickets.map((ticket, index) => (
               <motion.div
                 key={ticket.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
                 <Link
                   href={`/tickets/${ticket.id}`}
-                  className="block bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-border"
+                  className="block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-colors"
                 >
                   <div className="flex gap-4 p-4">
                     <Image
                       src={ticket.eventImage}
                       alt={ticket.eventTitle}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
-                            {ticket.eventTitle}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            {ticket.eventDate} • {ticket.eventTime}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {ticket.eventLocation}
-                          </p>
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 line-clamp-1">{ticket.eventTitle}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{ticket.eventDate} · {ticket.eventTime}</p>
+                          <p className="text-xs text-gray-400 line-clamp-1">{ticket.eventLocation}</p>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
-                            ticket.status === "valid"
-                              ? "bg-tukki-success/10 text-tukki-success"
-                              : "bg-muted-foreground/10 text-muted-foreground"
-                          }`}
-                        >
+                        <span className={`ml-2 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+                          ticket.status === "valid" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"
+                        }`}>
                           {ticket.status === "valid" ? "Valide" : "Utilisé"}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-2">
                         <div>
-                          <p className="text-xs text-muted-foreground">
-                            {ticket.ticketType} × {ticket.quantity}
-                          </p>
-                          <p className="text-sm font-semibold text-primary">
-                            {ticket.totalPrice.toLocaleString()} FCFA
-                          </p>
+                          <p className="text-xs text-gray-400">{ticket.ticketType} × {ticket.quantity}</p>
+                          <p className="text-sm font-bold text-primary">{ticket.totalPrice.toLocaleString()} FCFA</p>
                         </div>
-                        <ChevronRight size={20} className="text-muted-foreground" />
+                        <ChevronRight size={16} className="text-gray-300" />
                       </div>
                     </div>
                   </div>
                   {ticket.status === "valid" && (
-                    <div className="border-t border-dashed border-border p-4 bg-muted/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-card rounded-lg flex items-center justify-center">
-                            <span className="text-2xl">📱</span>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Numéro de billet</p>
-                            <p className="text-sm font-semibold text-foreground">
-                              {ticket.ticketNumber}
-                            </p>
-                          </div>
+                    <div className="border-t border-dashed border-gray-100 px-4 py-3 bg-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">📱</span>
+                        <div>
+                          <p className="text-xs text-gray-400">Numéro de billet</p>
+                          <p className="text-xs font-semibold text-gray-900">{ticket.ticketNumber}</p>
                         </div>
-                        <span className="text-primary text-sm font-semibold">Afficher QR</span>
                       </div>
+                      <span className="text-xs font-semibold text-primary">Afficher QR</span>
                     </div>
                   )}
                 </Link>

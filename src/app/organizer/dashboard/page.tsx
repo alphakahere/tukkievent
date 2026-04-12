@@ -155,7 +155,7 @@ export default function OrganizerDashboardPage() {
               return (
                 <Link
                   key={oe.event.id}
-                  href={`/organizer/events/${oe.event.id}/attendees`}
+                  href={`/organizer/events/${oe.event.id}`}
                   className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${idx !== recentEvents.length - 1 ? "border-b border-gray-100" : ""}`}
                 >
                   <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">

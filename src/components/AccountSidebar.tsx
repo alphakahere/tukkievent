@@ -45,16 +45,16 @@ export default function AccountSidebar() {
 
   return (
     <aside className="hidden md:block w-64 shrink-0">
-      <div className="sticky top-20 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="sticky top-20 bg-white rounded-2xl border border-gray-100 overflow-hidden">
         {/* User header */}
-        <div className="p-5 border-b border-border">
+        <div className="p-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-bold">
               AD
             </div>
             <div className="min-w-0">
-              <p className="font-semibold text-foreground truncate">Amadou Diallo</p>
-              <p className="text-xs text-muted-foreground truncate">amadou.diallo@email.com</p>
+              <p className="font-semibold text-gray-900 truncate">Amadou Diallo</p>
+              <p className="text-xs text-gray-500 truncate">amadou.diallo@email.com</p>
             </div>
           </div>
         </div>
@@ -72,13 +72,13 @@ export default function AccountSidebar() {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   active
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                 }`}
               >
                 <Icon size={18} style={active ? { color: item.color } : undefined} />
                 <span className="flex-1">{item.label}</span>
                 {badge && (
-                  <span className="bg-primary text-primary-foreground text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                  <span className="bg-primary text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
                     {badge}
                   </span>
                 )}
@@ -88,10 +88,10 @@ export default function AccountSidebar() {
         </nav>
 
         {/* Logout */}
-        <div className="p-2 border-t border-border">
+        <div className="p-2 border-t border-gray-100">
           <button
             type="button"
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/5 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut size={18} />
             Déconnexion

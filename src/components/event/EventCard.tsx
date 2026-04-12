@@ -50,7 +50,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
     return (
       <Link
         href={`/events/${event.slug}`}
-        className="block flex-shrink-0 w-64 bg-card rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-border"
+        className="block flex-shrink-0 w-64 bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-colors"
       >
         <div className="relative h-40">
           <Image
@@ -61,7 +61,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
             height={160}
           />
           {event.isFeatured && (
-            <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-full flex items-center gap-1 text-xs font-semibold">
+            <div className="absolute top-2 left-2 bg-primary text-white px-2 py-1 rounded-full flex items-center gap-1 text-xs font-semibold">
               <TrendingUp size={12} />
               TENDANCE
             </div>
@@ -74,11 +74,11 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
           <button
             type="button"
             onClick={handleFavoriteClick}
-            className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+            className="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
           >
             <Heart
               size={16}
-              className={favorite ? "fill-primary text-primary" : "text-muted-foreground"}
+              className={favorite ? "fill-primary text-primary" : "text-gray-400"}
             />
           </button>
         </div>
@@ -88,15 +88,15 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
               {event.category.name}
             </div>
           )}
-          <h3 className="font-semibold text-sm mb-2 line-clamp-2 text-foreground">
+          <p className="font-semibold text-sm mb-2 line-clamp-2 text-gray-900">
             {event.title}
-          </h3>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+          </p>
+          <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
             <Calendar size={12} />
             <span>{dateStr}</span>
           </div>
           {location && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+            <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
               <MapPin size={12} />
               <span className="truncate">{location}</span>
             </div>
@@ -112,7 +112,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="block bg-card rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-border"
+      className="block bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-colors"
     >
       <div className="relative h-48">
         <Image
@@ -123,7 +123,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
           height={300}
         />
         {event.isFeatured && (
-          <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-3 py-1 rounded-full flex items-center gap-1 text-xs font-semibold">
+          <div className="absolute top-3 left-3 bg-primary text-white px-3 py-1 rounded-full flex items-center gap-1 text-xs font-semibold">
             <TrendingUp size={14} />
             TENDANCE
           </div>
@@ -136,11 +136,11 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
         <button
           type="button"
           onClick={handleFavoriteClick}
-          className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+          className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:opacity-90 transition-opacity"
         >
           <Heart
             size={18}
-            className={favorite ? "fill-primary text-primary" : "text-muted-foreground"}
+            className={favorite ? "fill-primary text-primary" : "text-gray-400"}
           />
         </button>
       </div>
@@ -150,15 +150,15 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
             {event.category.name}
           </div>
         )}
-        <h3 className="font-semibold text-base mb-2 line-clamp-2 text-foreground">
+        <p className="font-semibold text-base mb-2 line-clamp-2 text-gray-900">
           {event.title}
-        </h3>
-        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+        </p>
+        <div className="flex items-center gap-1 text-sm text-gray-500 mb-1">
           <Calendar size={14} />
           <span>{dateStr}</span>
         </div>
         {location && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+          <div className="flex items-center gap-1 text-sm text-gray-500 mb-3">
             <MapPin size={14} />
             <span className="truncate">{location}</span>
           </div>
