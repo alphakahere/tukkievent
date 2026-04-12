@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import DesktopNavbar from "./DesktopNavbar";
 import Footer from "./Footer";
 
-const HIDE_PREFIXES = ["/organizer", "/checkout"];
+const HIDE_PREFIXES = ["/organizer", "/checkout", "/admin"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
