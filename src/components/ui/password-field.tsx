@@ -3,16 +3,17 @@
 import * as React from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+import { Label } from "./label";
+import { Input } from "./input";
 
-interface Props extends Omit<React.ComponentProps<"input">, "type"> {
+export interface PasswordFieldProps extends Omit<React.ComponentProps<"input">, "type"> {
   label: string;
   id: string;
   error?: string;
   hint?: React.ReactNode;
 }
 
-export const PasswordField = React.forwardRef<HTMLInputElement, Props>(
+export const PasswordField = React.forwardRef<HTMLInputElement, PasswordFieldProps>(
   ({ label, id, error, hint, className, required, ...props }, ref) => {
     const [visible, setVisible] = React.useState(false);
     return (
@@ -24,13 +25,13 @@ export const PasswordField = React.forwardRef<HTMLInputElement, Props>(
           {hint}
         </div>
         <div className="relative">
-          <input
+          <Input
             id={id}
             ref={ref}
             type={visible ? "text" : "password"}
             className={cn(
-              "w-full h-11 rounded-xl border border-gray-200 bg-white px-4 pr-11 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all",
-              error && "border-red-400 focus:ring-red-200 focus:border-red-400",
+              "pr-11",
+              error && "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/20",
               className
             )}
             aria-invalid={error ? "true" : "false"}

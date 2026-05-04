@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const CODE_LENGTH = 6;
 const RESEND_DELAY = 30;
@@ -109,7 +110,7 @@ export default function VerifyPage() {
       </Link>
 
       <header>
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+        <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center mb-4">
           <MailCheck size={26} className="text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Vérifiez votre email</h1>
@@ -126,7 +127,7 @@ export default function VerifyPage() {
           handleChange(0, e.clipboardData.getData("text"));
         }}>
           {digits.map((d, i) => (
-            <input
+            <Input
               key={i}
               ref={(el) => { inputs.current[i] = el; }}
               type="text"
@@ -137,7 +138,7 @@ export default function VerifyPage() {
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               onFocus={(e) => e.target.select()}
-              className="w-full h-14 text-center text-xl font-bold rounded-xl border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="h-14 text-center text-xl font-bold"
               aria-label={`Chiffre ${i + 1}`}
             />
           ))}
@@ -146,7 +147,7 @@ export default function VerifyPage() {
         <Button
           type="submit"
           disabled={!filled || submitting}
-          className="w-full h-11 rounded-xl text-sm font-semibold"
+          className="w-full h-11 rounded-md text-sm font-semibold"
         >
           {submitting ? (
             <>

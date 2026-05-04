@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <Link href="/" className="inline-flex items-center gap-2.5 text-xl font-bold tracking-tight text-white">
-            <span className="w-9 h-9 rounded-xl bg-white/[0.06] ring-1 ring-white/10 backdrop-blur flex items-center justify-center">
+            <span className="w-9 h-9 rounded-md bg-white/[0.06] ring-1 ring-white/10 backdrop-blur flex items-center justify-center">
               <Ticket size={18} className="text-primary" />
             </span>
             Tukki Event
@@ -40,7 +40,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 w-9 h-9 rounded-xl bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
+                <span className="mt-0.5 w-9 h-9 rounded-md bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
                   <Sparkles size={15} className="text-primary" />
                 </span>
                 <div>
@@ -49,7 +49,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 w-9 h-9 rounded-xl bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
+                <span className="mt-0.5 w-9 h-9 rounded-md bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
                   <CalendarDays size={15} className="text-primary" />
                 </span>
                 <div>
@@ -58,7 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </li>
               <li className="flex items-start gap-3">
-                <span className="mt-0.5 w-9 h-9 rounded-xl bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
+                <span className="mt-0.5 w-9 h-9 rounded-md bg-primary/10 ring-1 ring-primary/25 flex items-center justify-center shrink-0">
                   <MapPin size={15} className="text-primary" />
                 </span>
                 <div>

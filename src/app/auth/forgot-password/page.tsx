@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: yupResolver(schema), mode: "onTouched" });
+  } = useForm<FormData>({ resolver: yupResolver(schema) });
 
   async function onSubmit(data: FormData) {
     setSubmitting(true);
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full h-11 rounded-xl text-sm font-semibold"
+          className="w-full h-11 rounded-md text-sm font-semibold"
         >
           {submitting ? (
             <>

@@ -14,7 +14,7 @@ import "react-phone-input-2/lib/style.css";
 import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { PasswordField } from "../_components/PasswordField";
+import { PasswordField } from "@/components/ui/password-field";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -68,7 +68,6 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(schema),
-    mode: "onTouched",
   });
 
   const password = watch("password") || "";
@@ -155,7 +154,7 @@ export default function RegisterPage() {
                 preferredCountries={["sn", "ci", "ml", "bj", "bf", "tg"]}
                 value={field.value}
                 onChange={(v) => field.onChange(v)}
-                inputProps={{ id: "phone", name: "phone" }}
+                inputProps={{ id: "phone", name: "phone", ref: field.ref }}
                 inputStyle={{
                   width: "100%",
                   height: "44px",
@@ -245,7 +244,7 @@ export default function RegisterPage() {
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full h-11 rounded-xl text-sm font-semibold"
+          className="w-full h-11 rounded-md text-sm font-semibold"
         >
           {submitting ? (
             <>

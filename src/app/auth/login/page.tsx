@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Mail } from "lucide-react";
 import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
-import { PasswordField } from "../_components/PasswordField";
+import { PasswordField } from "@/components/ui/password-field";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -35,7 +35,6 @@ export default function LoginPage() {
   } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: { remember: true },
-    mode: "onTouched",
   });
 
   async function onSubmit() {
@@ -114,7 +113,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full h-11 rounded-xl text-sm font-semibold"
+          className="w-full h-11 rounded-md text-sm font-semibold"
         >
           {submitting ? (
             <>

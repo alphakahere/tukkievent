@@ -9,7 +9,7 @@ export function SocialButtons({ context }: { context: "login" | "register" }) {
       onClick={() =>
         toast.info(`Google ${context === "login" ? "connexion" : "inscription"} bientôt disponible`)
       }
-      className="w-full flex items-center justify-center gap-2.5 h-11 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+      className="w-full flex items-center justify-center gap-2.5 h-11 rounded-md border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
     >
       <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" aria-hidden="true">
         <path

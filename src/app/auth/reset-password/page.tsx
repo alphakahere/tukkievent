@@ -10,7 +10,7 @@ import * as yup from "yup";
 import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PasswordField } from "../_components/PasswordField";
+import { PasswordField } from "@/components/ui/password-field";
 
 const schema = yup.object({
   password: yup
@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: yupResolver(schema), mode: "onTouched" });
+  } = useForm<FormData>({ resolver: yupResolver(schema) });
 
   async function onSubmit() {
     setSubmitting(true);
@@ -52,7 +52,7 @@ export default function ResetPasswordPage() {
       className="space-y-6"
     >
       <header>
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+        <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center mb-4">
           <ShieldCheck size={26} className="text-primary" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Nouveau mot de passe</h1>
@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full h-11 rounded-xl text-sm font-semibold"
+          className="w-full h-11 rounded-md text-sm font-semibold"
         >
           {submitting ? (
             <>
