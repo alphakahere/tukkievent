@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { motion } from "motion/react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import { Mail } from "lucide-react";
 import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -31,6 +33,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(schema),
@@ -101,14 +104,24 @@ export default function LoginPage() {
           }
         />
 
-        <label className="flex items-center gap-2 select-none cursor-pointer">
-          <input
-            type="checkbox"
-            {...register("remember")}
-            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+        <div className="flex items-center gap-2">
+          <Controller
+            name="remember"
+            control={control}
+            render={({ field }) => (
+              <Checkbox
+                id="remember"
+                checked={!!field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+                onBlur={field.onBlur}
+                ref={field.ref}
+              />
+            )}
           />
-          <span className="text-sm text-gray-600">Se souvenir de moi</span>
-        </label>
+          <Label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+            Se souvenir de moi
+          </Label>
+        </div>
 
         <Button
           type="submit"

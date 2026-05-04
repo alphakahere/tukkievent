@@ -14,6 +14,7 @@ import "react-phone-input-2/lib/style.css";
 import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordField } from "@/components/ui/password-field";
 import { SocialButtons } from "../_components/SocialButtons";
 
@@ -82,190 +83,264 @@ export default function RegisterPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
-        <p className="mt-1.5 text-sm text-gray-500">
-          Rejoignez Tukki Event et accédez aux meilleurs événements.
-        </p>
-      </header>
+		<motion.div
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			className="space-y-6"
+		>
+			<header>
+				<h1 className="text-2xl font-bold text-gray-900">
+					Créer un compte
+				</h1>
+				<p className="mt-1.5 text-sm text-gray-500">
+					Rejoignez Tukki Event et accédez aux meilleurs
+					événements.
+				</p>
+			</header>
 
-      <SocialButtons context="register" />
+			<SocialButtons context="register" />
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-200" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-[#F7F7F7] px-3 text-gray-400 uppercase tracking-wider">
-            ou avec votre email
-          </span>
-        </div>
-      </div>
+			<div className="relative">
+				<div className="absolute inset-0 flex items-center">
+					<span className="w-full border-t border-gray-200" />
+				</div>
+				<div className="relative flex justify-center text-xs">
+					<span className="bg-[#F7F7F7] px-3 text-gray-400 uppercase tracking-wider">
+						ou avec votre email
+					</span>
+				</div>
+			</div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-        <div className="grid grid-cols-2 gap-3">
-          <InputField
-            {...register("firstName")}
-            id="firstName"
-            label="Prénom"
-            placeholder="Awa"
-            required
-            autoComplete="given-name"
-            error={errors.firstName?.message}
-          />
-          <InputField
-            {...register("lastName")}
-            id="lastName"
-            label="Nom"
-            placeholder="Diop"
-            required
-            autoComplete="family-name"
-            error={errors.lastName?.message}
-          />
-        </div>
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="space-y-4"
+				noValidate
+			>
+				<div className="grid grid-cols-2 gap-3">
+					<InputField
+						{...register("firstName")}
+						id="firstName"
+						label="Prénom"
+						placeholder="Awa"
+						required
+						autoComplete="given-name"
+						error={errors.firstName?.message}
+					/>
+					<InputField
+						{...register("lastName")}
+						id="lastName"
+						label="Nom"
+						placeholder="Diop"
+						required
+						autoComplete="family-name"
+						error={errors.lastName?.message}
+					/>
+				</div>
 
-        <InputField
-          {...register("email")}
-          id="email"
-          type="email"
-          label="Adresse e-mail"
-          placeholder="vous@email.com"
-          required
-          autoComplete="email"
-          error={errors.email?.message}
-        />
+				<InputField
+					{...register("email")}
+					id="email"
+					type="email"
+					label="Adresse e-mail"
+					placeholder="vous@email.com"
+					required
+					autoComplete="email"
+					error={errors.email?.message}
+				/>
 
-        <div className="space-y-2">
-          <Label htmlFor="phone" className="after:content-['*'] after:ml-0.5 after:text-red-500">
-            Numéro de téléphone
-          </Label>
-          <Controller
-            name="phone"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <PhoneInput
-                country="sn"
-                preferredCountries={["sn", "ci", "ml", "bj", "bf", "tg"]}
-                value={field.value}
-                onChange={(v) => field.onChange(v)}
-                inputProps={{ id: "phone", name: "phone", ref: field.ref }}
-                inputStyle={{
-                  width: "100%",
-                  height: "44px",
-                  borderRadius: "12px",
-                  borderColor: errors.phone ? "#f87171" : "#e5e7eb",
-                  fontSize: "14px",
-                }}
-                buttonStyle={{
-                  borderTopLeftRadius: "12px",
-                  borderBottomLeftRadius: "12px",
-                  borderColor: errors.phone ? "#f87171" : "#e5e7eb",
-                  backgroundColor: "white",
-                }}
-              />
-            )}
-          />
-          {errors.phone && (
-            <p className="text-xs text-red-500" role="alert">
-              {errors.phone.message}
-            </p>
-          )}
-        </div>
+				<div className="space-y-2">
+					<Label
+						htmlFor="phone"
+						className="after:content-['*'] after:ml-0.5 after:text-red-500"
+					>
+						Numéro de téléphone
+					</Label>
+					<Controller
+						name="phone"
+						control={control}
+						defaultValue=""
+						render={({ field }) => (
+							<PhoneInput
+								country="sn"
+								preferredCountries={[
+									"sn",
+									"ci",
+									"ml",
+									"bj",
+									"bf",
+									"tg",
+								]}
+								value={field.value}
+								onChange={(v) =>
+									field.onChange(v)
+								}
+								inputProps={{
+									id: "phone",
+									name: "phone",
+									ref: field.ref,
+								}}
+								inputStyle={{
+									width: "100%",
+									height: "44px",
+									borderRadius: "12px",
+									borderColor: errors.phone
+										? "#f87171"
+										: "#e5e7eb",
+									fontSize: "14px",
+								}}
+								buttonStyle={{
+									borderTopLeftRadius:
+										"12px",
+									borderBottomLeftRadius:
+										"12px",
+									borderColor: errors.phone
+										? "#f87171"
+										: "#e5e7eb",
+									backgroundColor: "white",
+								}}
+							/>
+						)}
+					/>
+					{errors.phone && (
+						<p
+							className="text-xs text-red-500"
+							role="alert"
+						>
+							{errors.phone.message}
+						</p>
+					)}
+				</div>
 
-        <div>
-          <PasswordField
-            {...register("password")}
-            id="password"
-            label="Mot de passe"
-            placeholder="8 caractères min., 1 majuscule, 1 chiffre"
-            required
-            autoComplete="new-password"
-            error={errors.password?.message}
-          />
-          {password && (
-            <div className="mt-2 space-y-1">
-              <div className="flex gap-1">
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      i < strength.score ? strength.color : "bg-gray-200"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="text-xs text-gray-500">Force : {strength.label}</p>
-            </div>
-          )}
-        </div>
+				<div>
+					<PasswordField
+						{...register("password")}
+						id="password"
+						label="Mot de passe"
+						placeholder="8 caractères min., 1 majuscule, 1 chiffre"
+						required
+						autoComplete="new-password"
+						error={errors.password?.message}
+					/>
+					{password && (
+						<div className="mt-2 space-y-1">
+							<div className="flex gap-1">
+								{[0, 1, 2, 3].map((i) => (
+									<div
+										key={i}
+										className={`h-1 flex-1 rounded-full transition-colors ${
+											i <
+											strength.score
+												? strength.color
+												: "bg-gray-200"
+										}`}
+									/>
+								))}
+							</div>
+							<p className="text-xs text-gray-500">
+								Force : {strength.label}
+							</p>
+						</div>
+					)}
+				</div>
 
-        <PasswordField
-          {...register("confirmPassword")}
-          id="confirmPassword"
-          label="Confirmer le mot de passe"
-          placeholder="••••••••"
-          required
-          autoComplete="new-password"
-          error={errors.confirmPassword?.message}
-        />
+				<PasswordField
+					{...register("confirmPassword")}
+					id="confirmPassword"
+					label="Confirmer le mot de passe"
+					placeholder="••••••••"
+					required
+					autoComplete="new-password"
+					error={errors.confirmPassword?.message}
+				/>
 
-        <div className="space-y-1.5">
-          <label className="flex items-start gap-2.5 select-none cursor-pointer">
-            <input
-              type="checkbox"
-              {...register("acceptTerms")}
-              className="mt-0.5 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30"
-            />
-            <span className="text-xs text-gray-600 leading-relaxed">
-              J&apos;accepte les{" "}
-              <Link href="/terms" className="text-primary font-medium hover:underline">
-                Conditions d&apos;utilisation
-              </Link>{" "}
-              et la{" "}
-              <Link href="/privacy" className="text-primary font-medium hover:underline">
-                Politique de confidentialité
-              </Link>
-              .
-            </span>
-          </label>
-          {errors.acceptTerms && (
-            <p className="text-xs text-red-500" role="alert">
-              {errors.acceptTerms.message}
-            </p>
-          )}
-        </div>
+				<div className="space-y-1.5">
+					<div className="flex items-start gap-2.5">
+						<Controller
+							name="acceptTerms"
+							control={control}
+							defaultValue={false}
+							render={({ field }) => (
+								<Checkbox
+									id="acceptTerms"
+									className="mt-0.5"
+									checked={!!field.value}
+									onCheckedChange={(
+										checked,
+									) =>
+										field.onChange(
+											checked ===
+												true,
+										)
+									}
+									onBlur={field.onBlur}
+									ref={field.ref}
+									aria-invalid={
+										errors.acceptTerms
+											? "true"
+											: "false"
+									}
+								/>
+							)}
+						/>
+						<Label
+							htmlFor="acceptTerms"
+							className="text-xs text-gray-600 leading-relaxed font-normal cursor-pointer whitespace-nowrap"
+						>
+							J&apos;accepte les{" "}
+							<Link
+								href="/terms"
+								className="text-primary font-medium hover:underline"
+							>
+								Conditions d&apos;utilisation
+							</Link>{" "}
+							et la{" "}
+							<Link
+								href="/privacy"
+								className="text-primary font-medium hover:underline"
+							>
+								Politique de confidentialité
+							</Link>
+							.
+						</Label>
+					</div>
+					{errors.acceptTerms && (
+						<p
+							className="text-xs text-red-500"
+							role="alert"
+						>
+							{errors.acceptTerms.message}
+						</p>
+					)}
+				</div>
 
-        <Button
-          type="submit"
-          disabled={submitting}
-          className="w-full h-11 rounded-md text-sm font-semibold"
-        >
-          {submitting ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-              Création du compte…
-            </>
-          ) : (
-            <>
-              <UserPlus size={16} />
-              Créer mon compte
-            </>
-          )}
-        </Button>
-      </form>
+				<Button
+					type="submit"
+					disabled={submitting}
+					className="w-full h-11 rounded-md text-sm font-semibold"
+				>
+					{submitting ? (
+						<>
+							<span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+							Création du compte…
+						</>
+					) : (
+						<>
+							<UserPlus size={16} />
+							Créer mon compte
+						</>
+					)}
+				</Button>
+			</form>
 
-      <p className="text-center text-sm text-gray-500">
-        Déjà un compte ?{" "}
-        <Link href="/auth/login" className="font-semibold text-primary hover:underline">
-          Connectez-vous
-        </Link>
-      </p>
-    </motion.div>
+			<p className="text-center text-sm text-gray-500">
+				Déjà un compte ?{" "}
+				<Link
+					href="/auth/login"
+					className="font-semibold text-primary hover:underline"
+				>
+					Connectez-vous
+				</Link>
+			</p>
+		</motion.div>
   );
 }
