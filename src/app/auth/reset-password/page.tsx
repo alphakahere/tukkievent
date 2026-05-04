@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -11,6 +10,8 @@ import { toast } from "sonner";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
+import { useResetPasswordMutation } from "@/store/api/auth/auth.api";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 
 const schema = yup.object({
   password: yup
@@ -29,7 +30,9 @@ type FormData = yup.InferType<typeof schema>;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
+  const params = useSearchParams();
+  const token = params.get("token") || "";
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   const {
     register,
@@ -37,12 +40,18 @@ export default function ResetPasswordPage() {
     formState: { errors },
   } = useForm<FormData>({ resolver: yupResolver(schema) });
 
-  async function onSubmit() {
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setSubmitting(false);
-    toast.success("Mot de passe mis à jour. Reconnectez-vous.");
-    router.push("/auth/login");
+  async function onSubmit(data: FormData) {
+    if (!token) {
+      toast.error("Lien invalide ou expiré.");
+      return;
+    }
+    try {
+      await resetPassword({ token, password: data.password }).unwrap();
+      toast.success("Mot de passe mis à jour. Reconnectez-vous.");
+      router.push("/auth/login");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Lien invalide ou expiré"));
+    }
   }
 
   return (
@@ -60,6 +69,16 @@ export default function ResetPasswordPage() {
           Choisissez un mot de passe robuste, différent des précédents.
         </p>
       </header>
+
+      {!token && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Ce lien semble invalide. Veuillez{" "}
+          <Link href="/auth/forgot-password" className="font-semibold underline">
+            recommencer la procédure
+          </Link>
+          .
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <PasswordField
@@ -83,10 +102,10 @@ export default function ResetPasswordPage() {
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={isLoading || !token}
           className="w-full h-11 rounded-md text-sm font-semibold"
         >
-          {submitting ? (
+          {isLoading ? (
             <>
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Mise à jour…

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   User,
   Ticket,
@@ -15,6 +16,9 @@ import {
 } from "lucide-react";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { useAppDispatch } from "@/store/features/hooks";
+import { logout as logoutAction } from "@/store/features/auth.slice";
+import { authApi } from "@/store/api/auth/auth.api";
 
 const menuItems = [
   { icon: User, label: "Mon profil", path: "/profile", color: "#FF6B35" },
@@ -29,8 +33,17 @@ const menuItems = [
 
 export default function AccountSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const { favoriteIds } = useFavorites();
   const { unreadCount } = useNotifications();
+
+  function handleLogout() {
+    dispatch(logoutAction());
+    dispatch(authApi.util.resetApiState());
+    toast.success("À bientôt !");
+    router.replace("/auth/login");
+  }
 
   const isActive = (path: string) =>
     path === "/profile" ? pathname === "/profile" : pathname.startsWith(path);
@@ -105,6 +118,7 @@ export default function AccountSidebar() {
         <div className="p-2 border-t border-gray-100">
           <button
             type="button"
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut size={18} />

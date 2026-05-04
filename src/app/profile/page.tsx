@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 import {
   ChevronRight,
   Ticket,
@@ -18,6 +21,9 @@ import {
 import BottomNav from "@/components/BottomNav";
 import AccountSidebar from "@/components/AccountSidebar";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
+import { logout as logoutAction } from "@/store/features/auth.slice";
+import { authApi } from "@/store/api/auth/auth.api";
 
 const menuItems = [
   { icon: Ticket, label: "Mes billets", path: "/tickets", color: "#FF6B35" },
@@ -30,8 +36,30 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((s) => s.auth.user);
+  const accessToken = useAppSelector((s) => s.auth.accessToken);
   const { favoriteIds } = useFavorites();
   const favoritesCount = favoriteIds.length;
+
+  useEffect(() => {
+    if (!accessToken) router.replace("/auth/login?redirect=/profile");
+  }, [accessToken, router]);
+
+  const fullName = user ? `${user.firstname} ${user.lastname}`.trim() : "";
+  const initials = user
+    ? `${user.firstname.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase()
+    : "";
+
+  function handleLogout() {
+    dispatch(logoutAction());
+    dispatch(authApi.util.resetApiState());
+    toast.success("À bientôt !");
+    router.replace("/auth/login");
+  }
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] pb-36 md:pb-8">
@@ -57,14 +85,14 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4 mb-4">
               <div className="relative">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xl font-bold">
-                  AD
+                  {initials}
                 </div>
                 <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-base font-bold text-gray-900">Amadou Diallo</p>
-                <p className="text-sm text-gray-500 truncate">amadou.diallo@email.com</p>
-                <p className="text-sm text-gray-500">+221 77 123 45 67</p>
+                <p className="text-base font-bold text-gray-900">{fullName}</p>
+                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                {user.phone && <p className="text-sm text-gray-500">{user.phone}</p>}
               </div>
             </div>
 
@@ -100,13 +128,13 @@ export default function ProfilePage() {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                    AD
+                    {initials}
                   </div>
                   <div className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xl font-bold text-gray-900">Amadou Diallo</p>
+                    <p className="text-xl font-bold text-gray-900">{fullName}</p>
                     <Link
                       href="/profile/edit"
                       className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
@@ -115,8 +143,8 @@ export default function ProfilePage() {
                       Modifier
                     </Link>
                   </div>
-                  <p className="text-sm text-gray-500">amadou.diallo@email.com</p>
-                  <p className="text-sm text-gray-500">+221 77 123 45 67</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  {user.phone && <p className="text-sm text-gray-500">{user.phone}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pt-5 mt-5 border-t border-gray-100">
@@ -194,20 +222,17 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Logout */}
-            <motion.div
+            <motion.button
+              type="button"
+              onClick={handleLogout}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="md:hidden"
+              className="w-full bg-white text-destructive border border-red-200 py-3.5 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors md:hidden"
             >
-              <Link
-                href="/auth/login"
-                className="w-full bg-white text-destructive border border-red-200 py-3.5 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors"
-              >
-                <LogOut size={18} />
-                Déconnexion
-              </Link>
-            </motion.div>
+              <LogOut size={18} />
+              Déconnexion
+            </motion.button>
 
             <motion.div
               initial={{ opacity: 0 }}

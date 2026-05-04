@@ -8,6 +8,11 @@ import { toast } from "sonner";
 import { ArrowLeft, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  useResendVerificationMutation,
+  useVerifyEmailMutation,
+} from "@/store/api/auth/auth.api";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 
 const CODE_LENGTH = 6;
 const RESEND_DELAY = 30;
@@ -15,12 +20,14 @@ const RESEND_DELAY = 30;
 export default function VerifyPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const email = params.get("email") || "votre adresse";
+  const emailParam = params.get("email") || "";
+  const email = emailParam || "votre adresse";
 
   const [digits, setDigits] = useState<string[]>(() => Array(CODE_LENGTH).fill(""));
-  const [submitting, setSubmitting] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_DELAY);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
+  const [verifyEmail, { isLoading: verifying }] = useVerifyEmailMutation();
+  const [resendVerification, { isLoading: resending }] = useResendVerificationMutation();
 
   useEffect(() => {
     inputs.current[0]?.focus();
@@ -80,19 +87,36 @@ export default function VerifyPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!filled) return;
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setSubmitting(false);
-    toast.success("Compte vérifié avec succès !");
-    router.push("/profile");
+    if (!emailParam) {
+      toast.error("Adresse email manquante. Recommencez l'inscription.");
+      return;
+    }
+    try {
+      await verifyEmail({ email: emailParam, code }).unwrap();
+      toast.success("Compte vérifié avec succès !");
+      router.push("/profile");
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Code invalide ou expiré"));
+      setDigits(Array(CODE_LENGTH).fill(""));
+      inputs.current[0]?.focus();
+    }
   }
 
-  function handleResend() {
-    if (secondsLeft > 0) return;
-    toast.success("Un nouveau code vous a été envoyé.");
-    setDigits(Array(CODE_LENGTH).fill(""));
-    setSecondsLeft(RESEND_DELAY);
-    inputs.current[0]?.focus();
+  async function handleResend() {
+    if (secondsLeft > 0 || resending) return;
+    if (!emailParam) {
+      toast.error("Adresse email manquante.");
+      return;
+    }
+    try {
+      await resendVerification({ email: emailParam }).unwrap();
+      toast.success("Un nouveau code vous a été envoyé.");
+      setDigits(Array(CODE_LENGTH).fill(""));
+      setSecondsLeft(RESEND_DELAY);
+      inputs.current[0]?.focus();
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Impossible de renvoyer le code"));
+    }
   }
 
   return (
@@ -146,10 +170,10 @@ export default function VerifyPage() {
 
         <Button
           type="submit"
-          disabled={!filled || submitting}
+          disabled={!filled || verifying}
           className="w-full h-11 rounded-md text-sm font-semibold"
         >
-          {submitting ? (
+          {verifying ? (
             <>
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Vérification…

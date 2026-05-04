@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { motion } from "motion/react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -14,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useLoginMutation } from "@/store/api/auth/auth.api";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -28,7 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
   const redirect = params.get("redirect") || "/profile";
-  const [submitting, setSubmitting] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
 
   const {
     register,
@@ -40,12 +41,14 @@ export default function LoginPage() {
     defaultValues: { remember: true },
   });
 
-  async function onSubmit() {
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setSubmitting(false);
-    toast.success("Bienvenue ! Vous êtes connecté.");
-    router.push(redirect);
+  async function onSubmit(data: FormData) {
+    try {
+      await login({ email: data.email, password: data.password }).unwrap();
+      toast.success("Bienvenue ! Vous êtes connecté.");
+      router.push(redirect);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Email ou mot de passe incorrect"));
+    }
   }
 
   return (
@@ -125,10 +128,10 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={isLoading}
           className="w-full h-11 rounded-md text-sm font-semibold"
         >
-          {submitting ? (
+          {isLoading ? (
             <>
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Connexion en cours…

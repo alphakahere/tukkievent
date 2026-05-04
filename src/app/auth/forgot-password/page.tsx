@@ -6,9 +6,12 @@ import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Mail } from "lucide-react";
 import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
+import { useForgotPasswordMutation } from "@/store/api/auth/auth.api";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 
 const schema = yup.object({
   email: yup.string().required("L'email est requis").email("Veuillez entrer un email valide"),
@@ -17,8 +20,8 @@ const schema = yup.object({
 type FormData = yup.InferType<typeof schema>;
 
 export default function ForgotPasswordPage() {
-  const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
   const {
     register,
@@ -27,10 +30,12 @@ export default function ForgotPasswordPage() {
   } = useForm<FormData>({ resolver: yupResolver(schema) });
 
   async function onSubmit(data: FormData) {
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setSubmitting(false);
-    setSentTo(data.email);
+    try {
+      await forgotPassword({ email: data.email }).unwrap();
+      setSentTo(data.email);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Impossible d'envoyer le lien"));
+    }
   }
 
   if (sentTo) {
@@ -108,10 +113,10 @@ export default function ForgotPasswordPage() {
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={isLoading}
           className="w-full h-11 rounded-md text-sm font-semibold"
         >
-          {submitting ? (
+          {isLoading ? (
             <>
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
               Envoi en cours…

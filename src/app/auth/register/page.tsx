@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PasswordField } from "@/components/ui/password-field";
+import { useRegisterMutation } from "@/store/api/auth/auth.api";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -59,7 +61,7 @@ function passwordStrength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
+  const [registerUser, { isLoading }] = useRegisterMutation();
 
   const {
     register,
@@ -75,11 +77,19 @@ export default function RegisterPage() {
   const strength = useMemo(() => passwordStrength(password), [password]);
 
   async function onSubmit(data: FormData) {
-    setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitting(false);
-    toast.success("Compte créé ! Vérifiez votre email.");
-    router.push(`/auth/verify?email=${encodeURIComponent(data.email)}`);
+    try {
+      await registerUser({
+        firstname: data.firstName,
+        lastname: data.lastName,
+        email: data.email,
+        phone: data.phone ? `+${data.phone}` : undefined,
+        password: data.password,
+      }).unwrap();
+      toast.success("Compte créé ! Vérifiez votre email.");
+      router.push(`/auth/verify?email=${encodeURIComponent(data.email)}`);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, "Impossible de créer le compte"));
+    }
   }
 
   return (
@@ -315,10 +325,10 @@ export default function RegisterPage() {
 
 				<Button
 					type="submit"
-					disabled={submitting}
+					disabled={isLoading}
 					className="w-full h-11 rounded-md text-sm font-semibold"
 				>
-					{submitting ? (
+					{isLoading ? (
 						<>
 							<span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
 							Création du compte…
