@@ -194,16 +194,20 @@ export default function ProfilePage() {
             </motion.div>
 
             {/* Logout */}
-            <motion.button
-              type="button"
+            <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="w-full bg-white text-destructive border border-red-200 py-3.5 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors md:hidden"
+              className="md:hidden"
             >
-              <LogOut size={18} />
-              Déconnexion
-            </motion.button>
+              <Link
+                href="/auth/login"
+                className="w-full bg-white text-destructive border border-red-200 py-3.5 px-6 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-red-50 transition-colors"
+              >
+                <LogOut size={18} />
+                Déconnexion
+              </Link>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0 }}
