@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X } from "lucide-react";
 import EventCard from "@/components/event/EventCard";
 import BottomNav from "@/components/BottomNav";
@@ -26,7 +26,8 @@ type QuickFilterId = "all" | "today" | "weekend" | "free" | "cheap";
 
 export default function SearchPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const params = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(params.get("q") ?? "");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<QuickFilterId>("all");
 
@@ -87,14 +88,14 @@ export default function SearchPage() {
             >
               <ArrowLeft size={20} className="text-gray-700" />
             </button>
-            <div className="flex-1 relative">
+            <div className="flex-1 relative md:max-w-3xl">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un événement..."
-                className="w-full pl-11 pr-10 py-3 bg-gray-100 rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white transition-colors"
+                className="w-full pl-11 pr-10 py-3.5 bg-white border border-gray-200 rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 autoFocus
               />
               {searchQuery && (

@@ -33,6 +33,14 @@ export default function HomeContent() {
   const categoriesLoading = false;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const now = Date.now();
+  const upcomingEvents = [...events]
+    .filter((e) => new Date(e.startDatetime).getTime() > now)
+    .sort(
+      (a, b) =>
+        new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime(),
+    )
+    .slice(0, 6);
   const nearbyEvents = events.slice(0, 4);
   const popularEvents = events.slice(0, 6);
   const sortedByDate = [...events].sort(
@@ -73,6 +81,35 @@ export default function HomeContent() {
                   </button>
                 ))}
           </div>
+        </section>
+
+        {/* Upcoming Events */}
+        <section className="px-4 py-4">
+          <div className="flex justify-between items-center mb-4">
+            <p className="font-bold text-xl text-gray-900">Événements à venir</p>
+            <Link href="/events" className="text-primary text-sm font-semibold">
+              Voir tout
+            </Link>
+          </div>
+          {isLoading ? (
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="w-64 shrink-0">
+                  <EventCardSkeleton />
+                </div>
+              ))}
+            </div>
+          ) : upcomingEvents.length === 0 ? (
+            <p className="text-sm text-gray-500">Aucun événement à venir pour le moment.</p>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar snap-x snap-mandatory">
+              {upcomingEvents.map((event) => (
+                <div key={event.id} className="w-64 shrink-0 snap-start">
+                  <EventCard event={event} />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Nearby Events */}

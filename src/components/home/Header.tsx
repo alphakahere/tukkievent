@@ -33,7 +33,7 @@ export default function Header() {
 
         <Link
           href="/search"
-          className="flex items-center gap-3 bg-gray-100 px-4 py-3 rounded-full"
+          className="flex items-center gap-3 bg-white border border-gray-200 px-4 py-3.5 rounded-full hover:border-gray-300 transition-colors"
         >
           <Search size={20} className="text-gray-400" />
           <span className="text-gray-400 flex-1 text-left text-sm">Rechercher un événement...</span>
