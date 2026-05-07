@@ -1,100 +1,97 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from "@/store/features/hooks";
+import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
 import {
-	selectCartItems,
-	selectCartTotal,
-	selectCartIsEmpty,
 	selectBuyerInfo,
+	selectCartItems,
+	selectCartIsEmpty,
+	selectCartTotal,
 } from "@/store/selectors/cart.selectors";
+import { setOrderId } from "@/store/features/cart.slice";
 import { formatPrice } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+	useCreateOrderMutation,
+	useInitiatePaymentMutation,
+} from "@/store/api/order/order.api";
+import type { PaymentMethod } from "@/store/api/order/order.type";
 import BuyerForm from "./BuyerForm";
-import { useCreateOrderMutation } from "@/store/api/order/order.api";
 
 export default function PaymentPage() {
 	const router = useRouter();
-	const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+	const dispatch = useAppDispatch();
+	const [createOrder, { isLoading: isCreating, error: createError }] = useCreateOrderMutation();
+	const [initiatePayment, { isLoading: isInitiating }] = useInitiatePaymentMutation();
+	const [submitting, setSubmitting] = useState(false);
 
 	const cartItems = useAppSelector(selectCartItems);
 	const total = useAppSelector(selectCartTotal);
 	const isEmpty = useAppSelector(selectCartIsEmpty);
 	const buyerInfo = useAppSelector(selectBuyerInfo);
-	// Redirect if cart is empty or buyer info missing
+
 	useEffect(() => {
 		if (isEmpty) {
-			router.back();
+			router.replace("/");
 		}
 	}, [isEmpty, router]);
 
-	const onSubmit = async (paymentMethod: "WAVE" | "PAYPAL", currency: "XOF" | "EUR") => {
+	const onSubmit = async (paymentMethod: PaymentMethod) => {
+		if (submitting) return;
+		const eventId = cartItems[0]?.eventId;
+		if (!eventId) {
+			toast.error("Panier vide");
+			return;
+		}
+		setSubmitting(true);
 		try {
-			// Calculate total based on currency
-			let calculatedTotal = total;
-			const tickets = cartItems.flatMap((event) =>
-				event.tickets.map((ticket) => {
-					let unitPrice = ticket.unitPrice;
-
-					// If PayPal/EUR, we need to use Euro prices
-					// For now, use a simple conversion or priceEuro if available
-					// This should ideally come from the ticket type data
-					if (currency === "EUR") {
-						// Simple conversion: divide by ~656 (approximate XOF to EUR rate)
-						// In production, this should use the priceEuro field from the backend
-						unitPrice = Math.round(ticket.unitPrice / 656 * 100) / 100;
-					}
-
-					return {
+			const order = await createOrder({
+				eventId,
+				items: cartItems.flatMap((event) =>
+					event.tickets.map((ticket) => ({
 						ticketTypeId: ticket.ticketTypeId,
 						quantity: ticket.quantity,
-						unitPrice: unitPrice,
-					};
-				})
+					})),
+				),
+				buyer: {
+					firstName: buyerInfo.buyerFirstName ?? "",
+					lastName: buyerInfo.buyerLastName ?? "",
+					email: buyerInfo.buyerEmail || undefined,
+					phone: buyerInfo.buyerPhone || undefined,
+				},
+				currency: "XOF",
+			}).unwrap();
+
+			dispatch(setOrderId(order.id));
+
+			const payment = await initiatePayment({
+				orderId: order.id,
+				payload: {
+					method: paymentMethod,
+					phone: buyerInfo.buyerPhone,
+					returnUrl:
+						typeof window !== "undefined"
+							? `${window.location.origin}/checkout/processing?orderId=${order.id}`
+							: undefined,
+				},
+			}).unwrap();
+
+			router.push(
+				`/checkout/processing?orderId=${order.id}&redirect=${encodeURIComponent(payment.redirectUrl)}`,
 			);
-
-			// Recalculate total if using EUR
-			if (currency === "EUR") {
-				calculatedTotal = tickets.reduce((sum, ticket) => {
-					return sum + (ticket.unitPrice * ticket.quantity);
-				}, 0);
-			}
-
-			const orderData = {
-				eventId: cartItems[0]?.eventId, // For now, assume single event
-				buyerEmail: buyerInfo.buyerEmail || "",
-				buyerPhone: buyerInfo.buyerPhone || "",
-				buyerFirstName: buyerInfo.buyerFirstName!,
-				buyerLastName: buyerInfo.buyerLastName!,
-				subtotal: calculatedTotal.toString(),
-				fees: "0",
-				totalAmount: calculatedTotal.toString(),
-				paymentMethod: paymentMethod,
-				currency: currency,
-				tickets: tickets,
-			};
-
-			const result = await createOrder(orderData).unwrap();
-			// navigate to success page directly for now
-			// if (result)
-			// 	router.push(
-			// 		"/checkout/success?orderId=" + result.orderId
-			// 	);
-			if (
-				"paymentUrl" in result &&
-				typeof result.paymentUrl === "string"
-			) {
-				window.location.href = result.paymentUrl;
-			}
-		} catch (error) {
-			console.error("Order creation failed:", error);
+		} catch (err) {
+			console.error("Order creation failed:", err);
+			const message =
+				(err as { data?: { message?: string } })?.data?.message ?? "Le paiement a échoué.";
+			toast.error(message);
+		} finally {
+			setSubmitting(false);
 		}
 	};
 
-	if (isEmpty) {
-		return null; // Will redirect
-	}
+	if (isEmpty) return null;
 
 	return (
 		<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
@@ -102,9 +99,7 @@ export default function PaymentPage() {
 				<h1 className="text-xl sm:text-2xl font-bold text-gray-900">Paiement</h1>
 			</div>
 
-			{/* Mobile-first layout: Stack summary above form on mobile */}
 			<div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
-				{/* Order Summary - Appears first on mobile, second on desktop */}
 				<div className="lg:col-span-1 order-1 lg:order-2">
 					<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6 lg:sticky lg:top-24">
 						<h3 className="text-base font-semibold text-gray-900 mb-4">
@@ -117,11 +112,7 @@ export default function PaymentPage() {
 									{eventItem.eventTitle}
 								</div>
 								<div className="text-xs text-gray-500 mb-2">
-									{format(
-										new Date(eventItem.eventDate),
-										"d MMMM yyyy",
-										{ locale: fr }
-									)}
+									{format(new Date(eventItem.eventDate), "d MMMM yyyy", { locale: fr })}
 								</div>
 								{eventItem.tickets.map((ticket) => (
 									<div
@@ -129,12 +120,9 @@ export default function PaymentPage() {
 										className="flex justify-between text-xs text-gray-600 mb-1"
 									>
 										<span>
-											{ticket.ticketTypeName} x
-											{ticket.quantity}
+											{ticket.ticketTypeName} x{ticket.quantity}
 										</span>
-										<span>
-											{formatPrice(ticket.totalPrice)}
-										</span>
+										<span>{formatPrice(ticket.totalPrice)}</span>
 									</div>
 								))}
 							</div>
@@ -150,9 +138,12 @@ export default function PaymentPage() {
 					</div>
 				</div>
 
-				{/* Payment Form - Appears second on mobile, first on desktop */}
 				<div className="lg:col-span-2 order-2 lg:order-1">
-					<BuyerForm onCreateOrder={onSubmit} isLoading={isLoading} error={error} />
+					<BuyerForm
+						onCreateOrder={onSubmit}
+						isLoading={isCreating || isInitiating || submitting}
+						error={createError}
+					/>
 				</div>
 			</div>
 		</main>

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, RefreshCw, ArrowLeft, Phone, HelpCircle } from "lucide-react";
 import { PageLoading } from "@/components/ui/page-loading";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 
-export default function FailedPage() {
+function FailedInner() {
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get("orderId");
 	const errorCode = searchParams.get("error") || "unknown";
@@ -186,5 +186,13 @@ export default function FailedPage() {
 				</div>
 			</div>
 		</main>
+	);
+}
+
+export default function FailedPage() {
+	return (
+		<Suspense fallback={<div className="p-8 text-center text-gray-500">Chargement…</div>}>
+			<FailedInner />
+		</Suspense>
 	);
 }

@@ -16,8 +16,13 @@ import {
   Shield,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useOrders } from "@/contexts/OrdersContext";
 import type { Event } from "@/store/api/event/event.type";
+import {
+  useCreateOrderMutation,
+  useInitiatePaymentMutation,
+  usePreviewOrderMutation,
+} from "@/store/api/order/order.api";
+import type { PaymentMethod } from "@/store/api/order/order.type";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -33,29 +38,65 @@ type Props = { event: Event };
 const inputClass =
   "w-full px-4 py-3 rounded-xl border bg-gray-50 text-gray-900 placeholder:text-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus:bg-white transition-all";
 
+function splitName(fullName: string): { first: string; last: string } {
+  const trimmed = fullName.trim();
+  if (!trimmed) return { first: "", last: "" };
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return { first: parts[0], last: parts[0] };
+  return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
+const PAYMENT_METHODS: {
+  id: PaymentMethod;
+  label: string;
+  sub: string;
+  icon: typeof Smartphone;
+  color: string;
+  bg: string;
+}[] = [
+  { id: "WAVE", label: "Wave", sub: "Paiement mobile", icon: Smartphone, color: "#00A9E0", bg: "#E0F7FD" },
+  { id: "ORANGE_MONEY", label: "Orange Money", sub: "Paiement mobile", icon: Smartphone, color: "#FF7900", bg: "#FFF3E0" },
+  { id: "CARD", label: "Carte Bancaire", sub: "Visa, Mastercard", icon: CreditCard, color: "#6B7280", bg: "#F3F4F6" },
+];
+
 export default function CheckoutEventScreen({ event }: Props) {
   const router = useRouter();
-  const { addOrder } = useOrders();
+  const [createOrder, { isLoading: isCreating }] = useCreateOrderMutation();
+  const [initiatePayment, { isLoading: isInitiating }] = useInitiatePaymentMutation();
+  const [, { isLoading: isPreviewing }] = usePreviewOrderMutation();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [ticketSelections, setTicketSelections] = useState<TicketSelection[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    fullName: string;
+    email: string;
+    phone: string;
+    paymentMethod: PaymentMethod;
+  }>({
     fullName: "",
     email: "",
     phone: "",
-    paymentMethod: "wave",
+    paymentMethod: "WAVE",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const totalTickets = ticketSelections.reduce((sum, ts) => sum + ts.quantity, 0);
   const totalPrice = ticketSelections.reduce((sum, ts) => sum + ts.price * ts.quantity, 0);
   const serviceFee = Math.round(totalPrice * 0.05);
   const grandTotal = totalPrice + serviceFee;
 
-  const handleTicketQuantityChange = (ticketId: string, name: string, price: number, delta: number) => {
+  const handleTicketQuantityChange = (
+    ticketId: string,
+    name: string,
+    price: number,
+    delta: number,
+    cap: number,
+  ) => {
     setTicketSelections((prev) => {
       const existing = prev.find((ts) => ts.ticketId === ticketId);
       if (existing) {
-        const newQuantity = Math.max(0, Math.min(10, existing.quantity + delta));
+        const newQuantity = Math.max(0, Math.min(cap, existing.quantity + delta));
         if (newQuantity === 0) return prev.filter((ts) => ts.ticketId !== ticketId);
         return prev.map((ts) => ts.ticketId === ticketId ? { ...ts, quantity: newQuantity } : ts);
       }
@@ -73,7 +114,7 @@ export default function CheckoutEventScreen({ event }: Props) {
     if (!formData.email.trim()) newErrors.email = "L'email est requis";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Email invalide";
     if (!formData.phone.trim()) newErrors.phone = "Le numéro de téléphone est requis";
-    else if (!/^(\+221)?[0-9]{9}$/.test(formData.phone.replace(/\s/g, "")))
+    else if (!/^(\+221)?[0-9 ]{9,}$/.test(formData.phone.replace(/\s/g, "")))
       newErrors.phone = "Numéro invalide (format: +221 77 123 45 67)";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -93,30 +134,58 @@ export default function CheckoutEventScreen({ event }: Props) {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleConfirmPayment = () => {
-    toast.loading("Traitement du paiement...");
-    setTimeout(() => {
-      toast.dismiss();
-      const orderId = `ORD-${Date.now()}`;
-      addOrder({ orderId, event, tickets: ticketSelections, total: grandTotal, formData, createdAt: new Date().toISOString() });
-      toast.success("Paiement confirmé !");
-      router.push(`/checkout/success?orderId=${orderId}`);
-    }, 2000);
+  const handleConfirmPayment = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const { first, last } = splitName(formData.fullName);
+      const order = await createOrder({
+        eventId: event.id,
+        items: ticketSelections.map((ts) => ({
+          ticketTypeId: ts.ticketId,
+          quantity: ts.quantity,
+        })),
+        buyer: {
+          firstName: first,
+          lastName: last,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        currency: "XOF",
+      }).unwrap();
+
+      const payment = await initiatePayment({
+        orderId: order.id,
+        payload: {
+          method: formData.paymentMethod,
+          phone: formData.phone,
+          returnUrl:
+            typeof window !== "undefined"
+              ? `${window.location.origin}/checkout/processing?orderId=${order.id}`
+              : undefined,
+        },
+      }).unwrap();
+
+      router.push(
+        `/checkout/processing?orderId=${order.id}&redirect=${encodeURIComponent(payment.redirectUrl)}`,
+      );
+    } catch (err) {
+      const message =
+        (err as { data?: { message?: string } })?.data?.message ?? "Le paiement a échoué.";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const tickets = event.ticketTypes || [];
-  const available = (tt: { availableQuantity?: number }) => tt.availableQuantity ?? 99;
+  const ticketTypes = event.ticketTypes ?? [];
+  const available = (tt: { availableQuantity?: number; totalQuantity?: number; maxPurchase?: number }) =>
+    Math.max(0, Math.min(tt.maxPurchase ?? 10, tt.availableQuantity ?? tt.totalQuantity ?? 99));
   const stepLabels = ["Billets", "Informations", "Paiement"];
-
-  const paymentMethods = [
-    { id: "wave", label: "Wave", sub: "Paiement mobile", icon: Smartphone, color: "#00A9E0", bg: "#E0F7FD" },
-    { id: "orange", label: "Orange Money", sub: "Paiement mobile", icon: Smartphone, color: "#FF7900", bg: "#FFF3E0" },
-    { id: "card", label: "Carte Bancaire", sub: "Visa, Mastercard", icon: CreditCard, color: "#6B7280", bg: "#F3F4F6" },
-  ];
+  const isBusy = submitting || isCreating || isInitiating || isPreviewing;
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] pb-32">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-50">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-3 mb-4">
@@ -131,7 +200,6 @@ export default function CheckoutEventScreen({ event }: Props) {
               <p className="font-bold text-gray-900">Réservation</p>
               <p className="text-xs text-gray-500">Étape {currentStep}/3 — {stepLabels[currentStep - 1]}</p>
             </div>
-            {/* Step pills */}
             <div className="flex gap-1.5">
               {[1, 2, 3].map((s) => (
                 <div
@@ -143,7 +211,6 @@ export default function CheckoutEventScreen({ event }: Props) {
               ))}
             </div>
           </div>
-          {/* Progress bar */}
           <div className="relative h-1 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -156,16 +223,17 @@ export default function CheckoutEventScreen({ event }: Props) {
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        {/* Event summary card */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl border border-gray-100 p-4">
           <div className="flex gap-4">
-            <Image
-              src={event.coverImageUrl}
-              alt={event.title}
-              width={72}
-              height={72}
-              className="w-[72px] h-[72px] rounded-xl object-cover flex-shrink-0"
-            />
+            {event.coverImageUrl && (
+              <Image
+                src={event.coverImageUrl}
+                alt={event.title}
+                width={72}
+                height={72}
+                className="w-[72px] h-[72px] rounded-xl object-cover flex-shrink-0"
+              />
+            )}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 mb-1 line-clamp-1">{event.title}</p>
               <p className="text-xs text-gray-500 mb-0.5">
@@ -176,9 +244,7 @@ export default function CheckoutEventScreen({ event }: Props) {
           </div>
         </motion.div>
 
-        {/* Steps */}
         <AnimatePresence mode="wait">
-          {/* Step 1 — Ticket selection */}
           {currentStep === 1 && (
             <motion.div
               key="step1"
@@ -189,8 +255,14 @@ export default function CheckoutEventScreen({ event }: Props) {
               className="space-y-3"
             >
               <p className="text-base font-semibold text-gray-900">Sélectionnez vos billets</p>
-              {tickets.map((ticket) => {
+              {ticketTypes.length === 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 text-sm text-gray-500">
+                  Aucun billet disponible pour cet événement.
+                </div>
+              )}
+              {ticketTypes.map((ticket) => {
                 const quantity = getTicketQuantity(ticket.id);
+                const cap = available(ticket);
                 return (
                   <div key={ticket.id} className="bg-white rounded-2xl border border-gray-100 p-4">
                     <div className="flex justify-between items-start mb-3">
@@ -199,10 +271,12 @@ export default function CheckoutEventScreen({ event }: Props) {
                         {ticket.description && (
                           <p className="text-xs text-gray-500 mb-1">{ticket.description}</p>
                         )}
-                        <p className="text-xs text-gray-400">{available(ticket)} disponibles</p>
+                        <p className="text-xs text-gray-400">
+                          {ticket.availableQuantity ?? ticket.totalQuantity ?? 99} disponibles
+                        </p>
                       </div>
                       <p className="text-base font-bold text-primary ml-3">
-                        {ticket.price === 0 ? "Gratuit" : `${ticket.price.toLocaleString()} FCFA`}
+                        {Number(ticket.price) === 0 ? "Gratuit" : `${Number(ticket.price).toLocaleString()} FCFA`}
                       </p>
                     </div>
                     <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
@@ -210,7 +284,7 @@ export default function CheckoutEventScreen({ event }: Props) {
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, -1)}
+                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, Number(ticket.price), -1, cap)}
                           disabled={quantity === 0}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 disabled:opacity-40"
                         >
@@ -219,8 +293,8 @@ export default function CheckoutEventScreen({ event }: Props) {
                         <span className="w-6 text-center text-sm font-semibold text-gray-900">{quantity}</span>
                         <button
                           type="button"
-                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, ticket.price, 1)}
-                          disabled={quantity >= 10 || quantity >= available(ticket)}
+                          onClick={() => handleTicketQuantityChange(ticket.id, ticket.name, Number(ticket.price), 1, cap)}
+                          disabled={quantity >= cap}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-white disabled:opacity-40"
                         >
                           <Plus size={15} />
@@ -230,7 +304,9 @@ export default function CheckoutEventScreen({ event }: Props) {
                     {quantity > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
                         <span className="text-xs text-gray-400">Sous-total</span>
-                        <span className="text-sm font-bold text-gray-900">{(ticket.price * quantity).toLocaleString()} FCFA</span>
+                        <span className="text-sm font-bold text-gray-900">
+                          {(Number(ticket.price) * quantity).toLocaleString()} FCFA
+                        </span>
                       </div>
                     )}
                   </div>
@@ -239,7 +315,6 @@ export default function CheckoutEventScreen({ event }: Props) {
             </motion.div>
           )}
 
-          {/* Step 2 — Buyer info */}
           {currentStep === 2 && (
             <motion.div
               key="step2"
@@ -293,7 +368,6 @@ export default function CheckoutEventScreen({ event }: Props) {
                 </div>
               </div>
 
-              {/* Recap */}
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100">
                   <p className="text-sm font-semibold text-gray-900">Récapitulatif</p>
@@ -310,7 +384,6 @@ export default function CheckoutEventScreen({ event }: Props) {
             </motion.div>
           )}
 
-          {/* Step 3 — Payment */}
           {currentStep === 3 && (
             <motion.div
               key="step3"
@@ -322,7 +395,7 @@ export default function CheckoutEventScreen({ event }: Props) {
             >
               <p className="text-base font-semibold text-gray-900">Mode de paiement</p>
               <div className="space-y-3">
-                {paymentMethods.map(({ id, label, sub, icon: Icon, color, bg }) => (
+                {PAYMENT_METHODS.map(({ id, label, sub, icon: Icon, color, bg }) => (
                   <button
                     key={id}
                     type="button"
@@ -347,7 +420,6 @@ export default function CheckoutEventScreen({ event }: Props) {
                 ))}
               </div>
 
-              {/* Order summary */}
               <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
                 <div className="px-5 py-4 border-b border-gray-100">
                   <p className="text-sm font-semibold text-gray-900">Détails de la commande</p>
@@ -372,7 +444,6 @@ export default function CheckoutEventScreen({ event }: Props) {
                 </div>
               </div>
 
-              {/* Security badge */}
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-3">
                 <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
                   <Shield size={16} className="text-emerald-600" />
@@ -387,7 +458,6 @@ export default function CheckoutEventScreen({ event }: Props) {
         </AnimatePresence>
       </div>
 
-      {/* Fixed footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 z-40 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
           <div>
@@ -406,9 +476,11 @@ export default function CheckoutEventScreen({ event }: Props) {
             <button
               type="button"
               onClick={handleConfirmPayment}
-              className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+              disabled={isBusy}
+              className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
             >
-              Confirmer <Check size={18} />
+              {isBusy ? "Traitement..." : "Confirmer"}
+              {!isBusy && <Check size={18} />}
             </button>
           )}
         </div>

@@ -1,9 +1,10 @@
 "use client";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
-import React, { useState, useEffect } from "react";
-import { useAppDispatch } from "@/store/features/hooks";
+import React, { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
 import { updateBuyerInfo } from "@/store/features/cart.slice";
+import { selectBuyerInfo } from "@/store/selectors/cart.selectors";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import * as yup from "yup";
@@ -13,48 +14,56 @@ import { Label } from "@/components/ui/label";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CreditCard } from "lucide-react";
+import type { PaymentMethod } from "@/store/api/order/order.type";
 
-type PaymentMethod = "WAVE" | "PAYPAL";
-type Currency = "XOF" | "EUR";
+const PAYMENT_OPTIONS: {
+	id: PaymentMethod;
+	label: string;
+	sub: string;
+	logo?: string;
+	icon?: typeof CreditCard;
+}[] = [
+	{ id: "WAVE", label: "Wave", sub: "Paiement mobile (XOF)", logo: "/images/wave.png" },
+	{ id: "ORANGE_MONEY", label: "Orange Money", sub: "Paiement mobile (XOF)", icon: CreditCard },
+	{ id: "CARD", label: "Carte bancaire", sub: "Visa, Mastercard", icon: CreditCard },
+];
 
-const createBuyerInfoSchema = (paymentMethod: PaymentMethod) => yup.object({
-	buyerFirstName: yup
-		.string()
-		.required("Le prénom est requis")
-		.min(2, "Le prénom doit contenir au moins 2 caractères")
-		.max(50, "Le prénom ne peut pas dépasser 50 caractères"),
-
-	buyerLastName: yup
-		.string()
-		.required("Le nom est requis")
-		.min(2, "Le nom doit contenir au moins 2 caractères")
-		.max(50, "Le nom ne peut pas dépasser 50 caractères"),
-
-	buyerEmail: yup.string().email("Veuillez entrer un email valide").nullable().optional(),
-
-	buyerPhone: paymentMethod === "WAVE"
-		? yup
+const buildSchema = (method: PaymentMethod) =>
+	yup.object({
+		buyerFirstName: yup
 			.string()
-			.required("Le numéro de téléphone est requis")
-			.min(10, "Le numéro de téléphone doit contenir au moins 10 chiffres")
-		: yup.string().optional(),
-});
+			.required("Le prénom est requis")
+			.min(2, "Le prénom doit contenir au moins 2 caractères")
+			.max(50, "Le prénom ne peut pas dépasser 50 caractères"),
+		buyerLastName: yup
+			.string()
+			.required("Le nom est requis")
+			.min(2, "Le nom doit contenir au moins 2 caractères")
+			.max(50, "Le nom ne peut pas dépasser 50 caractères"),
+		buyerEmail: yup.string().email("Veuillez entrer un email valide").nullable().optional(),
+		buyerPhone:
+			method === "WAVE" || method === "ORANGE_MONEY" || method === "FREE_MONEY"
+				? yup
+						.string()
+						.required("Le numéro de téléphone est requis")
+						.min(10, "Numéro trop court")
+				: yup.string().optional(),
+	});
 
-export type BuyerInfoFormData = yup.InferType<ReturnType<typeof createBuyerInfoSchema>>;
+export type BuyerInfoFormData = yup.InferType<ReturnType<typeof buildSchema>>;
 
 interface Props {
-	onCreateOrder: (paymentMethod: PaymentMethod, currency: Currency) => void;
+	onCreateOrder: (paymentMethod: PaymentMethod) => void;
 	isLoading: boolean;
 	error: FetchBaseQueryError | SerializedError | undefined;
 }
 
-const BuyerForm = (props: Props) => {
-	const { onCreateOrder, isLoading, error } = props;
+export default function BuyerForm({ onCreateOrder, isLoading, error }: Props) {
 	const dispatch = useAppDispatch();
-	const [buyerPhone, setBuyerPhone] = useState("");
+	const buyer = useAppSelector(selectBuyerInfo);
+	const [buyerPhone, setBuyerPhone] = useState(buyer.buyerPhone ?? "");
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
-	const [currency, setCurrency] = useState<Currency>("XOF");
 
 	const {
 		register,
@@ -63,132 +72,94 @@ const BuyerForm = (props: Props) => {
 		trigger,
 		formState: { errors, isValid },
 	} = useForm<BuyerInfoFormData>({
-		// @ts-ignore
-		resolver: yupResolver(createBuyerInfoSchema(paymentMethod || "WAVE")),
+		// @ts-expect-error generic resolver typing mismatch
+		resolver: yupResolver(buildSchema(paymentMethod ?? "WAVE")),
 		mode: "onChange",
+		defaultValues: {
+			buyerFirstName: buyer.buyerFirstName ?? "",
+			buyerLastName: buyer.buyerLastName ?? "",
+			buyerEmail: buyer.buyerEmail ?? "",
+			buyerPhone: buyer.buyerPhone ?? "",
+		},
 	});
 
-	// Update currency when payment method changes
 	useEffect(() => {
-		if (paymentMethod === "WAVE") {
-			setCurrency("XOF");
-		} else if (paymentMethod === "PAYPAL") {
-			setCurrency("EUR");
-		}
-	}, [paymentMethod]);
-
-	// Re-validate form when payment method changes
-	useEffect(() => {
-		if (paymentMethod) {
-			trigger();
-		}
+		if (paymentMethod) trigger();
 	}, [paymentMethod, trigger]);
 
 	const onSubmit = async (data: BuyerInfoFormData) => {
 		if (!paymentMethod) return;
-
-		// Clean the data to handle nullable email
-		const cleanedData = {
+		const cleaned = {
 			...data,
-			buyerEmail: data.buyerEmail || undefined, // Convert null to undefined
-			buyerPhone: paymentMethod === "PAYPAL" ? undefined : data.buyerPhone,
+			buyerEmail: data.buyerEmail || undefined,
+			buyerPhone: data.buyerPhone || undefined,
 		};
-		dispatch(updateBuyerInfo(cleanedData));
-		await onCreateOrder(paymentMethod, currency);
+		dispatch(updateBuyerInfo(cleaned));
+		await onCreateOrder(paymentMethod);
 	};
 
 	const handlePhoneChange = async (value: string) => {
 		setBuyerPhone(value);
 		setValue("buyerPhone", value, { shouldValidate: true });
-		// Trigger validation for the phone field
 		await trigger("buyerPhone");
 	};
 
-	// If no payment method selected, show payment method selection
 	if (!paymentMethod) {
 		return (
 			<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
 				<h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
 					Choisissez votre méthode de paiement
 				</h3>
-
-				<div className="space-y-4">
-					<button
-						type="button"
-						onClick={() => setPaymentMethod("WAVE")}
-						className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all duration-200 text-left group"
-					>
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-3">
-								<div className="relative w-12 h-12 flex-shrink-0 bg-blue-200 rounded-full overflow-hidden">
-									<Image
-										src="/images/wave.png"
-										alt="Wave"
-										fill
-										sizes="48px"
-										className="object-contain"
-									/>
+				<div className="space-y-3">
+					{PAYMENT_OPTIONS.map((opt) => {
+						const Icon = opt.icon;
+						return (
+							<button
+								key={opt.id}
+								type="button"
+								onClick={() => setPaymentMethod(opt.id)}
+								className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-left group"
+							>
+								<div className="flex items-center justify-between">
+									<div className="flex items-center space-x-3">
+										<div className="relative w-12 h-12 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center overflow-hidden">
+											{opt.logo ? (
+												<Image src={opt.logo} alt={opt.label} fill sizes="48px" className="object-contain" />
+											) : Icon ? (
+												<Icon className="w-5 h-5 text-orange-500" />
+											) : null}
+										</div>
+										<div>
+											<p className="font-semibold text-gray-900">{opt.label}</p>
+											<p className="text-sm text-gray-600">{opt.sub}</p>
+										</div>
+									</div>
+									<ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500" />
 								</div>
-								<div>
-									<p className="font-semibold text-gray-900">
-										Wave
-									</p>
-									<p className="text-sm text-gray-600">
-										Paiement mobile (XOF)
-									</p>
-								</div>
-							</div>
-							<ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500" />
-						</div>
-					</button>
-
-					<button
-						type="button"
-						disabled
-						className="w-full p-4 border-2 border-gray-200 rounded-lg bg-gray-50 cursor-not-allowed opacity-60 text-left"
-					>
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-3">
-								<div className="relative w-12 h-12 flex-shrink-0 bg-blue-200 rounded-full overflow-hidden">
-									<Image
-										src="/images/paypal.jpeg"
-										alt="PayPal"
-										fill
-										sizes="48px"
-										className="object-contain"
-									/>
-								</div>
-								<div>
-									<p className="font-semibold text-gray-900">
-										PayPal
-									</p>
-									<p className="text-sm text-gray-600">
-										Carte bancaire (EUR)
-									</p>
-									<p className="text-xs text-orange-500 font-medium mt-1">
-										Disponible bientôt
-									</p>
-								</div>
-							</div>
-						</div>
-					</button>
+							</button>
+						);
+					})}
 				</div>
 			</div>
 		);
 	}
+
+	const isMobileMoney =
+		paymentMethod === "WAVE" || paymentMethod === "ORANGE_MONEY" || paymentMethod === "FREE_MONEY";
 
 	return (
 		<div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-6">
 			{error && (
 				<div className="mb-4">
 					<p className="text-red-500 text-sm">
-						Une erreur est survenue lors de la création de la commande
+						Une erreur est survenue lors de la création de la commande.
 					</p>
 				</div>
 			)}
 
 			<div className="mb-4">
 				<button
+					type="button"
 					onClick={() => setPaymentMethod(null)}
 					className="text-sm text-gray-600 hover:text-orange-500 flex items-center"
 				>
@@ -200,12 +171,12 @@ const BuyerForm = (props: Props) => {
 				Informations de contact
 			</h3>
 			<p className="text-sm text-gray-500 mb-4 sm:mb-5">
-				{paymentMethod === "WAVE"
-					? "Entrez vos informations de contact et votre numéro de téléphone Wave pour finaliser l'achat. L'email est optionnel."
-					: "Entrez vos informations de contact. Vous serez redirigé vers PayPal pour finaliser le paiement. L'email est optionnel."
-				}
+				{isMobileMoney
+					? "Entrez vos informations et le numéro mobile money à débiter."
+					: "Entrez vos informations. Vous serez redirigé vers la passerelle de paiement."}
 			</p>
-			{/* @ts-ignore */}
+
+			{/* @ts-expect-error generic resolver typing mismatch */}
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 					<InputField
@@ -236,14 +207,13 @@ const BuyerForm = (props: Props) => {
 					placeholder="exemple@email.com"
 				/>
 
-				{paymentMethod === "WAVE" && (
+				{isMobileMoney && (
 					<div className="space-y-2 col-span-2">
 						<Label htmlFor="buyerPhone">
-							Numéro de téléphone Wave{" "}
-							<small className="text-xs text-red-500">*</small>
+							Numéro de téléphone <small className="text-xs text-red-500">*</small>
 						</Label>
 						<PhoneInput
-							placeholder="Entrez votre numéro de téléphone Wave"
+							placeholder="Entrez votre numéro"
 							country="sn"
 							onlyCountries={["sn"]}
 							preferredCountries={["sn"]}
@@ -256,38 +226,27 @@ const BuyerForm = (props: Props) => {
 							masks={{ sn: ".. ... .. .." }}
 						/>
 						{errors.buyerPhone && (
-							<p className="text-red-500 text-sm mt-1">
-								{errors.buyerPhone.message}
-							</p>
+							<p className="text-red-500 text-sm mt-1">{errors.buyerPhone.message}</p>
 						)}
 					</div>
 				)}
 
-				{paymentMethod === "PAYPAL" && (
+				{!isMobileMoney && (
 					<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
 						<p className="text-sm text-gray-700">
-							Vous serez redirigé vers PayPal pour finaliser votre paiement de manière sécurisée.
+							Vous serez redirigé vers la passerelle de paiement pour finaliser de manière sécurisée.
 						</p>
 					</div>
 				)}
 
-				<div>
-					<Button
-						type="submit"
-						className="w-full py-3 sm:py-4 text-sm sm:text-base"
-						disabled={!isValid || isLoading}
-					>
-						{isLoading
-							? "En cours de paiement..."
-							: paymentMethod === "WAVE"
-								? "Payer avec Wave"
-								: "Payer avec PayPal"
-						}
-					</Button>
-				</div>
+				<Button
+					type="submit"
+					className="w-full py-3 sm:py-4 text-sm sm:text-base"
+					disabled={!isValid || isLoading}
+				>
+					{isLoading ? "Traitement..." : `Payer avec ${paymentMethod.replace("_", " ")}`}
+				</Button>
 			</form>
 		</div>
 	);
-};
-
-export default BuyerForm;
+}

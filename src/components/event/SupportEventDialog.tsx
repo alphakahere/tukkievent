@@ -7,7 +7,12 @@ import { Event } from "@/store/api/event/event.type";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Image from "next/image";
-import { useCreateOrderMutation } from "@/store/api/order/order.api";
+import {
+	useCreateOrderMutation,
+	useInitiatePaymentMutation,
+} from "@/store/api/order/order.api";
+import type { PaymentMethod as ApiPaymentMethod } from "@/store/api/order/order.type";
+import { useRouter } from "next/navigation";
 
 type SupportEventDialogProps = {
 	event: Event;
@@ -23,8 +28,11 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 	open,
 	onOpenChange,
 }) => {
+	const router = useRouter();
 	const [createOrder, { isLoading: isCreatingOrder, error: orderError }] =
 		useCreateOrderMutation();
+	const [initiatePayment, { isLoading: isInitiating }] =
+		useInitiatePaymentMutation();
 	const [step, setStep] = useState<
 		"method" | "tickets" | "details" | "confirm"
 	>("method");
@@ -128,45 +136,42 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 		setIsProcessing(true);
 
 		try {
-			// Prepare tickets array from selected tickets
-			const tickets = Object.entries(selectedTickets)
+			const items = Object.entries(selectedTickets)
 				.filter(([, quantity]) => quantity > 0)
-				.map(([ticketTypeId, quantity]) => ({
-					ticketTypeId,
-					quantity,
-				}));
+				.map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
 
-			// Prepare order data
-			const orderData = {
+			const order = await createOrder({
 				eventId: event.id,
-				buyerEmail: "", // Empty for support donations
-				buyerPhone: phoneNumber,
-				buyerFirstName: "Support",
-				buyerLastName: "Donation",
-				subtotal: total.toString(),
-				fees: "0",
-				totalAmount: total.toString(),
-				paymentMethod: paymentMethod || "WAVE",
-				currency: currency,
-				tickets,
-			};
+				items,
+				buyer: {
+					firstName: "Support",
+					lastName: "Donation",
+					phone: phoneNumber || undefined,
+				},
+				currency,
+			}).unwrap();
 
-			// Create the order
-			const result = await createOrder(orderData).unwrap();
+			const apiMethod: ApiPaymentMethod =
+				paymentMethod === "WAVE" ? "WAVE" : "PAYPAL";
 
-			// Check if payment URL exists and open it
-			if (
-				"paymentUrl" in result &&
-				typeof result.paymentUrl === "string"
-			) {
-				window.location.href = result.paymentUrl;
-			} else {
-				// If no payment URL, show confirmation
-				setStep("confirm");
-			}
+			const init = await initiatePayment({
+				orderId: order.id,
+				payload: {
+					method: apiMethod,
+					phone: phoneNumber,
+					returnUrl:
+						typeof window !== "undefined"
+							? `${window.location.origin}/checkout/processing?orderId=${order.id}`
+							: undefined,
+				},
+			}).unwrap();
+
+			onOpenChange(false);
+			router.push(
+				`/checkout/processing?orderId=${order.id}&redirect=${encodeURIComponent(init.redirectUrl)}`,
+			);
 		} catch (error) {
 			console.error("Order creation failed:", error);
-			// Keep processing state false to allow retry
 		} finally {
 			setIsProcessing(false);
 		}
@@ -498,13 +503,13 @@ const SupportEventDialog: React.FC<SupportEventDialogProps> = ({
 				onClick={handlePayNow}
 				disabled={
 					isProcessing ||
-					isCreatingOrder ||
+					(isCreatingOrder || isInitiating) ||
 					(paymentMethod === "WAVE" &&
 						phoneNumber.length < 10)
 				}
 				className="w-full py-3 text-base"
 			>
-				{isProcessing || isCreatingOrder
+				{isProcessing || (isCreatingOrder || isInitiating)
 					? "Traitement en cours..."
 					: "Payer maintenant"}
 			</Button>

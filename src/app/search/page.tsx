@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Search, X } from "lucide-react";
 import EventCard from "@/components/event/EventCard";
+import EventCardSkeleton from "@/components/event/EventCardSkeleton";
 import BottomNav from "@/components/BottomNav";
-import { mockCategories, mockEvents } from "@/lib/mockData";
+import { useListVisitorEventsQuery } from "@/store/api/event/event.api";
+import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Concert: "🎵",
@@ -28,44 +30,49 @@ export default function SearchPage() {
   const router = useRouter();
   const params = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(params.get("q") ?? "");
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quickFilter, setQuickFilter] = useState<QuickFilterId>("all");
 
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-  const weekendStart = new Date(todayStart);
-  const dayOfWeek = now.getDay();
-  const daysUntilSaturday = dayOfWeek === 0 ? 6 : 6 - dayOfWeek;
-  weekendStart.setDate(now.getDate() + daysUntilSaturday);
-  const weekendEnd = new Date(weekendStart.getTime() + 2 * 24 * 60 * 60 * 1000);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  const filteredEvents = mockEvents.filter((event) => {
-    const matchesSearch =
-      !searchQuery.trim() ||
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (event.city && event.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (event.address && event.address.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory =
-      !selectedCategory || event.category?.name === selectedCategory;
-    const eventStart = new Date(event.startDatetime).getTime();
-    const minPrice = event.ticketTypes?.length
-      ? Math.min(...event.ticketTypes.map((t) => t.price))
-      : null;
+  const { data: categories } = useListVisitorEventCategoriesQuery();
 
-    let matchesQuick = true;
+  const filterParams = useMemo(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+    const dayOfWeek = now.getDay();
+    const daysUntilSaturday = dayOfWeek === 0 ? 6 : 6 - dayOfWeek;
+    const weekendStart = new Date(todayStart);
+    weekendStart.setDate(now.getDate() + daysUntilSaturday);
+    const weekendEnd = new Date(weekendStart.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+    const out: Record<string, string | number | boolean | undefined> = {
+      limit: 30,
+    };
+    if (debouncedQuery) out.q = debouncedQuery;
+    if (selectedCategory) out.categoryId = selectedCategory;
     if (quickFilter === "today") {
-      matchesQuick = eventStart >= todayStart.getTime() && eventStart < todayEnd.getTime();
+      out.startDateFrom = todayStart.toISOString();
+      out.startDateTo = todayEnd.toISOString();
     } else if (quickFilter === "weekend") {
-      matchesQuick = eventStart >= weekendStart.getTime() && eventStart <= weekendEnd.getTime();
+      out.startDateFrom = weekendStart.toISOString();
+      out.startDateTo = weekendEnd.toISOString();
     } else if (quickFilter === "free") {
-      matchesQuick = minPrice === 0;
+      out.priceMax = 0;
     } else if (quickFilter === "cheap") {
-      matchesQuick = minPrice !== null && minPrice < 5000;
+      out.priceMax = 5000;
     }
+    return out;
+  }, [debouncedQuery, selectedCategory, quickFilter]);
 
-    return matchesSearch && matchesCategory && matchesQuick;
-  });
+  const { data, isLoading, isFetching } = useListVisitorEventsQuery(filterParams);
+  const events = data?.data ?? [];
+  const showSkeleton = isLoading || (isFetching && events.length === 0);
 
   const quickFilters: { id: QuickFilterId; label: string }[] = [
     { id: "all", label: "Tous" },
@@ -145,15 +152,15 @@ export default function SearchPage() {
             >
               Tous
             </button>
-            {mockCategories.map((category) => (
+            {(categories ?? []).map((category) => (
               <button
                 key={category.id}
                 type="button"
                 onClick={() =>
-                  setSelectedCategory(selectedCategory === category.name ? null : category.name)
+                  setSelectedCategory(selectedCategory === category.id ? null : category.id)
                 }
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
-                  selectedCategory === category.name
+                  selectedCategory === category.id
                     ? "bg-primary text-white"
                     : "bg-white border border-gray-200 text-gray-600 hover:border-primary hover:bg-primary/5"
                 }`}
@@ -167,11 +174,16 @@ export default function SearchPage() {
 
         {/* Result count */}
         <p className="text-sm text-gray-500 mb-4">
-          {filteredEvents.length}{" "}
-          {filteredEvents.length === 1 ? "résultat trouvé" : "résultats trouvés"}
+          {showSkeleton
+            ? "Recherche en cours..."
+            : `${events.length} ${events.length === 1 ? "résultat trouvé" : "résultats trouvés"}`}
         </p>
 
-        {filteredEvents.length === 0 ? (
+        {showSkeleton ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <EventCardSkeleton key={i} />)}
+          </div>
+        ) : events.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search size={32} className="text-gray-300" />
@@ -181,7 +193,7 @@ export default function SearchPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredEvents.map((event) => (
+            {events.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
           </div>

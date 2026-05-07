@@ -9,12 +9,19 @@ import type {
 	UpdateEventPayload,
 } from "./event.resource.type";
 
+export type VisitorEventSort = "starting_soon" | "recent" | "popular";
+
 export interface ListVisitorEventsParams extends PaginationParams {
 	categoryId?: string;
 	city?: string;
 	q?: string;
+	organizationId?: string;
 	startDateFrom?: string;
 	startDateTo?: string;
+	isFeatured?: boolean;
+	priceMin?: number;
+	priceMax?: number;
+	sort?: VisitorEventSort;
 }
 
 export const eventApi = createApi({

@@ -9,7 +9,9 @@ import EventCard from "@/components/event/EventCard";
 import EventCardSkeleton from "@/components/event/EventCardSkeleton";
 import BottomNav from "@/components/BottomNav";
 import { Skeleton } from "@/components/ui/skeleton";
-import { mockCategories, mockEvents } from "@/lib/mockData";
+import { useListVisitorEventsQuery } from "@/store/api/event/event.api";
+import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
+import type { Event } from "@/store/api/event/event.type";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Concert: "🎵",
@@ -26,34 +28,48 @@ function getCategoryIcon(name: string): string {
   return CATEGORY_ICONS[name] ?? CATEGORY_ICONS.Défaut;
 }
 
-export default function HomeContent() {
-  const events = mockEvents;
-  const categories = mockCategories;
-  const isLoading = false;
-  const categoriesLoading = false;
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+function minTicketPrice(event: Event): number | null {
+  if (!event.ticketTypes?.length) return null;
+  const prices = event.ticketTypes.map((t) => Number(t.price)).filter((p) => Number.isFinite(p));
+  if (prices.length === 0) return null;
+  return Math.min(...prices);
+}
 
-  const now = Date.now();
-  const upcomingEvents = [...events]
-    .filter((e) => new Date(e.startDatetime).getTime() > now)
-    .sort(
-      (a, b) =>
-        new Date(a.startDatetime).getTime() - new Date(b.startDatetime).getTime(),
-    )
-    .slice(0, 6);
-  const nearbyEvents = events.slice(0, 4);
-  const popularEvents = events.slice(0, 6);
-  const sortedByDate = [...events].sort(
-    (a, b) => new Date(b.startDatetime).getTime() - new Date(a.startDatetime).getTime()
-  );
-  const newEvents = sortedByDate.slice(0, 4);
+export default function HomeContent() {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const nowIso = new Date().toISOString();
+
+  const featuredQuery = useListVisitorEventsQuery({ isFeatured: true, limit: 6 });
+  const upcomingQuery = useListVisitorEventsQuery({
+    sort: "starting_soon",
+    startDateFrom: nowIso,
+    limit: 6,
+    ...(selectedCategory ? { categoryId: selectedCategory } : {}),
+  });
+  const popularQuery = useListVisitorEventsQuery({ sort: "popular", limit: 6 });
+  const newQuery = useListVisitorEventsQuery({ sort: "recent", limit: 4 });
+  const { data: categories, isLoading: categoriesLoading } =
+    useListVisitorEventCategoriesQuery();
+
+  const featuredEvents = featuredQuery.data?.data ?? [];
+  const upcomingEvents = upcomingQuery.data?.data ?? [];
+  const popularEvents = popularQuery.data?.data ?? [];
+  const newEvents = newQuery.data?.data ?? [];
+
+  const heroEvents = featuredEvents.length > 0 ? featuredEvents : upcomingEvents;
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
       <Header />
 
       <div className="max-w-lg md:max-w-6xl mx-auto">
-        <Hero events={events} />
+        {heroEvents.length > 0 ? (
+          <Hero events={heroEvents} />
+        ) : featuredQuery.isLoading || upcomingQuery.isLoading ? (
+          <section className="px-4 py-6">
+            <Skeleton className="h-48 md:h-80 w-full rounded-2xl" />
+          </section>
+        ) : null}
 
         {/* Categories */}
         <section className="px-4 py-4">
@@ -63,7 +79,7 @@ export default function HomeContent() {
               ? Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="h-10 w-24 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
                 ))
-              : categories.map((category) => (
+              : (categories ?? []).map((category) => (
                   <button
                     key={category.id}
                     type="button"
@@ -91,7 +107,7 @@ export default function HomeContent() {
               Voir tout
             </Link>
           </div>
-          {isLoading ? (
+          {upcomingQuery.isLoading ? (
             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="w-64 shrink-0">
@@ -112,31 +128,6 @@ export default function HomeContent() {
           )}
         </section>
 
-        {/* Nearby Events */}
-        <section className="px-4 py-4">
-          <div className="flex justify-between items-center mb-4">
-            <p className="font-bold text-xl text-gray-900">Près de chez vous</p>
-            <Link href="/events" className="text-primary text-sm font-semibold">
-              Voir tout
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {isLoading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="w-44 flex-shrink-0 rounded-2xl overflow-hidden bg-white border border-gray-100">
-                    <Skeleton className="h-28 w-full" />
-                    <div className="p-2 space-y-2">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                  </div>
-                ))
-              : nearbyEvents.map((event) => (
-                  <EventCard key={event.id} event={event} compact />
-                ))}
-          </div>
-        </section>
-
         {/* Popular Events */}
         <section className="px-4 py-4">
           <div className="flex justify-between items-center mb-4">
@@ -146,9 +137,11 @@ export default function HomeContent() {
             </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {isLoading
+            {popularQuery.isLoading
               ? Array.from({ length: 4 }).map((_, i) => <EventCardSkeleton key={i} />)
-              : popularEvents.map((event) => <EventCard key={event.id} event={event} />)}
+              : popularEvents.length === 0
+                ? <p className="text-sm text-gray-500 col-span-full">Aucun événement populaire.</p>
+                : popularEvents.map((event) => <EventCard key={event.id} event={event} />)}
           </div>
         </section>
 
@@ -161,7 +154,7 @@ export default function HomeContent() {
             </Link>
           </div>
           <div className="space-y-3">
-            {isLoading
+            {newQuery.isLoading
               ? Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100">
                   <div className="w-24 h-24 rounded-xl bg-gray-100 animate-pulse shrink-0" />
@@ -172,46 +165,46 @@ export default function HomeContent() {
                     </div>
                   </div>
                 ))
-              : newEvents.map((event) => (
-                  <Link
-                    key={event.id}
-                    href={`/events/${event.slug}`}
-                  className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100 hover:border-gray-200 transition-colors"
-                  >
-                    <Image
-                      src={event.coverImageUrl}
-                      alt={event.title}
-                      width={96}
-                      height={96}
-                    className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <span className="inline-block px-2 py-1 bg-tukki-success/10 text-tukki-success rounded-full text-xs font-semibold mb-1">
-                        NOUVEAU
-                      </span>
-                    <p className="font-semibold text-sm mb-1 line-clamp-1 text-gray-900">
-                        {event.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mb-1">
-                        {new Date(event.startDatetime).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <p className="text-primary font-bold text-sm">
-                        {event.ticketTypes?.length
-                          ? (() => {
-                              const min = Math.min(
-                                ...event.ticketTypes.map((t) => t.price).filter(Boolean)
-                              );
-                              return min === 0 ? "Gratuit" : `${min.toLocaleString()} FCFA`;
-                            })()
-                          : "—"}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+              : newEvents.length === 0
+                ? <p className="text-sm text-gray-500">Aucune nouveauté.</p>
+                : newEvents.map((event) => {
+                    const min = minTicketPrice(event);
+                    return (
+                      <Link
+                        key={event.id}
+                        href={`/events/${event.slug}`}
+                        className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100 hover:border-gray-200 transition-colors"
+                      >
+                        {event.coverImageUrl && (
+                          <Image
+                            src={event.coverImageUrl}
+                            alt={event.title}
+                            width={96}
+                            height={96}
+                            className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <span className="inline-block px-2 py-1 bg-tukki-success/10 text-tukki-success rounded-full text-xs font-semibold mb-1">
+                            NOUVEAU
+                          </span>
+                          <p className="font-semibold text-sm mb-1 line-clamp-1 text-gray-900">
+                            {event.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mb-1">
+                            {new Date(event.startDatetime).toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <p className="text-primary font-bold text-sm">
+                            {min === null ? "—" : min === 0 ? "Gratuit" : `${min.toLocaleString()} FCFA`}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
           </div>
         </section>
       </div>
