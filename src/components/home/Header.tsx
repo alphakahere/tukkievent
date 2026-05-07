@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Bell, SlidersHorizontal } from "lucide-react";
+import { Search, Bell, SlidersHorizontal, Plus } from "lucide-react";
+import { useAppSelector } from "@/store/features/hooks";
+import { selectIsAuthenticated } from "@/store/selectors/auth.selectors";
 
 export default function Header() {
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const createEventHref = isAuthenticated
+    ? "/become-organizer"
+    : "/auth/login?redirect=/become-organizer";
+
   return (
     <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-40 md:hidden">
       <div className="max-w-lg mx-auto">
@@ -12,7 +19,15 @@ export default function Header() {
             <h1 className="text-2xl font-bold text-primary">Tukki Event</h1>
             <p className="text-sm text-gray-500">Dakar, Sénégal</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-2">
+            <Link
+              href={createEventHref}
+              className="p-2 rounded-full bg-primary text-white hover:opacity-90 transition-opacity"
+              aria-label="Créer un événement"
+              title="Créer un événement"
+            >
+              <Plus size={20} />
+            </Link>
             <button
               type="button"
               className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"

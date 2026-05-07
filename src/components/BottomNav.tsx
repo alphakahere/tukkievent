@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, Ticket, Heart, User, LogIn } from "lucide-react";
 import { useAppSelector } from "@/store/features/hooks";
+import { selectIsAuthenticated } from "@/store/selectors/auth.selectors";
 
 const publicItems = [
   { href: "/", label: "Accueil", icon: Home },
@@ -22,7 +23,7 @@ const guestItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const isAuthenticated = Boolean(useAppSelector((s) => s.auth.accessToken));
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
   const items = isAuthenticated
     ? [...publicItems, ...authItems]

@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Search, User, Bell, Briefcase, LogIn } from "lucide-react";
+import { Search, User, Bell, Briefcase, LogIn, Plus } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { useAppSelector } from "@/store/features/hooks";
+import { selectIsAuthenticated } from "@/store/selectors/auth.selectors";
 
 export default function DesktopNavbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { unreadCount } = useNotifications();
   const user = useAppSelector((s) => s.auth.user);
-  const isAuthenticated = Boolean(useAppSelector((s) => s.auth.accessToken));
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const [query, setQuery] = useState("");
 
   const isActive = (href: string) =>
@@ -60,6 +61,19 @@ export default function DesktopNavbar() {
 
         {/* Right: actions */}
         <div className="ml-auto flex items-center gap-1 shrink-0">
+          <Link
+            href={
+              isAuthenticated
+                ? "/become-organizer"
+                : "/auth/login?redirect=/become-organizer"
+            }
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+            title="Créer un événement"
+          >
+            <Plus size={16} />
+            <span className="hidden lg:inline">Créer un événement</span>
+          </Link>
+
           {isAuthenticated && (
             <Link
               href="/notifications"
