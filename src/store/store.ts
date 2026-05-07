@@ -10,6 +10,7 @@ import { eventCategoriesApi } from "./api/event-categories/event-categories.api"
 import { orderApi } from "./api/order/order.api";
 import { organizationsApi } from "./api/organizations/organizations.api";
 import { promoCodeApi } from "./api/promo-code/promo-code.api";
+import { ticketApi } from "./api/tickets/tickets.api";
 import { usersApi } from "./api/users/users.api";
 import authReducer from "./features/auth.slice";
 import cartReducer from "./features/cart.slice";
@@ -31,6 +32,7 @@ const rootReducer = combineReducers({
 	[orderApi.reducerPath]: orderApi.reducer,
 	[cityApi.reducerPath]: cityApi.reducer,
 	[promoCodeApi.reducerPath]: promoCodeApi.reducer,
+	[ticketApi.reducerPath]: ticketApi.reducer,
 	auth: authReducer,
 	cart: cartReducer,
 });
@@ -54,6 +56,7 @@ export const store = configureStore({
 			orderApi.middleware,
 			cityApi.middleware,
 			promoCodeApi.middleware,
+			ticketApi.middleware,
 		),
 });
 

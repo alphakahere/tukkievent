@@ -1,0 +1,55 @@
+import type { Currency, TicketStatus } from "../event/event.type";
+import type { PaginationParams } from "../types";
+
+export interface AttendeeTicketType {
+	id: string;
+	name: string;
+	price: string;
+	currency: Currency;
+}
+
+export interface AttendeeOrder {
+	id: string;
+	buyerEmail: string | null;
+	buyerFirstName: string | null;
+	buyerLastName: string | null;
+	createdAt: string;
+}
+
+export interface AttendeeScanner {
+	id: string;
+	firstname: string;
+	lastname: string;
+}
+
+export interface Attendee {
+	id: string;
+	ticketNumber: string | null;
+	qrCode: string | null;
+	holderFirstName: string | null;
+	holderLastName: string | null;
+	holderEmail: string | null;
+	holderPhone: string | null;
+	status: TicketStatus;
+	usedAt: string | null;
+	ticketType: AttendeeTicketType;
+	scannedBy: AttendeeScanner | null;
+	order: AttendeeOrder;
+}
+
+export interface AttendeeStats {
+	total: number;
+	checkedIn: number;
+	pending: number;
+}
+
+export interface ListAttendeesParams extends PaginationParams {
+	q?: string;
+	status?: TicketStatus;
+	ticketTypeId?: string;
+}
+
+export interface CheckInPayload {
+	ticketId: string;
+	checkedIn: boolean;
+}
