@@ -7,6 +7,7 @@ import { authApi } from "./api/auth/auth.api";
 import { eventApi } from "./api/event/event.api";
 import { organizationsApi } from "./api/organizations/organizations.api";
 import { eventCategoriesApi } from "./api/event-categories/event-categories.api";
+import { usersApi } from "./api/users/users.api";
 import { orderApi } from "./api/order/order.api";
 import authReducer from "./features/auth.slice";
 import cartReducer from "./features/cart.slice";
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
 	[eventApi.reducerPath]: eventApi.reducer,
 	[organizationsApi.reducerPath]: organizationsApi.reducer,
 	[eventCategoriesApi.reducerPath]: eventCategoriesApi.reducer,
+	[usersApi.reducerPath]: usersApi.reducer,
 	[orderApi.reducerPath]: orderApi.reducer,
 	auth: authReducer,
 	cart: cartReducer,
@@ -44,6 +46,7 @@ export const store = configureStore({
 			eventApi.middleware,
 			organizationsApi.middleware,
 			eventCategoriesApi.middleware,
+			usersApi.middleware,
 			orderApi.middleware,
 		),
 });
