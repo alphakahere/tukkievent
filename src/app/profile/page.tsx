@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const accessToken = useAppSelector((s) => s.auth.accessToken);
   const { favoriteIds } = useFavorites();
   const favoritesCount = favoriteIds.length;
+  console.log(user);
 
   useEffect(() => {
     if (!accessToken) router.replace("/auth/login?redirect=/profile");

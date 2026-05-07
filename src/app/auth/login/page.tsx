@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useLoginMutation } from "@/store/api/auth/auth.api";
 import { getApiErrorMessage } from "@/store/api/auth/error";
+import { resolveAuthRedirect } from "@/lib/auth-redirect";
 import { SocialButtons } from "../_components/SocialButtons";
 
 const schema = yup.object({
@@ -28,7 +29,7 @@ type FormData = yup.InferType<typeof schema>;
 export default function LoginPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirect = params.get("redirect") || "/profile";
+  const redirect = params.get("redirect");
   const [login, { isLoading }] = useLoginMutation();
 
   const {
@@ -43,9 +44,9 @@ export default function LoginPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      await login({ email: data.email, password: data.password }).unwrap();
+      const { user } = await login({ email: data.email, password: data.password }).unwrap();
       toast.success("Bienvenue ! Vous êtes connecté.");
-      router.push(redirect);
+      router.push(resolveAuthRedirect(redirect, user.roles));
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Email ou mot de passe incorrect"));
     }

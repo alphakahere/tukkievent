@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { OrganizerProvider, useOrganizer } from "@/contexts/OrganizerContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 const sidebarItems = [
   { href: "/organizer/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -274,8 +275,10 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
 
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   return (
-    <OrganizerProvider>
-      <OrganizerShell>{children}</OrganizerShell>
-    </OrganizerProvider>
+    <RoleGuard allow={["ORGANIZER", "ADMIN"]}>
+      <OrganizerProvider>
+        <OrganizerShell>{children}</OrganizerShell>
+      </OrganizerProvider>
+    </RoleGuard>
   );
 }

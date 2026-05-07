@@ -19,6 +19,7 @@ import {
   Shield,
 } from "lucide-react";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { RoleGuard } from "@/components/auth/RoleGuard";
 
 const sidebarItems = [
   { href: "/admin/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -244,8 +245,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminProvider>
+    <RoleGuard allow={["ADMIN"]}>
+      <AdminProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminProvider>
+    </RoleGuard>
   );
 }
