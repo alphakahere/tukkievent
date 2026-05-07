@@ -1,21 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Building2, Globe, Trash2 } from "lucide-react";
+import { Building2, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useOrganizer } from "@/contexts/OrganizerContext";
+import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import {
+  useGetOrganizationQuery,
+  useUpdateOrganizationMutation,
+} from "@/store/api/organizations/organizations.api";
+
+const inputClass =
+  "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors";
 
 export default function OrganizerSettingsPage() {
-  const { org } = useOrganizer();
-  const [name, setName] = useState(org.name);
-  const [description, setDescription] = useState(org.description);
-  const [logoUrl, setLogoUrl] = useState(org.logoUrl);
-  const [websiteUrl, setWebsiteUrl] = useState(org.websiteUrl);
+  const { activeOrgId } = useOrganizerOrg();
+  const { data: org, isLoading } = useGetOrganizationQuery(activeOrgId ?? "", {
+    skip: !activeOrgId,
+  });
+  const [updateOrg, { isLoading: isSaving }] = useUpdateOrganizationMutation();
 
-  const handleSave = () => {
-    toast.success("Paramètres enregistrés !");
-  };
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [primaryEventType, setPrimaryEventType] = useState("");
+
+  useEffect(() => {
+    if (!org) return;
+    setName(org.name);
+    setDescription(org.description ?? "");
+    setPrimaryEventType(org.primaryEventType ?? "");
+  }, [org]);
+
+  async function handleSave() {
+    if (!activeOrgId) return;
+    try {
+      await updateOrg({
+        id: activeOrgId,
+        patch: {
+          name: name.trim(),
+          description: description.trim() || undefined,
+          primaryEventType: primaryEventType.trim() || undefined,
+        },
+      }).unwrap();
+      toast.success("Paramètres enregistrés !");
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "data" in err && err.data && typeof err.data === "object" && "message" in err.data
+          ? String((err.data as { message: unknown }).message)
+          : "Une erreur est survenue";
+      toast.error(message);
+    }
+  }
+
+  if (isLoading || !org) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <Loader2 size={28} className="text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-5 md:p-8 max-w-2xl space-y-6">
@@ -43,8 +86,20 @@ export default function OrganizerSettingsPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            className={inputClass}
           />
+        </div>
+
+        <div>
+          <label htmlFor="orgSlug" className="text-sm font-medium text-gray-700 block mb-1.5">Slug</label>
+          <input
+            id="orgSlug"
+            type="text"
+            value={org.slug}
+            disabled
+            className={`${inputClass} cursor-not-allowed opacity-60`}
+          />
+          <p className="text-xs text-gray-400 mt-1">Le slug ne peut pas être modifié.</p>
         </div>
 
         <div>
@@ -54,48 +109,29 @@ export default function OrganizerSettingsPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+            className={`${inputClass} resize-none`}
           />
         </div>
 
         <div>
-          <label htmlFor="orgLogo" className="text-sm font-medium text-gray-700 block mb-1.5">URL du logo</label>
-          <div className="flex items-center gap-3">
-            {logoUrl && (
-              <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shrink-0">
-                <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
-              </div>
-            )}
-            <input
-              id="orgLogo"
-              type="url"
-              value={logoUrl}
-              onChange={(e) => setLogoUrl(e.target.value)}
-              placeholder="https://..."
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="orgWebsite" className="text-sm font-medium text-gray-700 block mb-1.5">
-            <span className="flex items-center gap-2"><Globe size={14} /> Site web</span>
-          </label>
+          <label htmlFor="orgEventType" className="text-sm font-medium text-gray-700 block mb-1.5">Type d&apos;événements principal</label>
           <input
-            id="orgWebsite"
-            type="url"
-            value={websiteUrl}
-            onChange={(e) => setWebsiteUrl(e.target.value)}
-            placeholder="https://..."
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            id="orgEventType"
+            type="text"
+            value={primaryEventType}
+            onChange={(e) => setPrimaryEventType(e.target.value)}
+            placeholder="Ex: Concerts, Conférences"
+            className={inputClass}
           />
         </div>
 
         <button
           type="button"
           onClick={handleSave}
-          className="w-full py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
+          disabled={isSaving || !name.trim()}
+          className="w-full py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
+          {isSaving && <Loader2 size={16} className="animate-spin" />}
           Enregistrer les modifications
         </button>
       </motion.div>

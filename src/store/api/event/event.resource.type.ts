@@ -41,12 +41,15 @@ export interface ListEventsParams extends PaginationParams {
 	city?: string;
 }
 
-export interface UpdateEventPayload {
+export interface CreateEventPayload {
+	organizationId: string;
+	title: string;
+	startDatetime: string;
+	capacity: number;
 	categoryId?: string;
-	title?: string;
+	slug?: string;
 	description?: string;
 	shortDescription?: string;
-	startDatetime?: string;
 	endDatetime?: string;
 	address?: string;
 	city?: string;
@@ -56,9 +59,10 @@ export interface UpdateEventPayload {
 	onlineLink?: string;
 	coverImageUrl?: string;
 	thumbnailUrl?: string;
-	capacity?: number;
 	minAge?: number;
 	status?: EventStatus;
 	metaTitle?: string;
 	metaDescription?: string;
 }
+
+export type UpdateEventPayload = Partial<Omit<CreateEventPayload, "organizationId" | "slug">>;

@@ -3,6 +3,7 @@ import { baseQuery } from "../baseQuery";
 import type { Paginated, PaginationParams } from "../types";
 import type { Event } from "./event.type";
 import type {
+	CreateEventPayload,
 	EventResource,
 	ListEventsParams,
 	UpdateEventPayload,
@@ -43,6 +44,10 @@ export const eventApi = createApi({
 			query: (id) => `/events/${id}`,
 			providesTags: (_r, _e, id) => [{ type: "event", id }],
 		}),
+		createEvent: builder.mutation<EventResource, CreateEventPayload>({
+			query: (body) => ({ url: "/events", method: "POST", body }),
+			invalidatesTags: [{ type: "events", id: "LIST" }],
+		}),
 		updateEvent: builder.mutation<EventResource, { id: string; patch: UpdateEventPayload }>({
 			query: ({ id, patch }) => ({ url: `/events/${id}`, method: "PATCH", body: patch }),
 			invalidatesTags: (_r, _e, { id }) => [
@@ -65,6 +70,7 @@ export const {
 	useGetVisitorEventBySlugQuery,
 	useListEventsQuery,
 	useGetEventQuery,
+	useCreateEventMutation,
 	useUpdateEventMutation,
 	useDeleteEventMutation,
 } = eventApi;

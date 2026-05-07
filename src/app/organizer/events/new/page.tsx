@@ -7,21 +7,15 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Plus,
-  Trash2,
   Image as ImageIcon,
+  Info,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { mockCategories } from "@/lib/mockData";
-
-type TicketInput = {
-  id: string;
-  name: string;
-  price: string;
-  quantity: string;
-  minPurchase: string;
-  maxPurchase: string;
-};
+import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
+import { useCreateEventMutation } from "@/store/api/event/event.api";
+import type { CreateEventPayload } from "@/store/api/event/event.resource.type";
 
 const STEPS = [
   "Informations générales",
@@ -31,19 +25,18 @@ const STEPS = [
   "Résumé",
 ];
 
-function emptyTicket(): TicketInput {
-  return {
-    id: `t-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    name: "",
-    price: "",
-    quantity: "",
-    minPurchase: "1",
-    maxPurchase: "10",
-  };
+function combineDateTime(date: string, time: string): string | null {
+  if (!date) return null;
+  const t = time || "00:00";
+  return new Date(`${date}T${t}:00`).toISOString();
 }
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const { activeOrgId } = useOrganizerOrg();
+  const { data: categories = [], isLoading: categoriesLoading } = useListVisitorEventCategoriesQuery();
+  const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
+
   const [step, setStep] = useState(0);
 
   // Step 1: general info
@@ -53,6 +46,8 @@ export default function CreateEventPage() {
   const [isOnline, setIsOnline] = useState(false);
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [onlineLink, setOnlineLink] = useState("");
+  const [capacity, setCapacity] = useState("");
 
   // Step 2: date
   const [startDate, setStartDate] = useState("");
@@ -60,45 +55,68 @@ export default function CreateEventPage() {
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  // Step 3: tickets
-  const [tickets, setTickets] = useState<TicketInput[]>([emptyTicket()]);
-
   // Step 4: media
   const [coverUrl, setCoverUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
 
   // Step 5: publish
-  const [isDraft, setIsDraft] = useState(false);
-
-  function addTicket() {
-    setTickets((prev) => [...prev, emptyTicket()]);
-  }
-
-  function removeTicket(id: string) {
-    setTickets((prev) => prev.filter((t) => t.id !== id));
-  }
-
-  function updateTicket(id: string, field: keyof TicketInput, value: string) {
-    setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
-    );
-  }
+  const [isDraft, setIsDraft] = useState(true);
 
   function canProceed(): boolean {
-    if (step === 0) return title.trim().length > 0;
+    if (step === 0) return title.trim().length > 0 && capacity.trim().length > 0;
     if (step === 1) return startDate.length > 0 && startTime.length > 0;
-    if (step === 2) return tickets.some((t) => t.name.trim() && t.price.trim());
     return true;
   }
 
-  function handleSubmit() {
-    toast.success(isDraft ? "Brouillon enregistré !" : "Événement publié !");
-    router.push("/organizer/events");
+  async function handleSubmit() {
+    if (!activeOrgId) {
+      toast.error("Aucune organisation active");
+      return;
+    }
+
+    const startDatetime = combineDateTime(startDate, startTime);
+    if (!startDatetime) {
+      toast.error("Date de début invalide");
+      return;
+    }
+    const endDatetime = endDate ? combineDateTime(endDate, endTime || "23:59") : undefined;
+
+    const payload: CreateEventPayload = {
+      organizationId: activeOrgId,
+      title: title.trim(),
+      capacity: Number(capacity) || 0,
+      startDatetime,
+      status: isDraft ? "DRAFT" : "PUBLISHED",
+    };
+    if (description.trim()) payload.description = description.trim();
+    if (categoryId) payload.categoryId = categoryId;
+    if (endDatetime) payload.endDatetime = endDatetime;
+    if (isOnline) {
+      payload.isOnline = true;
+      if (onlineLink.trim()) payload.onlineLink = onlineLink.trim();
+    } else {
+      if (city.trim()) payload.city = city.trim();
+      if (address.trim()) payload.address = address.trim();
+    }
+    if (coverUrl.trim()) payload.coverImageUrl = coverUrl.trim();
+    if (thumbnailUrl.trim()) payload.thumbnailUrl = thumbnailUrl.trim();
+
+    try {
+      await createEvent(payload).unwrap();
+      toast.success(isDraft ? "Brouillon enregistré !" : "Événement publié !");
+      router.push("/organizer/events");
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "data" in err && err.data && typeof err.data === "object" && "message" in err.data
+          ? String((err.data as { message: unknown }).message)
+          : "Une erreur est survenue";
+      toast.error(message);
+    }
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;
-
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors";
+  const inputClass =
+    "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors";
 
   return (
     <div className="p-5 md:p-8 max-w-2xl mx-auto space-y-6">
@@ -150,12 +168,30 @@ export default function CreateEventPage() {
             </div>
             <div>
               <label htmlFor="category" className="text-sm font-medium text-gray-700 block mb-1.5">Catégorie</label>
-              <select id="category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
-                <option value="">Sélectionner une catégorie</option>
-                {mockCategories.map((c) => (
+              <select
+                id="category"
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                disabled={categoriesLoading}
+                className={inputClass}
+              >
+                <option value="">{categoriesLoading ? "Chargement..." : "Sélectionner une catégorie"}</option>
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label htmlFor="capacity" className="text-sm font-medium text-gray-700 block mb-1.5">Capacité totale *</label>
+              <input
+                id="capacity"
+                type="number"
+                min={0}
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+                placeholder="500"
+                className={inputClass}
+              />
             </div>
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
               <span className="text-sm font-medium text-gray-700">Événement en ligne</span>
@@ -163,7 +199,12 @@ export default function CreateEventPage() {
                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${isOnline ? "translate-x-6" : "translate-x-1"}`} />
               </button>
             </div>
-            {!isOnline && (
+            {isOnline ? (
+              <div>
+                <label htmlFor="onlineLink" className="text-sm font-medium text-gray-700 block mb-1.5">Lien de connexion</label>
+                <input id="onlineLink" type="url" value={onlineLink} onChange={(e) => setOnlineLink(e.target.value)} placeholder="https://meet.example.com/..." className={inputClass} />
+              </div>
+            ) : (
               <>
                 <div>
                   <label htmlFor="city" className="text-sm font-medium text-gray-700 block mb-1.5">Ville</label>
@@ -179,78 +220,36 @@ export default function CreateEventPage() {
         )}
 
         {step === 1 && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="startDate" className="text-sm font-medium text-gray-700 block mb-1.5">Date de début *</label>
-                <input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="startTime" className="text-sm font-medium text-gray-700 block mb-1.5">Heure de début *</label>
-                <input id="startTime" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="endDate" className="text-sm font-medium text-gray-700 block mb-1.5">Date de fin</label>
-                <input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputClass} />
-              </div>
-              <div>
-                <label htmlFor="endTime" className="text-sm font-medium text-gray-700 block mb-1.5">Heure de fin</label>
-                <input id="endTime" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="startDate" className="text-sm font-medium text-gray-700 block mb-1.5">Date de début *</label>
+              <input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputClass} />
             </div>
-          </>
+            <div>
+              <label htmlFor="startTime" className="text-sm font-medium text-gray-700 block mb-1.5">Heure de début *</label>
+              <input id="startTime" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="endDate" className="text-sm font-medium text-gray-700 block mb-1.5">Date de fin</label>
+              <input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="endTime" className="text-sm font-medium text-gray-700 block mb-1.5">Heure de fin</label>
+              <input id="endTime" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
+            </div>
+          </div>
         )}
 
         {step === 2 && (
-          <>
-            <p className="text-sm text-gray-500">Ajoutez un ou plusieurs types de billets pour votre événement.</p>
-            <div className="space-y-4">
-              {tickets.map((ticket, i) => (
-                <div key={ticket.id} className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-900">Billet {i + 1}</span>
-                    {tickets.length > 1 && (
-                      <button type="button" onClick={() => removeTicket(ticket.id)} className="p-1.5 text-destructive hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={15} />
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Nom *</label>
-                      <input type="text" value={ticket.name} onChange={(e) => updateTicket(ticket.id, "name", e.target.value)} placeholder="Ex: Standard, VIP" className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Prix (FCFA) *</label>
-                      <input type="number" value={ticket.price} onChange={(e) => updateTicket(ticket.id, "price", e.target.value)} placeholder="5000" className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-500 block mb-1">Quantité</label>
-                      <input type="number" value={ticket.quantity} onChange={(e) => updateTicket(ticket.id, "quantity", e.target.value)} placeholder="100" className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Min</label>
-                        <input type="number" value={ticket.minPurchase} onChange={(e) => updateTicket(ticket.id, "minPurchase", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-                      </div>
-                      <div>
-                        <label className="text-xs text-gray-500 block mb-1">Max</label>
-                        <input type="number" value={ticket.maxPurchase} onChange={(e) => updateTicket(ticket.id, "maxPurchase", e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <Info size={18} className="text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="font-medium">Configuration des billets</p>
+              <p className="mt-1 text-blue-700">
+                Les types de billets seront configurables depuis la page de l&apos;événement après sa création.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={addTicket}
-              className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-gray-400 hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus size={16} />
-              Ajouter un type de billet
-            </button>
-          </>
+          </div>
         )}
 
         {step === 3 && (
@@ -258,12 +257,12 @@ export default function CreateEventPage() {
             <div>
               <label htmlFor="coverUrl" className="text-sm font-medium text-gray-700 block mb-1.5">URL de l&apos;image de couverture</label>
               <input id="coverUrl" type="url" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://example.com/image.jpg" className={inputClass} />
-              {coverUrl && (
+              {coverUrl ? (
                 <div className="mt-3 h-40 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
-              )}
-              {!coverUrl && (
+              ) : (
                 <div className="mt-3 h-40 bg-gray-50 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-200">
                   <div className="text-center text-gray-400">
                     <ImageIcon size={32} className="mx-auto mb-2" />
@@ -289,26 +288,20 @@ export default function CreateEventPage() {
               </div>
               <div className="flex justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500">Catégorie</span>
-                <span className="font-medium text-gray-900">{mockCategories.find((c) => c.id === categoryId)?.name || "—"}</span>
+                <span className="font-medium text-gray-900">{categories.find((c) => c.id === categoryId)?.name || "—"}</span>
               </div>
               <div className="flex justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500">Lieu</span>
-                <span className="font-medium text-gray-900">{isOnline ? "En ligne" : `${city || "—"}, ${address || "—"}`}</span>
+                <span className="font-medium text-gray-900">{isOnline ? "En ligne" : `${city || "—"}${address ? `, ${address}` : ""}`}</span>
               </div>
               <div className="flex justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500">Date</span>
                 <span className="font-medium text-gray-900">{startDate || "—"} {startTime || ""}</span>
               </div>
               <div className="flex justify-between py-2.5 border-b border-gray-100">
-                <span className="text-gray-500">Billets</span>
-                <span className="font-medium text-gray-900">{tickets.filter((t) => t.name).length} type(s)</span>
+                <span className="text-gray-500">Capacité</span>
+                <span className="font-medium text-gray-900">{capacity || "—"}</span>
               </div>
-              {tickets.filter((t) => t.name).map((t) => (
-                <div key={t.id} className="flex justify-between py-1.5 pl-4">
-                  <span className="text-gray-400">{t.name}</span>
-                  <span className="font-medium text-gray-700">{Number(t.price || 0).toLocaleString()} FCFA × {t.quantity || "∞"}</span>
-                </div>
-              ))}
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 mt-4">
@@ -330,7 +323,8 @@ export default function CreateEventPage() {
           <button
             type="button"
             onClick={() => setStep(step - 1)}
-            className="flex-1 py-3 px-4 bg-white border border-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-50 transition-colors"
+            disabled={isCreating}
+            className="flex-1 py-3 px-4 bg-white border border-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Précédent
           </button>
@@ -349,9 +343,14 @@ export default function CreateEventPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex-1 py-3 px-4 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            disabled={isCreating || !activeOrgId}
+            className="flex-1 py-3 px-4 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <Check size={16} />
+            {isCreating ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Check size={16} />
+            )}
             {isDraft ? "Enregistrer le brouillon" : "Publier l'événement"}
           </button>
         )}

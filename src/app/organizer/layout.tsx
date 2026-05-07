@@ -17,11 +17,16 @@ import {
   Search,
   Menu,
   X,
+  Building2,
+  Loader2,
+  Plus,
 } from "lucide-react";
-import { OrganizerProvider, useOrganizer } from "@/contexts/OrganizerContext";
+import { OrganizerOrgProvider, useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
+import { useAppSelector } from "@/store/features/hooks";
+import { selectAuthUser } from "@/store/selectors/auth.selectors";
 
 const sidebarItems = [
   { href: "/organizer/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -41,7 +46,8 @@ const mobileNavItems = [
 function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { org } = useOrganizer();
+  const user = useAppSelector(selectAuthUser);
+  const { activeOrg } = useOrganizerOrg();
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -51,6 +57,12 @@ function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  const initials = user
+    ? `${user.firstname[0] ?? ""}${user.lastname[0] ?? ""}`.toUpperCase() || "?"
+    : "?";
+  const fullName = user ? `${user.firstname} ${user.lastname}` : "Organisateur";
+  const orgLabel = activeOrg?.name ?? "—";
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -58,12 +70,17 @@ function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2.5 px-2 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
       >
-        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold">
-          AD
+        <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+          {user?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            initials
+          )}
         </div>
         <div className="hidden lg:block text-left">
-          <p className="text-sm font-semibold text-gray-900 leading-tight">Amadou Diallo</p>
-          <p className="text-[11px] text-gray-500 leading-tight">{org.name}</p>
+          <p className="text-sm font-semibold text-gray-900 leading-tight">{fullName}</p>
+          <p className="text-[11px] text-gray-500 leading-tight">{orgLabel}</p>
         </div>
         <ChevronDown
           size={14}
@@ -74,8 +91,8 @@ function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
       {open && (
         <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-gray-200 shadow-sm z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900">Amadou Diallo</p>
-            <p className="text-xs text-gray-500">amadou.diallo@email.com</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{fullName}</p>
+            <p className="text-xs text-gray-500 truncate">{user?.email ?? ""}</p>
           </div>
           <div className="py-1">
             <Link
@@ -122,9 +139,42 @@ function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
   );
 }
 
+function NoOrganizationState() {
+  return (
+    <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-6">
+      <div className="bg-white rounded-2xl border border-gray-100 p-8 max-w-md w-full text-center">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
+          <Building2 size={26} className="text-primary" />
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">
+          Créez votre organisation
+        </h1>
+        <p className="text-sm text-gray-500 mb-6">
+          Pour accéder à l&apos;espace organisateur, vous devez d&apos;abord créer votre organisation.
+        </p>
+        <Link
+          href="/become-organizer"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
+        >
+          <Plus size={16} />
+          Créer mon organisation
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function FullPageLoader() {
+  return (
+    <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center">
+      <Loader2 size={28} className="text-primary animate-spin" />
+    </div>
+  );
+}
+
 function OrganizerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { org } = useOrganizer();
+  const { activeOrg, isLoading, hasNoOrg } = useOrganizerOrg();
   const { unreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -138,6 +188,12 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  if (isLoading) return <FullPageLoader />;
+  if (hasNoOrg) return <NoOrganizationState />;
+
+  const orgName = activeOrg?.name ?? "Organisation";
+  const orgInitial = orgName.charAt(0);
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] flex flex-col">
@@ -156,10 +212,10 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
             </button>
             <Link href="/organizer/dashboard" className="flex items-center gap-2.5">
               <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0">
-                {org.name.charAt(0)}
+                {orgInitial}
               </div>
               <div className="hidden sm:block">
-                <span className="text-sm font-semibold text-gray-900">{org.name}</span>
+                <span className="text-sm font-semibold text-gray-900">{orgName}</span>
                 <span className="ml-2 text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-semibold">
                   Organisateur
                 </span>
@@ -284,9 +340,9 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
 export default function OrganizerLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleGuard allow={["ORGANIZER", "ADMIN"]}>
-      <OrganizerProvider>
+      <OrganizerOrgProvider>
         <OrganizerShell>{children}</OrganizerShell>
-      </OrganizerProvider>
+      </OrganizerOrgProvider>
     </RoleGuard>
   );
 }

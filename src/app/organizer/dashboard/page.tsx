@@ -4,51 +4,80 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import {
   CalendarDays,
-  Ticket,
-  TrendingUp,
+  Users,
   Clock,
   Plus,
   BarChart3,
   ChevronRight,
   Eye,
+  FileEdit,
+  Loader2,
+  Ticket,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useOrganizer } from "@/contexts/OrganizerContext";
+import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import { useListEventsQuery } from "@/store/api/event/event.api";
+import type { EventStatus } from "@/store/api/event/event.resource.type";
 
 const kpiIcons = [
   { icon: CalendarDays, color: "#FF6B35", bg: "#FFF1EC" },
-  { icon: Ticket, color: "#3B82F6", bg: "#EFF6FF" },
-  { icon: TrendingUp, color: "#10B981", bg: "#ECFDF5" },
-  { icon: Clock, color: "#F59E0B", bg: "#FFFBEB" },
+  { icon: Clock, color: "#3B82F6", bg: "#EFF6FF" },
+  { icon: Users, color: "#10B981", bg: "#ECFDF5" },
+  { icon: FileEdit, color: "#F59E0B", bg: "#FFFBEB" },
 ];
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    PUBLISHED: "bg-emerald-50 text-emerald-700",
-    DRAFT: "bg-amber-50 text-amber-700",
-    ENDED: "bg-gray-100 text-gray-500",
-  };
-  const labels: Record<string, string> = { PUBLISHED: "Publié", DRAFT: "Brouillon", ENDED: "Terminé" };
+const STATUS_LABELS: Record<EventStatus, string> = {
+  DRAFT: "Brouillon",
+  PUBLISHED: "Publié",
+  CANCELLED: "Annulé",
+  COMPLETED: "Terminé",
+  REJECTED: "Rejeté",
+  SUSPENDED: "Suspendu",
+};
+
+const STATUS_STYLES: Record<EventStatus, string> = {
+  DRAFT: "bg-amber-50 text-amber-700",
+  PUBLISHED: "bg-emerald-50 text-emerald-700",
+  CANCELLED: "bg-gray-100 text-gray-500",
+  COMPLETED: "bg-gray-100 text-gray-500",
+  REJECTED: "bg-red-50 text-red-700",
+  SUSPENDED: "bg-red-50 text-red-700",
+};
+
+function StatusBadge({ status }: { status: EventStatus }) {
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${styles[status] || styles.DRAFT}`}>
-      {labels[status] || status}
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[status]}`}>
+      {STATUS_LABELS[status]}
     </span>
   );
 }
 
 export default function OrganizerDashboardPage() {
-  const { org, events, recentOrders, totalRevenue, totalTicketsSold, upcomingCount } = useOrganizer();
+  const { activeOrg, activeOrgId } = useOrganizerOrg();
+  const { data, isLoading } = useListEventsQuery(
+    activeOrgId ? { organizationId: activeOrgId, limit: 50 } : undefined,
+    { skip: !activeOrgId },
+  );
+
+  const events = data?.data ?? [];
+  const now = Date.now();
+  const upcomingCount = events.filter(
+    (e) => e.status === "PUBLISHED" && new Date(e.startDatetime).getTime() > now,
+  ).length;
+  const draftCount = events.filter((e) => e.status === "DRAFT").length;
+  const totalCapacity = events.reduce((sum, e) => sum + (e.capacity || 0), 0);
 
   const kpis = [
     { label: "Événements", value: events.length.toString() },
-    { label: "Billets vendus", value: totalTicketsSold.toLocaleString() },
-    { label: "Revenu total", value: `${(totalRevenue / 1000).toFixed(0)}K FCFA` },
     { label: "À venir", value: upcomingCount.toString() },
+    { label: "Capacité totale", value: totalCapacity.toLocaleString() },
+    { label: "Brouillons", value: draftCount.toString() },
   ];
 
-  const recentEvents = events.slice(0, 4);
-  const lastOrders = recentOrders.slice(0, 5);
+  const recentEvents = [...events]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 4);
 
   return (
     <div className="p-5 md:p-8 space-y-8">
@@ -56,7 +85,7 @@ export default function OrganizerDashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-          <p className="text-gray-500 mt-0.5">{org.name}</p>
+          <p className="text-gray-500 mt-0.5">{activeOrg?.name ?? "—"}</p>
         </div>
         <Link
           href="/organizer/events/new"
@@ -68,29 +97,35 @@ export default function OrganizerDashboardPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {kpis.map((kpi, i) => {
-          const { icon: Icon, color, bg } = kpiIcons[i];
-          return (
-            <motion.div
-              key={kpi.label}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
-              className="bg-white rounded-2xl p-5 border border-gray-100"
-            >
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                style={{ backgroundColor: bg }}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={28} className="text-primary animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {kpis.map((kpi, i) => {
+            const { icon: Icon, color, bg } = kpiIcons[i];
+            return (
+              <motion.div
+                key={kpi.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="bg-white rounded-2xl p-5 border border-gray-100"
               >
-                <Icon size={20} style={{ color }} strokeWidth={2} />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
-              <p className="text-xs font-medium text-gray-500 mt-0.5">{kpi.label}</p>
-            </motion.div>
-          );
-        })}
-      </div>
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: bg }}
+                >
+                  <Icon size={20} style={{ color }} strokeWidth={2} />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+                <p className="text-xs font-medium text-gray-500 mt-0.5">{kpi.label}</p>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Quick actions */}
       <div className="flex gap-3 flex-wrap sm:hidden">
@@ -149,34 +184,43 @@ export default function OrganizerDashboardPage() {
               Tout voir
             </Link>
           </div>
-          <div>
-            {recentEvents.map((oe, idx) => {
-              const eventDate = format(new Date(oe.event.startDatetime), "d MMM yyyy", { locale: fr });
-              return (
-                <Link
-                  key={oe.event.id}
-                  href={`/organizer/events/${oe.event.id}`}
-                  className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${idx !== recentEvents.length - 1 ? "border-b border-gray-100" : ""}`}
-                >
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                    <CalendarDays size={18} className="text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm line-clamp-1">{oe.event.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{eventDate} · {oe.event.city}</p>
-                  </div>
-                  <div className="text-right shrink-0 space-y-1">
-                    <StatusBadge status={oe.status} />
-                    <p className="text-xs text-gray-400">{oe.totalSold} vendus</p>
-                  </div>
-                  <ChevronRight size={16} className="text-gray-300 shrink-0" />
-                </Link>
-              );
-            })}
-          </div>
+          {recentEvents.length === 0 ? (
+            <div className="p-10 text-center">
+              <CalendarDays size={36} className="mx-auto text-gray-200 mb-3" />
+              <p className="text-sm text-gray-400">Aucun événement pour le moment</p>
+            </div>
+          ) : (
+            <div>
+              {recentEvents.map((event, idx) => {
+                const eventDate = format(new Date(event.startDatetime), "d MMM yyyy", { locale: fr });
+                return (
+                  <Link
+                    key={event.id}
+                    href={`/organizer/events/${event.id}`}
+                    className={`flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${idx !== recentEvents.length - 1 ? "border-b border-gray-100" : ""}`}
+                  >
+                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                      <CalendarDays size={18} className="text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm line-clamp-1">{event.title}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {eventDate}{event.city ? ` · ${event.city}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0 space-y-1">
+                      <StatusBadge status={event.status} />
+                      <p className="text-xs text-gray-400">{event.capacity} places</p>
+                    </div>
+                    <ChevronRight size={16} className="text-gray-300 shrink-0" />
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
-        {/* Recent orders */}
+        {/* Recent orders — placeholder until orders API lands */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -186,30 +230,9 @@ export default function OrganizerDashboardPage() {
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-base font-semibold text-gray-900">Ventes récentes</h2>
           </div>
-          <div>
-            {lastOrders.map((order, idx) => {
-              const timeAgo = formatDistanceToNow(new Date(order.createdAt), { addSuffix: true, locale: fr });
-              return (
-                <div
-                  key={order.id}
-                  className={`flex items-center gap-4 px-6 py-4 ${idx !== lastOrders.length - 1 ? "border-b border-gray-100" : ""}`}
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/80 to-secondary/80 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {order.buyerName.split(" ").map((n) => n[0]).join("")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{order.buyerName}</p>
-                    <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
-                      {order.quantity}× {order.ticketType} · {order.eventTitle}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-gray-900 text-sm">{order.total.toLocaleString()} F</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{timeAgo}</p>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="p-10 text-center">
+            <Ticket size={36} className="mx-auto text-gray-200 mb-3" />
+            <p className="text-sm text-gray-400">Le suivi des commandes arrive bientôt.</p>
           </div>
         </motion.div>
       </div>
