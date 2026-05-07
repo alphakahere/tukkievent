@@ -45,21 +45,21 @@ export default function BecomeOrganizerPage() {
 		Boolean(user?.roles.includes("ORGANIZER")) ||
 		(myOrgs && myOrgs.length > 0);
 
-	// useEffect(() => {
-	//   if (step === "org" && !orgsLoading && isAlreadyOrganizer) {
-	//     router.replace("/organizer/events/new");
-	//   }
-	// }, [step, orgsLoading, isAlreadyOrganizer, router]);
+	useEffect(() => {
+		if (step === "org" && !orgsLoading && isAlreadyOrganizer) {
+			router.replace("/organizer/events/new");
+		}
+	}, [step, orgsLoading, isAlreadyOrganizer, router]);
 
 	const verifyEmail = pendingEmail || user?.email || "";
 
-	// if (step === "org" && (orgsLoading || isAlreadyOrganizer)) {
-	// 	return (
-	// 		<div className="min-h-screen flex items-center justify-center bg-[#F7F7F7]">
-	// 			<p className="text-sm text-gray-500">Chargement…</p>
-	// 		</div>
-	// 	);
-	// }
+	if (step === "org" && (orgsLoading || isAlreadyOrganizer)) {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-[#F7F7F7]">
+				<p className="text-sm text-gray-500">Chargement…</p>
+			</div>
+		);
+	}
 
 	return (
 		<div className="bg-[#F7F7F7] py-12 px-4">

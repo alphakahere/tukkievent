@@ -8,6 +8,7 @@ import { OtpForm } from "@/components/auth/OtpForm";
 export default function VerifyPage() {
   const params = useSearchParams();
   const email = params.get("email") || "";
+  const redirect = params.get("redirect");
 
   return (
     <div className="space-y-6">
@@ -18,7 +19,7 @@ export default function VerifyPage() {
         <ArrowLeft size={15} />
         Retour
       </Link>
-      <OtpForm email={email} />
+      <OtpForm email={email} redirectAfter={redirect || "/profile"} />
     </div>
   );
 }
