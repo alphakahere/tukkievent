@@ -135,29 +135,19 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           {sidebarItems.map(({ href, label, icon: Icon }) => {
             const active = isActive(href);
             return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  active
-                    ? "bg-rose-50 text-rose-600"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-              >
-                <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                {label}
-                {href === "/admin/reports" && (
-                  <span className="ml-auto text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full">
-                    3
-                  </span>
-                )}
-                {href === "/admin/events" && (
-                  <span className="ml-auto text-[10px] bg-amber-500 text-white font-bold px-1.5 py-0.5 rounded-full">
-                    2
-                  </span>
-                )}
-              </Link>
-            );
+			<Link
+				key={href}
+				href={href}
+				className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+					active
+						? "bg-rose-50 text-rose-600"
+						: "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+				}`}
+			>
+				<Icon size={18} strokeWidth={active ? 2.5 : 2} />
+				{label}
+			</Link>
+		);
           })}
         </nav>
 

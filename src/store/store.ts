@@ -5,6 +5,8 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { authApi } from "./api/auth/auth.api";
 import { eventApi } from "./api/event/event.api";
+import { organizationsApi } from "./api/organizations/organizations.api";
+import { eventCategoriesApi } from "./api/event-categories/event-categories.api";
 import { orderApi } from "./api/order/order.api";
 import authReducer from "./features/auth.slice";
 import cartReducer from "./features/cart.slice";
@@ -20,6 +22,8 @@ const persistConfig = {
 const rootReducer = combineReducers({
 	[authApi.reducerPath]: authApi.reducer,
 	[eventApi.reducerPath]: eventApi.reducer,
+	[organizationsApi.reducerPath]: organizationsApi.reducer,
+	[eventCategoriesApi.reducerPath]: eventCategoriesApi.reducer,
 	[orderApi.reducerPath]: orderApi.reducer,
 	auth: authReducer,
 	cart: cartReducer,
@@ -35,7 +39,13 @@ export const store = configureStore({
 			serializableCheck: {
 				ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
 			},
-		}).concat(authApi.middleware, eventApi.middleware, orderApi.middleware),
+		}).concat(
+			authApi.middleware,
+			eventApi.middleware,
+			organizationsApi.middleware,
+			eventCategoriesApi.middleware,
+			orderApi.middleware,
+		),
 });
 
 export const persistor = persistStore(store);
