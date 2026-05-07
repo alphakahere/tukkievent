@@ -77,7 +77,7 @@ export default function HomeContent() {
           <div className="flex gap-3 overflow-x-auto pb-2 hide-scrollbar">
             {categoriesLoading
               ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-10 w-24 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                  <Skeleton key={i} className="h-10 w-24 rounded-full flex-shrink-0" />
                 ))
               : (categories ?? []).map((category) => (
                   <button
@@ -156,12 +156,12 @@ export default function HomeContent() {
           <div className="space-y-3">
             {newQuery.isLoading
               ? Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100">
-                  <div className="w-24 h-24 rounded-xl bg-gray-100 animate-pulse shrink-0" />
+                  <div key={i} className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100">
+                    <Skeleton className="w-24 h-24 rounded-xl shrink-0" />
                     <div className="flex-1 space-y-2">
-                    <div className="h-4 w-3/4 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-3 w-1/2 bg-gray-100 rounded animate-pulse" />
-                    <div className="h-4 w-1/4 bg-gray-100 rounded animate-pulse" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-4 w-1/4" />
                     </div>
                   </div>
                 ))
