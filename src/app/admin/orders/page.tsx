@@ -8,11 +8,14 @@ import type { OrderAdminStatus } from "@/store/api/admin/admin.type";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const STATUS_CONFIG: Record<OrderAdminStatus, { label: string; class: string }> = {
-  PENDING: { label: "En attente", class: "bg-amber-50 text-amber-600" },
-  COMPLETED: { label: "Complété", class: "bg-emerald-50 text-emerald-600" },
-  REFUNDED: { label: "Remboursé", class: "bg-rose-50 text-rose-600" },
-  CANCELLED: { label: "Annulé", class: "bg-gray-100 text-gray-500" },
+const STATUS_CONFIG: Record<
+	OrderAdminStatus,
+	{ label: string; class: string }
+> = {
+	PENDING: { label: "En attente", class: "bg-amber-50 text-amber-600" },
+	COMPLETED: { label: "Complété", class: "bg-emerald-50 text-emerald-600" },
+	REFUNDED: { label: "Remboursé", class: "bg-red-50 text-rose-600" },
+	CANCELLED: { label: "Annulé", class: "bg-gray-100 text-gray-500" },
 };
 
 export default function AdminOrdersPage() {

@@ -17,9 +17,9 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; class: string }> = {
-  OPEN: { label: "Ouvert", class: "bg-rose-50 text-rose-600" },
-  RESOLVED: { label: "Résolu", class: "bg-emerald-50 text-emerald-600" },
-  DISMISSED: { label: "Ignoré", class: "bg-gray-100 text-gray-500" },
+	OPEN: { label: "Ouvert", class: "bg-red-50 text-rose-600" },
+	RESOLVED: { label: "Résolu", class: "bg-emerald-50 text-emerald-600" },
+	DISMISSED: { label: "Ignoré", class: "bg-gray-100 text-gray-500" },
 };
 
 const TARGET_LABELS: Record<string, string> = {

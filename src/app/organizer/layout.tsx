@@ -21,6 +21,7 @@ import {
 import { OrganizerProvider, useOrganizer } from "@/contexts/OrganizerContext";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { RoleGuard } from "@/components/auth/RoleGuard";
+import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
 
 const sidebarItems = [
   { href: "/organizer/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -37,7 +38,7 @@ const mobileNavItems = [
   { href: "/", label: "Utilisateur", icon: Home },
 ];
 
-function ProfileDropdown() {
+function ProfileDropdown({ onLogoutRequest }: { onLogoutRequest: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { org } = useOrganizer();
@@ -105,6 +106,10 @@ function ProfileDropdown() {
           <div className="border-t border-gray-100 py-1">
             <button
               type="button"
+              onClick={() => {
+                setOpen(false);
+                onLogoutRequest();
+              }}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-red-50 transition-colors w-full"
             >
               <LogOut size={16} />
@@ -122,6 +127,7 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
   const { org } = useOrganizer();
   const { unreadCount } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const isActive = (href: string) =>
     href === "/organizer/dashboard"
@@ -196,7 +202,7 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
               <span className="hidden lg:inline">Mode utilisateur</span>
             </Link>
             <div className="w-px h-6 bg-gray-200 mx-1 hidden lg:block" />
-            <ProfileDropdown />
+            <ProfileDropdown onLogoutRequest={() => setLogoutOpen(true)} />
           </div>
         </div>
       </header>
@@ -269,6 +275,8 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
+
+      <LogoutConfirmDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </div>
   );
 }

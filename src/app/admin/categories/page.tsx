@@ -73,9 +73,13 @@ export default function AdminCategoriesPage() {
 				className="flex items-start justify-between gap-4"
 			>
 				<div>
-					<p className="text-2xl font-bold text-gray-900">Catégories</p>
+					<p className="text-2xl font-bold text-gray-900">
+						Catégories
+					</p>
 					<p className="text-sm text-gray-500 mt-0.5">
-						{isLoading ? "Chargement…" : `${total} catégorie${total !== 1 ? "s" : ""}`}
+						{isLoading
+							? "Chargement…"
+							: `${total} catégorie${total !== 1 ? "s" : ""}`}
 					</p>
 				</div>
 				<button
@@ -95,18 +99,31 @@ export default function AdminCategoriesPage() {
 						initial={{ opacity: 0, height: 0 }}
 						animate={{ opacity: 1, height: "auto" }}
 						exit={{ opacity: 0, height: 0 }}
-						transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+						transition={{
+							duration: 0.2,
+							ease: [0.22, 1, 0.36, 1],
+						}}
 						className="overflow-hidden"
 					>
 						<div className="bg-white rounded-2xl border border-gray-100 p-5">
-							<p className="text-base font-semibold text-gray-900 mb-3">Nouvelle catégorie</p>
+							<p className="text-base font-semibold text-gray-900 mb-3">
+								Nouvelle catégorie
+							</p>
 							<div className="flex gap-3">
 								<input
 									type="text"
 									placeholder="Nom de la catégorie"
 									value={newName}
-									onChange={(e) => setNewName(e.target.value)}
-									onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+									onChange={(e) =>
+										setNewName(
+											e.target
+												.value,
+										)
+									}
+									onKeyDown={(e) =>
+										e.key === "Enter" &&
+										handleAdd()
+									}
 									autoFocus
 									disabled={isCreating}
 									className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
@@ -114,10 +131,15 @@ export default function AdminCategoriesPage() {
 								<button
 									type="button"
 									onClick={handleAdd}
-									disabled={!newName.trim() || isCreating}
+									disabled={
+										!newName.trim() ||
+										isCreating
+									}
 									className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
 								>
-									{isCreating ? "Création…" : "Créer"}
+									{isCreating
+										? "Création…"
+										: "Créer"}
 								</button>
 								<button
 									type="button"
@@ -151,13 +173,17 @@ export default function AdminCategoriesPage() {
 				</div>
 
 				{isLoading ? (
-					<div className="px-5 py-8 text-center text-sm text-gray-500">Chargement…</div>
+					<div className="px-5 py-8 text-center text-sm text-gray-500">
+						Chargement…
+					</div>
 				) : categories.length === 0 ? (
 					<div className="px-5 py-8 text-center text-sm text-gray-500">
 						Aucune catégorie pour le moment.
 					</div>
 				) : (
-					<div className={`divide-y divide-gray-100 ${isFetching ? "opacity-60" : ""}`}>
+					<div
+						className={`divide-y divide-gray-100 ${isFetching ? "opacity-60" : ""}`}
+					>
 						{categories.map((cat) => (
 							<div
 								key={cat.id}
@@ -167,13 +193,27 @@ export default function AdminCategoriesPage() {
 									<div
 										className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
 										style={{
-											backgroundColor: cat.color ? `${cat.color}1a` : undefined,
-											color: cat.color ?? undefined,
+											backgroundColor:
+												cat.color
+													? `${cat.color}1a`
+													: undefined,
+											color:
+												cat.color ??
+												undefined,
 										}}
 									>
-										<Tag size={14} className={cat.color ? "" : "text-primary"} />
+										<Tag
+											size={14}
+											className={
+												cat.color
+													? ""
+													: "text-primary"
+											}
+										/>
 									</div>
-									<p className="text-sm font-semibold text-gray-900 truncate">{cat.name}</p>
+									<p className="text-sm font-semibold text-gray-900 truncate">
+										{cat.name}
+									</p>
 								</div>
 								<p className="hidden md:block text-xs text-gray-400 font-mono truncate">
 									{cat.slug}
@@ -186,14 +226,22 @@ export default function AdminCategoriesPage() {
 												: "bg-gray-100 text-gray-500"
 										}`}
 									>
-										{cat.isActive ? "Actif" : "Inactif"}
+										{cat.isActive
+											? "Actif"
+											: "Inactif"}
 									</span>
 								</p>
 								<div className="flex justify-end">
 									<button
 										type="button"
-										onClick={() => setToDelete(cat)}
-										disabled={isDeleting}
+										onClick={() =>
+											setToDelete(
+												cat,
+											)
+										}
+										disabled={
+											isDeleting
+										}
 										className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-rose-500 transition-colors disabled:opacity-50"
 										title="Supprimer"
 									>
@@ -206,10 +254,15 @@ export default function AdminCategoriesPage() {
 				)}
 			</motion.div>
 
-			<AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+			<AlertDialog
+				open={!!toDelete}
+				onOpenChange={(open) => !open && setToDelete(null)}
+			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Supprimer cette catégorie ?</AlertDialogTitle>
+						<AlertDialogTitle>
+							Supprimer cette catégorie ?
+						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{toDelete
 								? `La catégorie «${toDelete.name}» sera supprimée définitivement. Cette action est irréversible.`
@@ -217,13 +270,17 @@ export default function AdminCategoriesPage() {
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>
+							Annuler
+						</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleConfirmDelete}
 							disabled={isDeleting}
-							className="bg-rose-500 hover:bg-rose-600 text-white"
+							className="bg-red-500 hover:bg-red-600 text-white"
 						>
-							{isDeleting ? "Suppression…" : "Supprimer"}
+							{isDeleting
+								? "Suppression…"
+								: "Supprimer"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

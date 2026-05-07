@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { toast } from "sonner";
 import {
   ChevronRight,
   Ticket,
@@ -20,10 +19,9 @@ import {
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import AccountSidebar from "@/components/AccountSidebar";
+import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
-import { logout as logoutAction } from "@/store/features/auth.slice";
-import { authApi } from "@/store/api/auth/auth.api";
+import { useAppSelector } from "@/store/features/hooks";
 
 const menuItems = [
   { icon: Ticket, label: "Mes billets", path: "/tickets", color: "#FF6B35" },
@@ -37,12 +35,11 @@ const menuItems = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const accessToken = useAppSelector((s) => s.auth.accessToken);
   const { favoriteIds } = useFavorites();
   const favoritesCount = favoriteIds.length;
-  console.log(user);
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
     if (!accessToken) router.replace("/auth/login?redirect=/profile");
@@ -52,13 +49,6 @@ export default function ProfilePage() {
   const initials = user
     ? `${user.firstname.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase()
     : "";
-
-  function handleLogout() {
-    dispatch(logoutAction());
-    dispatch(authApi.util.resetApiState());
-    toast.success("À bientôt !");
-    router.replace("/auth/login");
-  }
 
   if (!user) return null;
 
@@ -225,7 +215,7 @@ export default function ProfilePage() {
             {/* Logout */}
             <motion.button
               type="button"
-              onClick={handleLogout}
+              onClick={() => setLogoutOpen(true)}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -264,6 +254,7 @@ export default function ProfilePage() {
       </div>
 
       <BottomNav />
+      <LogoutConfirmDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </div>
   );
 }

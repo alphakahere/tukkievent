@@ -1,5 +1,6 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../baseQuery";
+import { setUser } from "../../features/auth.slice";
 import type { Paginated } from "../types";
 import type {
 	AdminUpdateUserPayload,
@@ -16,10 +17,26 @@ export const usersApi = createApi({
 		getMe: builder.query<User, void>({
 			query: () => "/users/me",
 			providesTags: [{ type: "user", id: "ME" }],
+			async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled;
+					dispatch(setUser(data));
+				} catch {
+					/* not authenticated */
+				}
+			},
 		}),
 		updateMe: builder.mutation<User, UpdateUserPayload>({
 			query: (body) => ({ url: "/users/me", method: "PATCH", body }),
 			invalidatesTags: [{ type: "user", id: "ME" }],
+			async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+				try {
+					const { data } = await queryFulfilled;
+					dispatch(setUser(data));
+				} catch {
+					/* handled by caller */
+				}
+			},
 		}),
 		listUsers: builder.query<Paginated<User>, ListUsersParams | void>({
 			query: (params) => ({ url: "/users", params: params ?? {} }),
