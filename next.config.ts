@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
 			"cloudinary.com",
 			"res.cloudinary.com",
 			"picsum.photos",
+			"taxotu.org.au",
 		],
 	},
 };

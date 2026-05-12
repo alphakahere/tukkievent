@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import {
-  ArrowLeft,
   Search,
   CheckCircle,
   XCircle,
@@ -16,7 +14,6 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useGetEventQuery } from "@/store/api/event/event.api";
 import {
   useCheckInTicketMutation,
   useGetAttendeeStatsQuery,
@@ -25,6 +22,7 @@ import {
 import { TicketStatus } from "@/store/api/event/event.type";
 import type { Attendee } from "@/store/api/tickets/tickets.type";
 import { getApiErrorMessage } from "@/store/api/auth/error";
+import { useEvent } from "../layout";
 
 const PAGE_SIZE = 20;
 
@@ -49,9 +47,8 @@ function holderInitials(a: Attendee): string {
 }
 
 export default function AttendeesPage() {
-  const params = useParams();
-  const router = useRouter();
-  const eventId = params?.id as string;
+  const event = useEvent();
+  const eventId = event.id;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
@@ -62,12 +59,6 @@ export default function AttendeesPage() {
   useEffect(() => {
     setPage(1);
   }, [debouncedQuery, statusFilter]);
-
-  const {
-    data: event,
-    isLoading: eventLoading,
-    isError: eventError,
-  } = useGetEventQuery(eventId, { skip: !eventId });
 
   const listParams = useMemo(
     () => ({
@@ -113,34 +104,6 @@ export default function AttendeesPage() {
 
   const handleExport = () => toast.info("Export CSV bientôt disponible");
 
-  if (!eventId) return null;
-
-  if (eventLoading) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-[60vh]">
-        <Loader2 size={28} className="text-primary animate-spin" />
-      </div>
-    );
-  }
-
-  if (eventError || !event) {
-    return (
-      <div className="p-6 text-center">
-        <AlertCircle size={48} className="mx-auto text-gray-300 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
-          Événement introuvable
-        </h2>
-        <button
-          type="button"
-          onClick={() => router.push("/organizer/events")}
-          className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
-        >
-          Retour aux événements
-        </button>
-      </div>
-    );
-  }
-
   const attendees = attendeesPage?.data ?? [];
   const totalPages = attendeesPage?.meta.totalPages ?? 1;
   const total = stats?.total ?? attendeesPage?.meta.total ?? 0;
@@ -148,21 +111,7 @@ export default function AttendeesPage() {
   const pending = stats?.pending ?? Math.max(0, total - checkedIn);
 
   return (
-    <div className="p-5 md:p-8 space-y-6">
-      {/* Header */}
-      <div>
-        <button
-          type="button"
-          onClick={() => router.push(`/organizer/events/${event.id}`)}
-          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-3"
-        >
-          <ArrowLeft size={16} />
-          Retour à l&apos;événement
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Gestion des participants</p>
-      </div>
-
+    <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">

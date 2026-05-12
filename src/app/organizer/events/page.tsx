@@ -117,17 +117,17 @@ function EventRow({ event }: { event: EventResource }) {
   }
 
   return (
-    <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden flex items-stretch hover:border-gray-300 transition-colors">
-      {/* Stretched link covers the whole card */}
-      <Link
-        href={`/organizer/events/${event.id}`}
-        aria-label={event.title}
-        className="absolute inset-0 z-0"
-      />
+		<div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden flex items-stretch hover:border-gray-300 transition-colors">
+			{/* Stretched link covers the whole card */}
+			<Link
+				href={`/organizer/events/${event.id}`}
+				aria-label={event.title}
+				className="absolute inset-0 z-0"
+			/>
 
-      {/* Cover image + date badge + status pill */}
-      <div className="relative h-32 w-40 sm:w-48 shrink-0 bg-gray-100">
-        {event.coverImageUrl ? (
+			{/* Cover image + date badge + status pill */}
+			<div className="relative h-32 w-40 sm:w-48 shrink-0 bg-gray-100">
+				{/* {event.coverImageUrl ? (
           <Image
             src={event.coverImageUrl}
             alt={event.title}
@@ -135,75 +135,100 @@ function EventRow({ event }: { event: EventResource }) {
             sizes="192px"
             className="object-cover"
           />
-        ) : null}
-        <span className="absolute top-2.5 left-2.5">
-          <StatusBadge status={event.status as EventStatus} />
-        </span>
-        <span className="absolute bottom-2.5 left-2.5 bg-white rounded-lg px-2.5 py-1 text-center shadow-sm">
-          <span className="block text-base font-bold leading-none text-gray-900">{dayNumber}</span>
-          <span className="block text-[10px] font-semibold leading-none mt-0.5 text-gray-500">{monthShort}</span>
-        </span>
-      </div>
+        ) : null} */}
+				<span className="absolute top-2.5 left-2.5">
+					<StatusBadge
+						status={event.status as EventStatus}
+					/>
+				</span>
+				<span className="absolute bottom-2.5 left-2.5 bg-white rounded-lg px-2.5 py-1 text-center shadow-sm">
+					<span className="block text-base font-bold leading-none text-gray-900">
+						{dayNumber}
+					</span>
+					<span className="block text-[10px] font-semibold leading-none mt-0.5 text-gray-500">
+						{monthShort}
+					</span>
+				</span>
+			</div>
 
-      {/* Middle: title + date */}
-      <div className="flex-1 min-w-0 px-5 py-4 flex flex-col justify-center">
-        <p className="font-semibold text-gray-900 line-clamp-1">{event.title}</p>
-        <div className="mt-1.5 text-sm text-gray-700">
-          {dateTimeLabel} <span className="text-gray-400">({relative})</span>
-        </div>
-      </div>
+			{/* Middle: title + date */}
+			<div className="flex-1 min-w-0 px-5 py-4 flex flex-col justify-center">
+				<p className="font-semibold text-gray-900 line-clamp-1">
+					{event.title}
+				</p>
+				<div className="mt-1.5 text-sm text-gray-700">
+					{dateTimeLabel}{" "}
+					<span className="text-gray-400">
+						({relative})
+					</span>
+				</div>
+			</div>
 
-      {/* Right: stats + menu — z-10 to sit above the stretched link */}
-      <div className="relative z-10 shrink-0 hidden md:flex items-center gap-8 pr-5">
-        <div className="text-center">
-          <div className="text-lg font-bold text-gray-900 leading-tight">{attendees}</div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">Participants</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-emerald-600 leading-tight">{formatPrice(revenue)}</div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">Revenu</div>
-        </div>
-        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label="Actions"
-              className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-            >
-              <MoreVertical size={18} />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-56 p-1">
-            <Link
-              href={`/events/${event.slug}`}
-              onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <Eye size={16} className="text-gray-400" />
-              Voir la page de l&apos;événement
-            </Link>
-            <button
-              type="button"
-              onClick={handleDuplicate}
-              disabled={isDuplicating}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              <Copy size={16} className="text-gray-400" />
-              Dupliquer
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-            >
-              <Trash2 size={16} />
-              Supprimer
-            </button>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </div>
+			{/* Right: stats + menu — z-10 to sit above the stretched link */}
+			<div className="relative z-10 shrink-0 hidden md:flex items-center gap-8 pr-5">
+				<div className="text-center">
+					<div className="text-lg font-bold text-gray-900 leading-tight">
+						{attendees}
+					</div>
+					<div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">
+						Participants
+					</div>
+				</div>
+				<div className="text-center">
+					<div className="text-lg font-bold text-emerald-600 leading-tight">
+						{formatPrice(revenue)}
+					</div>
+					<div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">
+						Revenu
+					</div>
+				</div>
+				<Popover open={menuOpen} onOpenChange={setMenuOpen}>
+					<PopoverTrigger asChild>
+						<button
+							type="button"
+							aria-label="Actions"
+							className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+						>
+							<MoreVertical size={18} />
+						</button>
+					</PopoverTrigger>
+					<PopoverContent align="end" className="w-56 p-1">
+						<Link
+							href={`/events/${event.slug}`}
+							onClick={() => setMenuOpen(false)}
+							className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+						>
+							<Eye
+								size={16}
+								className="text-gray-400"
+							/>
+							Voir la page de l&apos;événement
+						</Link>
+						<button
+							type="button"
+							onClick={handleDuplicate}
+							disabled={isDuplicating}
+							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+						>
+							<Copy
+								size={16}
+								className="text-gray-400"
+							/>
+							Dupliquer
+						</button>
+						<button
+							type="button"
+							onClick={handleDelete}
+							disabled={isDeleting}
+							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+						>
+							<Trash2 size={16} />
+							Supprimer
+						</button>
+					</PopoverContent>
+				</Popover>
+			</div>
+		</div>
   );
 }
 
