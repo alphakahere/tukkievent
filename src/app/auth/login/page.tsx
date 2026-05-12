@@ -19,7 +19,7 @@ export default function LoginPage() {
       className="space-y-7"
     >
       <header>
-        <h1 className="text-2xl font-bold text-gray-900">Bon retour 👋</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Connexion ou inscription</h1>
         <p className="mt-1.5 text-sm text-gray-500">
           Connectez-vous, ou créez votre compte en saisissant simplement vos identifiants.
         </p>

@@ -2,20 +2,37 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import {
   Plus,
-  ChevronRight,
-  MapPin,
   Calendar,
-  Users,
+  Copy,
+  Eye,
   Loader2,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
-import { format } from "date-fns";
+import { toast } from "sonner";
+import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
-import { useListEventsQuery } from "@/store/api/event/event.api";
-import type { EventStatus } from "@/store/api/event/event.resource.type";
+import {
+  useCreateEventMutation,
+  useDeleteEventMutation,
+  useListEventsQuery,
+} from "@/store/api/event/event.api";
+import type {
+  CreateEventPayload,
+  EventResource,
+  EventStatus,
+} from "@/store/api/event/event.resource.type";
+import { formatPrice } from "@/lib/utils";
 
 type TabId = "all" | "PUBLISHED" | "DRAFT" | "COMPLETED";
 
@@ -39,9 +56,154 @@ const STATUS_STYLES: Record<EventStatus, string> = {
 
 function StatusBadge({ status }: { status: EventStatus }) {
   return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${STATUS_STYLES[status]}`}>
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[status]}`}>
       {STATUS_LABELS[status]}
     </span>
+  );
+}
+
+function EventRow({ event }: { event: EventResource }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [duplicateEvent, { isLoading: isDuplicating }] = useCreateEventMutation();
+  const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
+
+  const start = new Date(event.startDatetime);
+  const dayNumber = format(start, "d");
+  const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
+  const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
+  const relative = formatDistanceToNow(start, { locale: fr, addSuffix: true });
+  const attendees = 0;
+  const revenue = 0;
+
+  async function handleDuplicate() {
+    setMenuOpen(false);
+    const payload: CreateEventPayload = {
+      organizationId: event.organizationId,
+      title: `Copie - ${event.title}`,
+      startDatetime: event.startDatetime,
+      capacity: event.capacity,
+      status: "DRAFT",
+    };
+    if (event.categoryId) payload.categoryId = event.categoryId;
+    if (event.description) payload.description = event.description;
+    if (event.shortDescription) payload.shortDescription = event.shortDescription;
+    if (event.endDatetime) payload.endDatetime = event.endDatetime;
+    if (event.address) payload.address = event.address;
+    if (event.city) payload.city = event.city;
+    if (event.isOnline) payload.isOnline = true;
+    if (event.onlineLink) payload.onlineLink = event.onlineLink;
+    if (event.coverImageUrl) payload.coverImageUrl = event.coverImageUrl;
+    if (event.thumbnailUrl) payload.thumbnailUrl = event.thumbnailUrl;
+    if (event.minAge) payload.minAge = event.minAge;
+
+    try {
+      await duplicateEvent(payload).unwrap();
+      toast.success("Événement dupliqué");
+    } catch {
+      toast.error("Impossible de dupliquer l'événement");
+    }
+  }
+
+  async function handleDelete() {
+    setMenuOpen(false);
+    const ok = window.confirm(`Supprimer définitivement "${event.title}" ?`);
+    if (!ok) return;
+    try {
+      await deleteEvent(event.id).unwrap();
+      toast.success("Événement supprimé");
+    } catch {
+      toast.error("Impossible de supprimer l'événement");
+    }
+  }
+
+  return (
+    <div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden flex items-stretch hover:border-gray-300 transition-colors">
+      {/* Stretched link covers the whole card */}
+      <Link
+        href={`/organizer/events/${event.id}`}
+        aria-label={event.title}
+        className="absolute inset-0 z-0"
+      />
+
+      {/* Cover image + date badge + status pill */}
+      <div className="relative h-32 w-40 sm:w-48 shrink-0 bg-gray-100">
+        {event.coverImageUrl ? (
+          <Image
+            src={event.coverImageUrl}
+            alt={event.title}
+            fill
+            sizes="192px"
+            className="object-cover"
+          />
+        ) : null}
+        <span className="absolute top-2.5 left-2.5">
+          <StatusBadge status={event.status as EventStatus} />
+        </span>
+        <span className="absolute bottom-2.5 left-2.5 bg-white rounded-lg px-2.5 py-1 text-center shadow-sm">
+          <span className="block text-base font-bold leading-none text-gray-900">{dayNumber}</span>
+          <span className="block text-[10px] font-semibold leading-none mt-0.5 text-gray-500">{monthShort}</span>
+        </span>
+      </div>
+
+      {/* Middle: title + date */}
+      <div className="flex-1 min-w-0 px-5 py-4 flex flex-col justify-center">
+        <p className="font-semibold text-gray-900 line-clamp-1">{event.title}</p>
+        <div className="mt-1.5 text-sm text-gray-700">
+          {dateTimeLabel} <span className="text-gray-400">({relative})</span>
+        </div>
+      </div>
+
+      {/* Right: stats + menu — z-10 to sit above the stretched link */}
+      <div className="relative z-10 shrink-0 hidden md:flex items-center gap-8 pr-5">
+        <div className="text-center">
+          <div className="text-lg font-bold text-gray-900 leading-tight">{attendees}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">Participants</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-emerald-600 leading-tight">{formatPrice(revenue)}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">Revenu</div>
+        </div>
+        <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Actions"
+              className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            >
+              <MoreVertical size={18} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-56 p-1">
+            <Link
+              href={`/events/${event.slug}`}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <Eye size={16} className="text-gray-400" />
+              Voir la page de l&apos;événement
+            </Link>
+            <button
+              type="button"
+              onClick={handleDuplicate}
+              disabled={isDuplicating}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <Copy size={16} className="text-gray-400" />
+              Dupliquer
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              Supprimer
+            </button>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   );
 }
 
@@ -118,50 +280,16 @@ export default function OrganizerEventsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredEvents.map((event, index) => {
-            const dateStr = format(new Date(event.startDatetime), "d MMM yyyy", { locale: fr });
-            return (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-              >
-                <div className="p-5 md:flex md:items-center md:gap-5">
-                  <div className="flex-1 min-w-0 mb-4 md:mb-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <p className="text-sm font-semibold text-gray-900 line-clamp-1">{event.title}</p>
-                      <StatusBadge status={event.status} />
-                    </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-                      <span className="flex items-center gap-1.5"><Calendar size={13} />{dateStr}</span>
-                      {event.city && (
-                        <span className="flex items-center gap-1.5"><MapPin size={13} />{event.city}</span>
-                      )}
-                      <span className="flex items-center gap-1.5"><Users size={13} />{event.capacity} places</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 md:shrink-0">
-                    <Link
-                      href={`/organizer/events/${event.id}`}
-                      className="px-4 py-2 rounded-full text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Détails
-                    </Link>
-                    <Link
-                      href={`/organizer/events/${event.id}`}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                      aria-label="Voir"
-                    >
-                      <ChevronRight size={18} className="text-gray-400" />
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+          {filteredEvents.map((event, index) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <EventRow event={event} />
+            </motion.div>
+          ))}
         </div>
       )}
     </div>

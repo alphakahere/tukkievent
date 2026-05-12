@@ -158,151 +158,270 @@ export default function PaymentMethodsPage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
-        <header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-40 md:hidden">
-          <div className="max-w-lg mx-auto flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Retour"
-            >
-              <ArrowLeft size={20} className="text-gray-700" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Moyens de paiement</h1>
-          </div>
-        </header>
+		<>
+			<div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
+				<header className="bg-white border-b border-gray-100 px-4 pt-12 pb-4 sticky top-0 z-40 md:hidden">
+					<div className="max-w-lg mx-auto flex items-center gap-3">
+						<button
+							type="button"
+							onClick={() => router.back()}
+							className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+							aria-label="Retour"
+						>
+							<ArrowLeft
+								size={20}
+								className="text-gray-700"
+							/>
+						</button>
+						<h1 className="text-xl font-bold text-gray-900">
+							Moyens de paiement
+						</h1>
+					</div>
+				</header>
 
-        <div className="max-w-lg md:max-w-5xl mx-auto px-4 py-6">
-          <div className="md:flex md:gap-8">
-            <AccountSidebar />
-            <div className="flex-1 space-y-6">
-              <h1 className="hidden md:block text-2xl font-bold text-gray-900">Moyens de paiement</h1>
+				<div className="max-w-lg md: px-4 py-6">
+					<div className="md:flex md:gap-8">
+						<AccountSidebar />
+						<div className="flex-1 space-y-6">
+							<h1 className="hidden md:block text-2xl font-bold text-gray-900">
+								Moyens de paiement
+							</h1>
 
-              {/* Saved methods */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
-                  Méthodes sauvegardées
-                </p>
-                <div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-                  <AnimatePresence>
-                    {paymentMethods.length === 0 ? (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="p-6 text-center text-gray-400 text-sm"
-                      >
-                        Aucune méthode enregistrée
-                      </motion.div>
-                    ) : (
-                      paymentMethods.map((method, index) => {
-                        const meta = METHOD_META[method.type];
-                        return (
-                          <motion.div
-                            key={method.id}
-                            layout
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            className={`flex items-center gap-4 p-4 ${
-                              index !== paymentMethods.length - 1 ? "border-b border-gray-100" : ""
-                            }`}
-                          >
-                            <div
-                              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: meta.bg }}
-                            >
-                              <MethodIcon type={method.type} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900">{method.label}</p>
-                              <p className="text-xs text-gray-500 font-mono">
-                                {method.maskedIdentifier}
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemove(method.id)}
-                              className="p-2 rounded-full hover:bg-red-50 transition-colors"
-                              aria-label="Supprimer"
-                            >
-                              <Trash2 size={16} className="text-red-400" />
-                            </button>
-                          </motion.div>
-                        );
-                      })
-                    )}
-                  </AnimatePresence>
-                </div>
+							{/* Saved methods */}
+							<motion.div
+								initial={{ opacity: 0, y: 16 }}
+								animate={{ opacity: 1, y: 0 }}
+							>
+								<p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+									Méthodes sauvegardées
+								</p>
+								<div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
+									<AnimatePresence>
+										{paymentMethods.length ===
+										0 ? (
+											<motion.div
+												initial={{
+													opacity: 0,
+												}}
+												animate={{
+													opacity: 1,
+												}}
+												className="p-6 text-center text-gray-400 text-sm"
+											>
+												Aucune
+												méthode
+												enregistrée
+											</motion.div>
+										) : (
+											paymentMethods.map(
+												(
+													method,
+													index,
+												) => {
+													const meta =
+														METHOD_META[
+															method
+																.type
+														];
+													return (
+														<motion.div
+															key={
+																method.id
+															}
+															layout
+															initial={{
+																opacity: 0,
+																x: -20,
+															}}
+															animate={{
+																opacity: 1,
+																x: 0,
+															}}
+															exit={{
+																opacity: 0,
+																x: 20,
+															}}
+															className={`flex items-center gap-4 p-4 ${
+																index !==
+																paymentMethods.length -
+																	1
+																	? "border-b border-gray-100"
+																	: ""
+															}`}
+														>
+															<div
+																className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+																style={{
+																	backgroundColor:
+																		meta.bg,
+																}}
+															>
+																<MethodIcon
+																	type={
+																		method.type
+																	}
+																/>
+															</div>
+															<div className="flex-1 min-w-0">
+																<p className="text-sm font-semibold text-gray-900">
+																	{
+																		method.label
+																	}
+																</p>
+																<p className="text-xs text-gray-500 font-mono">
+																	{
+																		method.maskedIdentifier
+																	}
+																</p>
+															</div>
+															<button
+																type="button"
+																onClick={() =>
+																	handleRemove(
+																		method.id,
+																	)
+																}
+																className="p-2 rounded-full hover:bg-red-50 transition-colors"
+																aria-label="Supprimer"
+															>
+																<Trash2
+																	size={
+																		16
+																	}
+																	className="text-red-400"
+																/>
+															</button>
+														</motion.div>
+													);
+												},
+											)
+										)}
+									</AnimatePresence>
+								</div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowSheet(true)}
-                  className="mt-3 w-full bg-white border-2 border-dashed border-gray-200 text-gray-500 py-4 px-6 rounded-2xl font-medium flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-colors"
-                >
-                  <Plus size={18} />
-                  Ajouter un moyen de paiement
-                </button>
-              </motion.div>
+								<button
+									type="button"
+									onClick={() =>
+										setShowSheet(true)
+									}
+									className="mt-3 w-full bg-white border-2 border-dashed border-gray-200 text-gray-500 py-4 px-6 rounded-2xl font-medium flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-colors"
+								>
+									<Plus size={18} />
+									Ajouter un moyen de
+									paiement
+								</button>
+							</motion.div>
 
-              {/* Recent transactions */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
-                  Transactions récentes
-                </p>
-                <div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-                  {recentTransactions.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <ShoppingBag size={32} className="mx-auto text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-400">Aucune transaction</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {recentTransactions.map((order) => {
-                        const date = format(new Date(order.createdAt), "d MMM yyyy", { locale: fr });
-                        return (
-                          <div key={order.orderId} className="flex items-center gap-4 p-4">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                              <Smartphone size={16} className="text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-gray-900 line-clamp-1">
-                                {order.event.title}
-                              </p>
-                              <p className="text-xs text-gray-400">
-                                {date} · {order.formData.paymentMethod}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm font-bold text-primary">
-                                {order.total.toLocaleString()} F
-                              </span>
-                              <ChevronRight size={16} className="text-gray-300" />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </div>
+							{/* Recent transactions */}
+							<motion.div
+								initial={{ opacity: 0, y: 16 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: 0.1 }}
+							>
+								<p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">
+									Transactions récentes
+								</p>
+								<div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
+									{recentTransactions.length ===
+									0 ? (
+										<div className="p-8 text-center">
+											<ShoppingBag
+												size={
+													32
+												}
+												className="mx-auto text-gray-300 mb-2"
+											/>
+											<p className="text-sm text-gray-400">
+												Aucune
+												transaction
+											</p>
+										</div>
+									) : (
+										<div className="divide-y divide-gray-100">
+											{recentTransactions.map(
+												(
+													order,
+												) => {
+													const date =
+														format(
+															new Date(
+																order.createdAt,
+															),
+															"d MMM yyyy",
+															{
+																locale: fr,
+															},
+														);
+													return (
+														<div
+															key={
+																order.orderId
+															}
+															className="flex items-center gap-4 p-4"
+														>
+															<div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+																<Smartphone
+																	size={
+																		16
+																	}
+																	className="text-primary"
+																/>
+															</div>
+															<div className="flex-1 min-w-0">
+																<p className="text-sm font-semibold text-gray-900 line-clamp-1">
+																	{
+																		order
+																			.event
+																			.title
+																	}
+																</p>
+																<p className="text-xs text-gray-400">
+																	{
+																		date
+																	}{" "}
+																	·{" "}
+																	{
+																		order
+																			.formData
+																			.paymentMethod
+																	}
+																</p>
+															</div>
+															<div className="flex items-center gap-1">
+																<span className="text-sm font-bold text-primary">
+																	{order.total.toLocaleString()}{" "}
+																	F
+																</span>
+																<ChevronRight
+																	size={
+																		16
+																	}
+																	className="text-gray-300"
+																/>
+															</div>
+														</div>
+													);
+												},
+											)}
+										</div>
+									)}
+								</div>
+							</motion.div>
+						</div>
+					</div>
+				</div>
 
-        <BottomNav />
-      </div>
+				<BottomNav />
+			</div>
 
-      <AnimatePresence>
-        {showSheet && (
-          <AddMethodSheet onClose={() => setShowSheet(false)} onAdd={handleAdd} />
-        )}
-      </AnimatePresence>
-    </>
+			<AnimatePresence>
+				{showSheet && (
+					<AddMethodSheet
+						onClose={() => setShowSheet(false)}
+						onAdd={handleAdd}
+					/>
+				)}
+			</AnimatePresence>
+		</>
   );
 }
