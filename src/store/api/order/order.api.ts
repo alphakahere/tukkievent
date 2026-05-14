@@ -1,18 +1,29 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../baseQuery";
+import type { Paginated } from "../types";
 import type {
 	CreateOrderInput,
+	EventOrdersStats,
 	InitiatePaymentInput,
+	ListEventOrdersParams,
 	Order,
+	OrderListItem,
 	OrderPreview,
 	OrderStatusResponse,
+	OrganizationRevenue,
 	PaymentInitiationResponse,
 } from "./order.type";
 
 export const orderApi = createApi({
 	reducerPath: "orderApi",
 	baseQuery,
-	tagTypes: ["orders", "order"],
+	tagTypes: [
+		"orders",
+		"order",
+		"event-orders",
+		"event-orders-stats",
+		"org-revenue",
+	],
 	endpoints: (builder) => ({
 		previewOrder: builder.mutation<OrderPreview, CreateOrderInput>({
 			query: (body) => ({
@@ -47,6 +58,33 @@ export const orderApi = createApi({
 			}),
 			invalidatesTags: (_r, _e, { orderId }) => [{ type: "order", id: orderId }],
 		}),
+
+		// -- Organizer-side --------------------------------------------------
+
+		listEventOrders: builder.query<
+			Paginated<OrderListItem>,
+			{ eventId: string; params?: ListEventOrdersParams }
+		>({
+			query: ({ eventId, params }) => ({
+				url: `/events/${eventId}/orders`,
+				params: params ?? {},
+			}),
+			providesTags: (_r, _e, { eventId }) => [
+				{ type: "event-orders" as const, id: eventId },
+			],
+		}),
+		getEventOrdersStats: builder.query<EventOrdersStats, string>({
+			query: (eventId) => `/events/${eventId}/orders/stats`,
+			providesTags: (_r, _e, eventId) => [
+				{ type: "event-orders-stats" as const, id: eventId },
+			],
+		}),
+		getOrganizationRevenue: builder.query<OrganizationRevenue, string>({
+			query: (orgId) => `/organizations/${orgId}/revenue`,
+			providesTags: (_r, _e, orgId) => [
+				{ type: "org-revenue" as const, id: orgId },
+			],
+		}),
 	}),
 });
 
@@ -58,4 +96,7 @@ export const {
 	useGetOrderStatusQuery,
 	useLazyGetOrderStatusQuery,
 	useInitiatePaymentMutation,
+	useListEventOrdersQuery,
+	useGetEventOrdersStatsQuery,
+	useGetOrganizationRevenueQuery,
 } = orderApi;

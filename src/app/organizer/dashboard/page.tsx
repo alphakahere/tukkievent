@@ -17,8 +17,10 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import { formatPrice } from "@/lib/utils";
 import { useListEventsQuery } from "@/store/api/event/event.api";
 import type { EventStatus } from "@/store/api/event/event.resource.type";
+import { useGetOrganizationRevenueQuery } from "@/store/api/order/order.api";
 
 const kpiIcons = [
   { icon: CalendarDays, color: "#FF6B35", bg: "#FFF1EC" },
@@ -59,6 +61,8 @@ export default function OrganizerDashboardPage() {
     activeOrgId ? { organizationId: activeOrgId, limit: 50 } : undefined,
     { skip: !activeOrgId },
   );
+  const { data: revenue, isLoading: revenueLoading } =
+    useGetOrganizationRevenueQuery(activeOrgId ?? "", { skip: !activeOrgId });
 
   const events = data?.data ?? [];
   const now = Date.now();
@@ -220,20 +224,93 @@ export default function OrganizerDashboardPage() {
           )}
         </motion.div>
 
-        {/* Recent orders — placeholder until orders API lands */}
+        {/* Sales summary */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
         >
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900">Ventes récentes</h2>
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-900">Ventes</h2>
+            <Link
+              href="/organizer/analytics"
+              className="text-sm text-primary font-semibold hover:underline"
+            >
+              Détails
+            </Link>
           </div>
-          <div className="p-10 text-center">
-            <Ticket size={36} className="mx-auto text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400">Le suivi des commandes arrive bientôt.</p>
-          </div>
+          {revenueLoading ? (
+            <div className="p-10 text-center">
+              <Loader2 size={28} className="mx-auto text-primary animate-spin" />
+            </div>
+          ) : !revenue || revenue.revenue === 0 ? (
+            <div className="p-10 text-center">
+              <Ticket size={36} className="mx-auto text-gray-200 mb-3" />
+              <p className="text-sm text-gray-400">
+                Aucune vente pour le moment.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="px-6 py-5 grid grid-cols-3 gap-4 border-b border-gray-100">
+                <div>
+                  <p className="text-2xl font-bold text-emerald-600">
+                    {formatPrice(revenue.revenue)}
+                  </p>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">
+                    Revenu total
+                  </p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenue.soldTickets}
+                  </p>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">
+                    Billets vendus
+                  </p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {revenue.ordersCount}
+                  </p>
+                  <p className="text-xs font-medium text-gray-500 mt-0.5">
+                    Commandes payées
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                  Top événements
+                </p>
+                <div className="space-y-3">
+                  {revenue.perEvent
+                    .filter((e) => e.revenue > 0)
+                    .slice(0, 4)
+                    .map((e) => (
+                      <Link
+                        key={e.eventId}
+                        href={`/organizer/events/${e.eventId}/orders`}
+                        className="flex items-center justify-between gap-3 group"
+                      >
+                        <p className="text-sm font-medium text-gray-700 group-hover:text-primary truncate transition-colors">
+                          {e.title}
+                        </p>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {formatPrice(e.revenue)}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {e.soldTickets} billet
+                            {e.soldTickets > 1 ? "s" : ""}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>

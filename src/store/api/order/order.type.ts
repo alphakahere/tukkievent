@@ -117,3 +117,64 @@ export interface PaymentInitiationResponse {
 	redirectUrl: string;
 	instructions: string;
 }
+
+// -- Organizer-side reads --------------------------------------------------
+
+export interface OrderListItem {
+	id: string;
+	eventId: string;
+	buyerEmail: string | null;
+	buyerPhone: string | null;
+	buyerFirstName: string | null;
+	buyerLastName: string | null;
+	subtotal: number;
+	fees: number;
+	totalAmount: number;
+	paidAmount: number;
+	status: OrderStatus | string;
+	paymentMethod: string | null;
+	paymentReference: string | null;
+	ticketCount: number;
+	paidAt: string | null;
+	createdAt: string;
+}
+
+export interface ListEventOrdersParams {
+	page?: number;
+	limit?: number;
+	q?: string;
+	status?: OrderStatus;
+	from?: string;
+	to?: string;
+}
+
+export interface EventOrdersStats {
+	eventId: string;
+	currency: Currency;
+	totalOrders: number;
+	paidOrders: number;
+	pendingOrders: number;
+	cancelledOrders: number;
+	soldTickets: number;
+	revenue: number;
+	fees: number;
+	refunded: number;
+}
+
+export interface OrganizationEventRevenue {
+	eventId: string;
+	title: string;
+	slug: string;
+	revenue: number;
+	soldTickets: number;
+	ordersCount: number;
+}
+
+export interface OrganizationRevenue {
+	organizationId: string;
+	currency: Currency;
+	revenue: number;
+	soldTickets: number;
+	ordersCount: number;
+	perEvent: OrganizationEventRevenue[];
+}

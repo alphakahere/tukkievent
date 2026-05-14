@@ -1,10 +1,20 @@
 "use client";
 
 import { motion } from "motion/react";
-import { CalendarDays, FileEdit, Loader2, TrendingUp, Users } from "lucide-react";
+import {
+  CalendarDays,
+  FileEdit,
+  Loader2,
+  Ticket,
+  TrendingUp,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import { formatPrice } from "@/lib/utils";
 import { useListEventsQuery } from "@/store/api/event/event.api";
 import type { EventStatus } from "@/store/api/event/event.resource.type";
+import { useGetOrganizationRevenueQuery } from "@/store/api/order/order.api";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   DRAFT: "Brouillon",
@@ -21,9 +31,11 @@ export default function AnalyticsPage() {
     activeOrgId ? { organizationId: activeOrgId, limit: 100 } : undefined,
     { skip: !activeOrgId },
   );
+  const { data: revenue } = useGetOrganizationRevenueQuery(activeOrgId ?? "", {
+    skip: !activeOrgId,
+  });
 
   const events = data?.data ?? [];
-  const totalCapacity = events.reduce((sum, e) => sum + (e.capacity || 0), 0);
   const publishedCount = events.filter((e) => e.status === "PUBLISHED").length;
   const draftCount = events.filter((e) => e.status === "DRAFT").length;
 
@@ -35,8 +47,8 @@ export default function AnalyticsPage() {
     }))
     .filter((s) => s.count > 0);
 
-  const topByCapacity = [...events]
-    .sort((a, b) => (b.capacity || 0) - (a.capacity || 0))
+  const topByRevenue = (revenue?.perEvent ?? [])
+    .filter((e) => e.revenue > 0)
     .slice(0, 5);
 
   if (isLoading) {
@@ -51,28 +63,73 @@ export default function AnalyticsPage() {
     <div className="p-5 md:p-8 space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Analytiques</h1>
 
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-900">
-        Les indicateurs de revenu et de billets vendus seront disponibles dès que le module de ventes sera connecté.
-      </div>
-
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl border border-gray-100 p-5"
         >
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-            <CalendarDays size={20} className="text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
+            <Wallet size={20} className="text-emerald-600" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{events.length}</p>
-          <p className="text-xs font-medium text-gray-500 mt-0.5">Événements totaux</p>
+          <p className="text-2xl font-bold text-emerald-600">
+            {revenue ? formatPrice(revenue.revenue) : "—"}
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Revenu</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
+          className="bg-white rounded-2xl border border-gray-100 p-5"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <Ticket size={20} className="text-primary" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {revenue?.soldTickets ?? "—"}
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">
+            Billets vendus
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-2xl border border-gray-100 p-5"
+        >
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
+            <Users size={20} className="text-blue-500" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">
+            {revenue?.ordersCount ?? "—"}
+          </p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">
+            Commandes payées
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-white rounded-2xl border border-gray-100 p-5"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+            <CalendarDays size={20} className="text-primary" />
+          </div>
+          <p className="text-2xl font-bold text-gray-900">{events.length}</p>
+          <p className="text-xs font-medium text-gray-500 mt-0.5">Événements</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl border border-gray-100 p-5"
         >
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
@@ -85,7 +142,7 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.25 }}
           className="bg-white rounded-2xl border border-gray-100 p-5"
         >
           <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
@@ -93,19 +150,6 @@ export default function AnalyticsPage() {
           </div>
           <p className="text-2xl font-bold text-gray-900">{draftCount}</p>
           <p className="text-xs font-medium text-gray-500 mt-0.5">Brouillons</p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="bg-white rounded-2xl border border-gray-100 p-5"
-        >
-          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-3">
-            <Users size={20} className="text-blue-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{totalCapacity.toLocaleString()}</p>
-          <p className="text-xs font-medium text-gray-500 mt-0.5">Capacité totale</p>
         </motion.div>
       </div>
 
@@ -143,27 +187,40 @@ export default function AnalyticsPage() {
           )}
         </motion.div>
 
-        {/* Top events by capacity */}
+        {/* Top events by revenue */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
           className="bg-white rounded-2xl border border-gray-100 p-6"
         >
-          <h2 className="text-base font-semibold text-gray-900 mb-5">Top événements par capacité</h2>
-          {topByCapacity.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">Aucun événement</p>
+          <h2 className="text-base font-semibold text-gray-900 mb-5">
+            Top événements par revenu
+          </h2>
+          {topByRevenue.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">
+              Aucune vente pour le moment
+            </p>
           ) : (
             <div className="space-y-3">
-              {topByCapacity.map((event, i) => (
-                <div key={event.id} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-gray-400 w-5">{i + 1}</span>
+              {topByRevenue.map((event, i) => (
+                <div key={event.eventId} className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 w-5">
+                    {i + 1}
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
-                    <p className="text-xs text-gray-400">{STATUS_LABELS[event.status]}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {event.title}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {event.soldTickets} billet
+                      {event.soldTickets > 1 ? "s" : ""} ·{" "}
+                      {event.ordersCount} commande
+                      {event.ordersCount > 1 ? "s" : ""}
+                    </p>
                   </div>
-                  <span className="text-sm font-semibold text-gray-700 shrink-0">
-                    {event.capacity.toLocaleString()}
+                  <span className="text-sm font-semibold text-emerald-600 shrink-0">
+                    {formatPrice(event.revenue)}
                   </span>
                 </div>
               ))}
