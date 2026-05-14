@@ -132,15 +132,15 @@ function EventRow({ event }: { event: EventResource }) {
 
 			{/* Cover image + date badge + status pill */}
 			<div className="relative h-32 w-40 sm:w-48 shrink-0 bg-gray-100">
-				{/* {event.coverImageUrl ? (
-          <Image
-            src={event.coverImageUrl}
-            alt={event.title}
-            fill
-            sizes="192px"
-            className="object-cover"
-          />
-        ) : null} */}
+				{event.coverImageUrl ? (
+					<Image
+						src={event.coverImageUrl}
+						alt={event.title}
+						fill
+						sizes="192px"
+						className="object-cover"
+					/>
+				) : null}
 				<span className="absolute top-2.5 left-2.5">
 					<StatusBadge
 						status={event.status as EventStatus}
@@ -239,8 +239,10 @@ function EventRow({ event }: { event: EventResource }) {
 				title="Supprimer cet événement ?"
 				description={
 					<>
-						Cette action est irréversible. <strong>{event.title}</strong> et
-						toutes ses données associées seront définitivement supprimés.
+						Cette action est irréversible.{" "}
+						<strong>{event.title}</strong> et toutes ses
+						données associées seront définitivement
+						supprimés.
 					</>
 				}
 				confirmLabel="Supprimer"
