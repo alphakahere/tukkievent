@@ -15,28 +15,8 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { useGetEventQuery } from "@/store/api/event/event.api";
-import type { EventResource, EventStatus } from "@/store/api/event/event.resource.type";
-
-const STATUS_LABELS: Record<EventStatus, string> = {
-  DRAFT: "Brouillon",
-  PUBLISHED: "Publié",
-  CANCELLED: "Annulé",
-  COMPLETED: "Terminé",
-  REJECTED: "Rejeté",
-  SUSPENDED: "Suspendu",
-};
-
-const STATUS_STYLES: Record<EventStatus, string> = {
-  DRAFT: "bg-amber-50 text-amber-700",
-  PUBLISHED: "bg-emerald-50 text-emerald-700",
-  CANCELLED: "bg-gray-100 text-gray-500",
-  COMPLETED: "bg-gray-100 text-gray-500",
-  REJECTED: "bg-red-50 text-red-700",
-  SUSPENDED: "bg-red-50 text-red-700",
-};
+import type { EventResource } from "@/store/api/event/event.resource.type";
 
 const EventContext = createContext<EventResource | null>(null);
 
@@ -44,14 +24,6 @@ export function useEvent(): EventResource {
   const event = useContext(EventContext);
   if (!event) throw new Error("useEvent must be used inside an event layout");
   return event;
-}
-
-function StatusBadge({ status }: { status: EventStatus }) {
-  return (
-    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[status]}`}>
-      {STATUS_LABELS[status]}
-    </span>
-  );
 }
 
 export default function EventLayout({ children }: { children: React.ReactNode }) {
@@ -99,53 +71,34 @@ export default function EventLayout({ children }: { children: React.ReactNode })
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
-  const startDate = format(new Date(event.startDatetime), "EEE d MMM yyyy", { locale: fr });
-  const startTime = format(new Date(event.startDatetime), "HH:mm", { locale: fr });
+  const isPubliclyVisible = event.status === "PUBLISHED" || event.status === "COMPLETED";
 
   return (
     <EventContext.Provider value={event}>
       <div className="p-5 md:p-8">
-        <Link
-          href="/organizer/events"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4"
-        >
-          <ArrowLeft size={16} />
-          Événements
-        </Link>
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <Link
+            href="/organizer/events"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Événements
+          </Link>
+          {isPubliclyVisible && (
+            <Link
+              href={`/events/${event.slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors"
+            >
+              <ExternalLink size={14} />
+              Voir la page publique
+            </Link>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          {/* Sidebar: event card + sub-nav */}
+          {/* Sidebar: sub-nav */}
           <aside className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-              {event.coverImageUrl && (
-                <div className="h-32 w-full overflow-hidden bg-gray-100">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={event.coverImageUrl}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <div className="p-4 space-y-2">
-                <StatusBadge status={event.status as EventStatus} />
-                <h2 className="text-base font-semibold text-gray-900 line-clamp-2">
-                  {event.title}
-                </h2>
-                <p className="text-xs text-gray-500 capitalize">
-                  {startDate} · {startTime}
-                </p>
-                <Link
-                  href={`/events/${event.slug}`}
-                  target="_blank"
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
-                >
-                  <ExternalLink size={12} />
-                  Voir la page publique
-                </Link>
-              </div>
-            </div>
-
             <nav className="bg-white rounded-2xl border border-gray-200 p-2 space-y-1">
               {navItems.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActive(href, exact);
