@@ -8,9 +8,11 @@ import {
 	Mic,
 	Moon,
 	Music,
+	Search,
 	Sparkles,
 	Tag,
 	Trophy,
+	X,
 	type LucideIcon,
 } from "lucide-react";
 import Header from "./Header";
@@ -50,15 +52,26 @@ const SORT_OPTIONS: { value: VisitorEventSort; label: string }[] = [
 
 const PAGE_SIZE = 12;
 
+function useDebounced<T>(value: T, delay = 300): T {
+	const [debounced, setDebounced] = useState(value);
+	useEffect(() => {
+		const t = setTimeout(() => setDebounced(value), delay);
+		return () => clearTimeout(t);
+	}, [value, delay]);
+	return debounced;
+}
+
 export default function HomeContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 	const [sort, setSort] = useState<VisitorEventSort>("starting_soon");
 	const [page, setPage] = useState(1);
+	const [searchQuery, setSearchQuery] = useState("");
+	const debouncedQuery = useDebounced(searchQuery.trim(), 300);
 
 	// Reset to page 1 whenever the filter narrows the result set.
 	useEffect(() => {
 		setPage(1);
-	}, [selectedCategory, sort]);
+	}, [selectedCategory, sort, debouncedQuery]);
 
 	// Featured events power the hero independently of the filtered grid.
 	const featuredQuery = useListVisitorEventsQuery({
@@ -75,6 +88,7 @@ export default function HomeContent() {
 		sort,
 		page,
 		limit: PAGE_SIZE,
+		...(debouncedQuery && { q: debouncedQuery }),
 		...(selectedCategory ? { categoryId: selectedCategory } : {}),
 		...(sort === "starting_soon" ? { startDateFrom: nowIso } : {}),
 	});
@@ -100,6 +114,34 @@ export default function HomeContent() {
 						<Skeleton className="h-48 md:h-80 w-full rounded-2xl" />
 					</section>
 				) : null}
+
+				{/* Search */}
+				<section className="px-4 pt-4 pb-2">
+					<div className="relative">
+						<Search
+							size={18}
+							className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+						/>
+						<input
+							type="search"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							placeholder="Rechercher un événement, un artiste, un lieu..."
+							className="w-full h-12 pl-11 pr-10 bg-white border border-gray-200 rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+							aria-label="Rechercher"
+						/>
+						{searchQuery && (
+							<button
+								type="button"
+								onClick={() => setSearchQuery("")}
+								aria-label="Effacer la recherche"
+								className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+							>
+								<X size={14} className="text-gray-500" />
+							</button>
+						)}
+					</div>
+				</section>
 
 				{/* Categories */}
 				<section className="px-4 py-4">
@@ -181,7 +223,9 @@ export default function HomeContent() {
 					) : events.length === 0 ? (
 						<div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
 							<p className="text-sm text-gray-500">
-								Aucun événement ne correspond à ces filtres.
+								{debouncedQuery
+									? `Aucun événement trouvé pour « ${debouncedQuery} ».`
+									: "Aucun événement ne correspond à ces filtres."}
 							</p>
 						</div>
 					) : (
