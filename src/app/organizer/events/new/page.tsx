@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -32,6 +35,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
+import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 import { useCreateEventMutation } from "@/store/api/event/event.api";
 import type { CreateEventPayload } from "@/store/api/event/event.resource.type";
@@ -42,13 +46,75 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
 	return `${h}:${m}`;
 });
 
+const TIME_SELECT_OPTIONS = TIME_OPTIONS.map((t) => ({ value: t, label: t }));
+
 function combineDateTime(date: string, time: string): string | null {
 	if (!date) return null;
 	const t = time || "00:00";
 	return new Date(`${date}T${t}:00`).toISOString();
 }
 
-const TIME_SELECT_OPTIONS = TIME_OPTIONS.map((t) => ({ value: t, label: t }));
+// Coerce blank strings coming from number inputs into `undefined` so yup's
+// number validators surface a proper "required" error instead of NaN.
+const numberFromInput = (_value: unknown, originalValue: unknown) =>
+	originalValue === "" || originalValue === null ? undefined : Number(originalValue);
+
+const ticketSchema = yup.object({
+	name: yup.string().trim().required("Nom requis").max(80, "Au plus 80 caractères"),
+	price: yup
+		.number()
+		.transform(numberFromInput)
+		.typeError("Prix invalide")
+		.required("Prix requis")
+		.min(0, "Le prix doit être positif"),
+	quantity: yup
+		.number()
+		.transform(numberFromInput)
+		.typeError("Quantité invalide")
+		.required("Quantité requise")
+		.min(1, "Au moins 1 billet"),
+});
+
+const schema = yup.object({
+	title: yup
+		.string()
+		.trim()
+		.required("Le titre est requis")
+		.max(200, "Au plus 200 caractères"),
+	description: yup.string().trim().default("").max(5000, "Au plus 5000 caractères"),
+	categoryId: yup.string().default(""),
+	isOnline: yup.boolean().default(false),
+	city: yup.string().trim().default(""),
+	address: yup.string().trim().default(""),
+	onlineLink: yup
+		.string()
+		.trim()
+		.default("")
+		.when("isOnline", {
+			is: true,
+			then: (s) =>
+				s
+					.required("Le lien de connexion est requis")
+					.url("Lien invalide (https://...)"),
+			otherwise: (s) => s.notRequired(),
+		}),
+	capacity: yup
+		.number()
+		.transform(numberFromInput)
+		.typeError("Capacité invalide")
+		.required("La capacité est requise")
+		.min(0, "Doit être positif"),
+	startDate: yup.string().required("Date de début requise"),
+	startTime: yup.string().required("Heure de début requise"),
+	endDate: yup.string().default(""),
+	endTime: yup.string().default(""),
+	sameDayEnd: yup.boolean().default(false),
+	coverUrl: yup.string().default(""),
+	thumbnailUrl: yup.string().default(""),
+	tickets: yup.array().of(ticketSchema).default([]),
+});
+
+type FormValues = yup.InferType<typeof schema>;
 
 export default function CreateEventPage() {
 	const router = useRouter();
@@ -57,31 +123,63 @@ export default function CreateEventPage() {
 		useListVisitorEventCategoriesQuery();
 	const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
 
-	// General info
-	const [title, setTitle] = useState("");
-	const [description, setDescription] = useState("");
-	const [categoryId, setCategoryId] = useState("");
-	const [isOnline, setIsOnline] = useState(false);
-	const [city, setCity] = useState("");
-	const [address, setAddress] = useState("");
-	const [onlineLink, setOnlineLink] = useState("");
-	const [capacity, setCapacity] = useState("");
+	const {
+		register,
+		control,
+		handleSubmit,
+		watch,
+		setValue,
+		formState: { errors, isSubmitting },
+	} = useForm<FormValues>({
+		resolver: yupResolver(schema),
+		mode: "onTouched",
+		defaultValues: {
+			title: "",
+			description: "",
+			categoryId: "",
+			isOnline: false,
+			city: "",
+			address: "",
+			onlineLink: "",
+			capacity: undefined,
+			startDate: "",
+			startTime: "",
+			endDate: "",
+			endTime: "",
+			sameDayEnd: false,
+			coverUrl: "",
+			thumbnailUrl: "",
+			tickets: [],
+		},
+	});
 
-	// Dates
-	const [startDate, setStartDate] = useState("");
-	const [startTime, setStartTime] = useState("");
-	const [endDate, setEndDate] = useState("");
-	const [endTime, setEndTime] = useState("");
-	const [sameDayEnd, setSameDayEnd] = useState(false);
+	const {
+		fields: ticketFields,
+		append: appendTicket,
+		remove: removeTicket,
+	} = useFieldArray({ control, name: "tickets" });
 
+	const title = watch("title");
+	const categoryId = watch("categoryId");
+	const isOnline = watch("isOnline");
+	const city = watch("city");
+	const address = watch("address");
+	const capacity = watch("capacity");
+	const startDate = watch("startDate");
+	const startTime = watch("startTime");
+	const sameDayEnd = watch("sameDayEnd");
+	const coverUrl = watch("coverUrl");
+	const thumbnailUrl = watch("thumbnailUrl");
+
+	// Mirror start date into end date while "same day" is toggled on.
 	useEffect(() => {
-		if (sameDayEnd) setEndDate(startDate);
-	}, [sameDayEnd, startDate]);
+		if (sameDayEnd) {
+			setValue("endDate", startDate, { shouldValidate: true });
+		}
+	}, [sameDayEnd, startDate, setValue]);
 
-	// Media
-	const [coverUrl, setCoverUrl] = useState("");
-	const [thumbnailUrl, setThumbnailUrl] = useState("");
-	const [thumbnailFileName, setThumbnailFileName] = useState("");
+	// Media file pickers — values are kept in form state as data URLs.
+	const thumbnailFileNameRef = useRef("");
 	const coverInputRef = useRef<HTMLInputElement>(null);
 	const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,8 +194,7 @@ export default function CreateEventPage() {
 
 	async function handleImageChange(
 		e: React.ChangeEvent<HTMLInputElement>,
-		setUrl: (v: string) => void,
-		setName?: (v: string) => void,
+		field: "coverUrl" | "thumbnailUrl",
 	) {
 		const file = e.target.files?.[0];
 		if (!file) return;
@@ -111,8 +208,8 @@ export default function CreateEventPage() {
 		}
 		try {
 			const dataUrl = await readFileAsDataUrl(file);
-			setUrl(dataUrl);
-			setName?.(file.name);
+			setValue(field, dataUrl, { shouldDirty: true });
+			if (field === "thumbnailUrl") thumbnailFileNameRef.current = file.name;
 		} catch {
 			toast.error("Impossible de lire le fichier");
 		} finally {
@@ -120,105 +217,66 @@ export default function CreateEventPage() {
 		}
 	}
 
-	// Tickets
-	type TicketDraft = {
-		id: string;
-		name: string;
-		price: string;
-		quantity: string;
-	};
-	const [tickets, setTickets] = useState<TicketDraft[]>([]);
+	const pendingActionRef = useRef<"draft" | "publish" | null>(null);
 
-	function addTicket() {
-		setTickets((prev) => [
-			...prev,
-			{ id: crypto.randomUUID(), name: "", price: "", quantity: "" },
-		]);
-	}
-	function updateTicket(id: string, patch: Partial<TicketDraft>) {
-		setTickets((prev) =>
-			prev.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-		);
-	}
-	function removeTicket(id: string) {
-		setTickets((prev) => prev.filter((t) => t.id !== id));
-	}
-
-	// Publish
-	const [isDraft, setIsDraft] = useState(true);
-	const [pendingAction, setPendingAction] = useState<
-		"draft" | "publish" | null
-	>(null);
-
-	function isValid(): boolean {
-		return (
-			title.trim().length > 0 &&
-			capacity.trim().length > 0 &&
-			startDate.length > 0 &&
-			startTime.length > 0
-		);
-	}
-
-	async function handleSubmit(asDraft: boolean) {
+	const onValid = async (data: FormValues) => {
+		const asDraft = pendingActionRef.current !== "publish";
 		if (!activeOrgId) {
 			toast.error("Aucune organisation active");
 			return;
 		}
-		if (!isValid()) {
-			toast.error("Veuillez remplir les champs requis");
-			return;
-		}
 
-		const startDatetime = combineDateTime(startDate, startTime);
+		const startDatetime = combineDateTime(data.startDate, data.startTime);
 		if (!startDatetime) {
 			toast.error("Date de début invalide");
 			return;
 		}
-		const endDatetime = endDate
-			? combineDateTime(endDate, endTime || "23:59")
+		const endDatetime = data.endDate
+			? combineDateTime(data.endDate, data.endTime || "23:59")
 			: undefined;
 
 		const payload: CreateEventPayload = {
 			organizationId: activeOrgId,
-			title: title.trim(),
-			capacity: Number(capacity) || 0,
+			title: data.title,
+			capacity: data.capacity,
 			startDatetime,
 			status: asDraft ? "DRAFT" : "PUBLISHED",
 		};
-		if (description.trim()) payload.description = description.trim();
-		if (categoryId) payload.categoryId = categoryId;
+		if (data.description) payload.description = data.description;
+		if (data.categoryId) payload.categoryId = data.categoryId;
 		if (endDatetime) payload.endDatetime = endDatetime;
-		if (isOnline) {
+		if (data.isOnline) {
 			payload.isOnline = true;
-			if (onlineLink.trim()) payload.onlineLink = onlineLink.trim();
+			if (data.onlineLink) payload.onlineLink = data.onlineLink;
 		} else {
-			if (city.trim()) payload.city = city.trim();
-			if (address.trim()) payload.address = address.trim();
+			if (data.city) payload.city = data.city;
+			if (data.address) payload.address = data.address;
 		}
-		if (coverUrl.trim()) payload.coverImageUrl = coverUrl.trim();
-		if (thumbnailUrl.trim()) payload.thumbnailUrl = thumbnailUrl.trim();
+		if (data.coverUrl) payload.coverImageUrl = data.coverUrl;
+		if (data.thumbnailUrl) payload.thumbnailUrl = data.thumbnailUrl;
 
-		setPendingAction(asDraft ? "draft" : "publish");
 		try {
 			await createEvent(payload).unwrap();
 			toast.success(asDraft ? "Brouillon enregistré !" : "Événement publié !");
 			router.push("/organizer/events");
 		} catch (err) {
-			const message =
-				err &&
-				typeof err === "object" &&
-				"data" in err &&
-				err.data &&
-				typeof err.data === "object" &&
-				"message" in err.data
-					? String((err.data as { message: unknown }).message)
-					: "Une erreur est survenue";
-			toast.error(message);
-		} finally {
-			setPendingAction(null);
+			toast.error(getApiErrorMessage(err));
 		}
-	}
+	};
 
+	const onInvalid = () => {
+		toast.error("Veuillez corriger les champs en erreur");
+	};
+
+	const submitWith = (action: "draft" | "publish") => () => {
+		pendingActionRef.current = action;
+		void handleSubmit(onValid, onInvalid)();
+	};
+
+	const pendingAction = isSubmitting ? pendingActionRef.current : null;
+	const submitDisabled = isSubmitting || isCreating || !activeOrgId;
+
+	const ticketsLength = ticketFields.length;
 	const categoryName = categories.find((c) => c.id === categoryId)?.name;
 	const formattedStart =
 		startDate && startTime
@@ -233,7 +291,11 @@ export default function CreateEventPage() {
 		: [city, address].filter(Boolean).join(", ") || null;
 
 	return (
-		<div className="p-5 md:p-8 max-w-6xl mx-auto">
+		<form
+			noValidate
+			onSubmit={(e) => e.preventDefault()}
+			className="p-5 md:p-8 max-w-6xl mx-auto"
+		>
 			{/* Back link */}
 			<button
 				type="button"
@@ -251,16 +313,14 @@ export default function CreateEventPage() {
 					type="file"
 					accept="image/*"
 					className="hidden"
-					onChange={(e) => handleImageChange(e, setCoverUrl)}
+					onChange={(e) => handleImageChange(e, "coverUrl")}
 				/>
 				<input
 					ref={thumbnailInputRef}
 					type="file"
 					accept="image/*"
 					className="hidden"
-					onChange={(e) =>
-						handleImageChange(e, setThumbnailUrl, setThumbnailFileName)
-					}
+					onChange={(e) => handleImageChange(e, "thumbnailUrl")}
 				/>
 
 				<div className="relative h-56 md:h-72 bg-gradient-to-br from-gray-100 to-gray-50 group">
@@ -284,7 +344,9 @@ export default function CreateEventPage() {
 								</button>
 								<button
 									type="button"
-									onClick={() => setCoverUrl("")}
+									onClick={() =>
+										setValue("coverUrl", "", { shouldDirty: true })
+									}
 									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-xs font-semibold text-gray-800 shadow-sm hover:bg-white transition-colors"
 									aria-label="Retirer la couverture"
 								>
@@ -331,7 +393,7 @@ export default function CreateEventPage() {
 									Miniature (facultatif)
 								</p>
 								<p className="text-xs text-gray-500 truncate">
-									{thumbnailFileName ||
+									{thumbnailFileNameRef.current ||
 										"Utilisée dans les listes et résultats"}
 								</p>
 							</div>
@@ -349,8 +411,8 @@ export default function CreateEventPage() {
 								<button
 									type="button"
 									onClick={() => {
-										setThumbnailUrl("");
-										setThumbnailFileName("");
+										setValue("thumbnailUrl", "", { shouldDirty: true });
+										thumbnailFileNameRef.current = "";
 									}}
 									aria-label="Retirer la miniature"
 									className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -365,37 +427,44 @@ export default function CreateEventPage() {
 				<div className="p-5 md:p-6">
 					<input
 						type="text"
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
+						{...register("title")}
 						placeholder="Nom de votre événement"
 						className="w-full text-2xl md:text-3xl font-bold text-gray-900 placeholder:text-gray-300 bg-transparent border-0 focus:outline-none focus:ring-0 px-0"
 					/>
+					{errors.title?.message && (
+						<p className="text-xs text-red-500 mt-1" role="alert">
+							{errors.title.message}
+						</p>
+					)}
 					<div className="mt-3 w-full lg:w-1/2">
-						<Select
-							value={categoryId}
-							onValueChange={setCategoryId}
-							disabled={categoriesLoading}
-						>
-							<SelectTrigger
-								id="category"
-								className="w-full"
-							>
-								<SelectValue
-									placeholder={
-										categoriesLoading
-											? "Chargement..."
-											: "Choisir une catégorie"
-									}
-								/>
-							</SelectTrigger>
-							<SelectContent>
-								{categories.map((c) => (
-									<SelectItem key={c.id} value={c.id}>
-										{c.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<Controller
+							control={control}
+							name="categoryId"
+							render={({ field }) => (
+								<Select
+									value={field.value}
+									onValueChange={field.onChange}
+									disabled={categoriesLoading}
+								>
+									<SelectTrigger id="category" className="w-full">
+										<SelectValue
+											placeholder={
+												categoriesLoading
+													? "Chargement..."
+													: "Choisir une catégorie"
+											}
+										/>
+									</SelectTrigger>
+									<SelectContent>
+										{categories.map((c) => (
+											<SelectItem key={c.id} value={c.id}>
+												{c.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							)}
+						/>
 					</div>
 				</div>
 			</div>
@@ -418,9 +487,9 @@ export default function CreateEventPage() {
 							id="description"
 							label="Description"
 							labelClassName="sr-only"
-							value={description}
-							onChange={(e) => setDescription(e.target.value)}
 							placeholder="Décrivez votre événement, le programme, les artistes, ce que les participants vivront..."
+							error={errors.description?.message}
+							{...register("description")}
 						/>
 					</section>
 
@@ -436,29 +505,49 @@ export default function CreateEventPage() {
 						</header>
 
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-							<DatePicker
-								id="startDate"
-								label="Date de début"
-								required
-								value={startDate}
-								onChange={setStartDate}
+							<Controller
+								control={control}
+								name="startDate"
+								render={({ field, fieldState }) => (
+									<DatePicker
+										id="startDate"
+										label="Date de début"
+										required
+										value={field.value}
+										onChange={field.onChange}
+										error={fieldState.error?.message}
+									/>
+								)}
 							/>
-							<FormSelect
-								id="startTime"
-								label="Heure de début"
-								required
-								value={startTime}
-								onValueChange={setStartTime}
-								placeholder="Choisir une heure"
-								options={TIME_SELECT_OPTIONS}
+							<Controller
+								control={control}
+								name="startTime"
+								render={({ field, fieldState }) => (
+									<FormSelect
+										id="startTime"
+										label="Heure de début"
+										required
+										value={field.value}
+										onValueChange={field.onChange}
+										placeholder="Choisir une heure"
+										options={TIME_SELECT_OPTIONS}
+										error={fieldState.error?.message}
+									/>
+								)}
 							/>
 						</div>
 
 						<div className="flex items-center gap-2">
-							<Checkbox
-								id="sameDayEnd"
-								checked={sameDayEnd}
-								onCheckedChange={(c) => setSameDayEnd(c === true)}
+							<Controller
+								control={control}
+								name="sameDayEnd"
+								render={({ field }) => (
+									<Checkbox
+										id="sameDayEnd"
+										checked={field.value}
+										onCheckedChange={(c) => field.onChange(c === true)}
+									/>
+								)}
 							/>
 							<label
 								htmlFor="sameDayEnd"
@@ -469,25 +558,39 @@ export default function CreateEventPage() {
 						</div>
 
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-							<DatePicker
-								id="endDate"
-								label="Date de fin"
-								value={endDate}
-								onChange={setEndDate}
-								disabled={sameDayEnd}
-								disabledDates={(d) =>
-									startDate
-										? d < new Date(`${startDate}T00:00:00`)
-										: false
-								}
+							<Controller
+								control={control}
+								name="endDate"
+								render={({ field, fieldState }) => (
+									<DatePicker
+										id="endDate"
+										label="Date de fin"
+										value={field.value}
+										onChange={field.onChange}
+										disabled={sameDayEnd}
+										disabledDates={(d) =>
+											startDate
+												? d < new Date(`${startDate}T00:00:00`)
+												: false
+										}
+										error={fieldState.error?.message}
+									/>
+								)}
 							/>
-							<FormSelect
-								id="endTime"
-								label="Heure de fin"
-								value={endTime}
-								onValueChange={setEndTime}
-								placeholder="Choisir une heure"
-								options={TIME_SELECT_OPTIONS}
+							<Controller
+								control={control}
+								name="endTime"
+								render={({ field, fieldState }) => (
+									<FormSelect
+										id="endTime"
+										label="Heure de fin"
+										value={field.value}
+										onValueChange={field.onChange}
+										placeholder="Choisir une heure"
+										options={TIME_SELECT_OPTIONS}
+										error={fieldState.error?.message}
+									/>
+								)}
 							/>
 						</div>
 					</section>
@@ -496,9 +599,7 @@ export default function CreateEventPage() {
 					<section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
 						<header className="flex items-start justify-between gap-3">
 							<div>
-								<h2 className="text-base font-semibold text-gray-900">
-									Lieu
-								</h2>
+								<h2 className="text-base font-semibold text-gray-900">Lieu</h2>
 								<p className="text-xs text-gray-500 mt-0.5">
 									Où se déroule l&apos;événement ?
 								</p>
@@ -506,22 +607,23 @@ export default function CreateEventPage() {
 							<div className="inline-flex items-center gap-1 p-1 rounded-full bg-gray-100">
 								<button
 									type="button"
-									onClick={() => setIsOnline(false)}
+									onClick={() =>
+										setValue("isOnline", false, { shouldValidate: true })
+									}
 									className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
 										!isOnline
 											? "bg-white text-gray-900 shadow-sm"
 											: "text-gray-500 hover:text-gray-700"
 									}`}
 								>
-									<MapPin
-										size={12}
-										className="inline mr-1 -mt-0.5"
-									/>
+									<MapPin size={12} className="inline mr-1 -mt-0.5" />
 									Présentiel
 								</button>
 								<button
 									type="button"
-									onClick={() => setIsOnline(true)}
+									onClick={() =>
+										setValue("isOnline", true, { shouldValidate: true })
+									}
 									className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
 										isOnline
 											? "bg-white text-gray-900 shadow-sm"
@@ -539,25 +641,25 @@ export default function CreateEventPage() {
 								id="onlineLink"
 								label="Lien de connexion"
 								type="url"
-								value={onlineLink}
-								onChange={(e) => setOnlineLink(e.target.value)}
 								placeholder="https://meet.example.com/..."
+								error={errors.onlineLink?.message}
+								{...register("onlineLink")}
 							/>
 						) : (
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 								<FormInput
 									id="city"
 									label="Ville"
-									value={city}
-									onChange={(e) => setCity(e.target.value)}
 									placeholder="Dakar"
+									error={errors.city?.message}
+									{...register("city")}
 								/>
 								<FormInput
 									id="address"
 									label="Adresse"
-									value={address}
-									onChange={(e) => setAddress(e.target.value)}
 									placeholder="Place de l'Obélisque"
+									error={errors.address?.message}
+									{...register("address")}
 								/>
 							</div>
 						)}
@@ -579,9 +681,9 @@ export default function CreateEventPage() {
 							labelClassName="sr-only"
 							type="number"
 							min={0}
-							value={capacity}
-							onChange={(e) => setCapacity(e.target.value)}
 							placeholder="500"
+							error={errors.capacity?.message}
+							{...register("capacity")}
 						/>
 					</section>
 
@@ -596,12 +698,9 @@ export default function CreateEventPage() {
 							</p>
 						</header>
 
-						{tickets.length === 0 ? (
+						{ticketFields.length === 0 ? (
 							<div className="flex flex-col items-center justify-center text-center py-8 px-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-								<TicketIcon
-									size={28}
-									className="text-gray-300 mb-2"
-								/>
+								<TicketIcon size={28} className="text-gray-300 mb-2" />
 								<p className="text-sm font-medium text-gray-700">
 									Aucun billet pour le moment
 								</p>
@@ -611,9 +710,9 @@ export default function CreateEventPage() {
 							</div>
 						) : (
 							<div className="space-y-3">
-								{tickets.map((t, idx) => (
+								{ticketFields.map((field, idx) => (
 									<div
-										key={t.id}
+										key={field.id}
 										className="rounded-xl border border-gray-200 p-4 space-y-3"
 									>
 										<div className="flex items-center justify-between">
@@ -622,7 +721,7 @@ export default function CreateEventPage() {
 											</span>
 											<button
 												type="button"
-												onClick={() => removeTicket(t.id)}
+												onClick={() => removeTicket(idx)}
 												aria-label="Supprimer ce billet"
 												className="p-1.5 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
 											>
@@ -631,41 +730,33 @@ export default function CreateEventPage() {
 										</div>
 										<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 											<FormInput
-												id={`ticket-name-${t.id}`}
+												id={`ticket-name-${field.id}`}
 												label="Nom"
 												required
-												value={t.name}
-												onChange={(e) =>
-													updateTicket(t.id, { name: e.target.value })
-												}
 												placeholder="Standard, VIP..."
 												containerClassName="sm:col-span-2"
+												error={errors.tickets?.[idx]?.name?.message}
+												{...register(`tickets.${idx}.name`)}
 											/>
 											<FormInput
-												id={`ticket-price-${t.id}`}
+												id={`ticket-price-${field.id}`}
 												label="Prix (FCFA)"
 												required
 												type="number"
 												min={0}
-												value={t.price}
-												onChange={(e) =>
-													updateTicket(t.id, { price: e.target.value })
-												}
 												placeholder="0 pour gratuit"
+												error={errors.tickets?.[idx]?.price?.message}
+												{...register(`tickets.${idx}.price`)}
 											/>
 											<FormInput
-												id={`ticket-qty-${t.id}`}
+												id={`ticket-qty-${field.id}`}
 												label="Quantité"
 												required
 												type="number"
 												min={1}
-												value={t.quantity}
-												onChange={(e) =>
-													updateTicket(t.id, {
-														quantity: e.target.value,
-													})
-												}
 												placeholder="100"
+												error={errors.tickets?.[idx]?.quantity?.message}
+												{...register(`tickets.${idx}.quantity`)}
 											/>
 										</div>
 									</div>
@@ -675,7 +766,9 @@ export default function CreateEventPage() {
 
 						<button
 							type="button"
-							onClick={addTicket}
+							onClick={() =>
+								appendTicket({ name: "", price: 0, quantity: 1 })
+							}
 							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-200 text-sm font-medium text-gray-600 hover:border-primary hover:text-primary transition-colors"
 						>
 							<Plus size={16} />
@@ -693,17 +786,12 @@ export default function CreateEventPage() {
 								Enregistrez en brouillon pour continuer plus tard, ou publiez
 								pour rendre l&apos;événement visible.
 							</p>
-							{!isValid() && (
-								<p className="text-xs text-amber-600 mt-1.5">
-									Titre, capacité et date de début requis.
-								</p>
-							)}
 						</div>
 						<div className="flex flex-col-reverse sm:flex-row sm:justify-end items-stretch sm:items-center gap-2">
 							<button
 								type="button"
-								onClick={() => handleSubmit(true)}
-								disabled={isCreating || !activeOrgId || !isValid()}
+								onClick={submitWith("draft")}
+								disabled={submitDisabled}
 								className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-800 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
 							>
 								{pendingAction === "draft" ? (
@@ -713,8 +801,8 @@ export default function CreateEventPage() {
 							</button>
 							<button
 								type="button"
-								onClick={() => handleSubmit(false)}
-								disabled={isCreating || !activeOrgId || !isValid()}
+								onClick={submitWith("publish")}
+								disabled={submitDisabled}
 								className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
 							>
 								{pendingAction === "publish" ? (
@@ -754,17 +842,19 @@ export default function CreateEventPage() {
 							<SummaryRow
 								icon={Users}
 								label="Capacité"
-								value={
-									capacity ? `${capacity} place${Number(capacity) > 1 ? "s" : ""}` : null
-								}
+								value={(() => {
+									const n = Number(capacity);
+									if (!Number.isFinite(n) || n <= 0) return null;
+									return `${n} place${n > 1 ? "s" : ""}`;
+								})()}
 							/>
 							<SummaryRow
 								icon={TicketIcon}
 								label="Billets"
 								value={
-									tickets.length === 0
+									ticketsLength === 0
 										? null
-										: `${tickets.length} type${tickets.length > 1 ? "s" : ""}`
+										: `${ticketsLength} type${ticketsLength > 1 ? "s" : ""}`
 								}
 							/>
 							{categoryName && (
@@ -775,59 +865,10 @@ export default function CreateEventPage() {
 								/>
 							)}
 						</dl>
-
-						<div className="px-5 py-4 border-t border-gray-100 space-y-3">
-							<div className="flex items-center justify-between gap-3">
-								<div className="min-w-0">
-									<p className="text-sm font-medium text-gray-900">
-										Brouillon
-									</p>
-									<p className="text-xs text-gray-500">
-										Non visible publiquement
-									</p>
-								</div>
-								<button
-									type="button"
-									role="switch"
-									aria-checked={isDraft}
-									onClick={() => setIsDraft(!isDraft)}
-									className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-										isDraft ? "bg-primary" : "bg-gray-300"
-									}`}
-								>
-									<span
-										className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-											isDraft ? "translate-x-6" : "translate-x-1"
-										}`}
-									/>
-								</button>
-							</div>
-
-							<button
-								type="button"
-								onClick={() => handleSubmit(isDraft)}
-								disabled={isCreating || !activeOrgId || !isValid()}
-								className="w-full py-3 px-4 bg-primary text-white rounded-full font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-							>
-								{isCreating ? (
-									<Loader2 size={16} className="animate-spin" />
-								) : (
-									<Check size={16} />
-								)}
-								{isDraft
-									? "Enregistrer le brouillon"
-									: "Publier l'événement"}
-							</button>
-							{!isValid() && (
-								<p className="text-xs text-gray-400 text-center">
-									Titre, capacité et date de début requis
-								</p>
-							)}
-						</div>
 					</div>
 				</aside>
 			</div>
-		</div>
+		</form>
 	);
 }
 
