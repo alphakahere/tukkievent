@@ -22,7 +22,11 @@ import {
 import { TicketStatus } from "@/store/api/event/event.type";
 import type { Attendee } from "@/store/api/tickets/tickets.type";
 import { getApiErrorMessage } from "@/store/api/auth/error";
+import { useAppSelector } from "@/store/features/hooks";
+import { selectAccessToken } from "@/store/selectors/auth.selectors";
 import { useEvent } from "../layout";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const PAGE_SIZE = 20;
 
@@ -85,6 +89,9 @@ export default function AttendeesPage() {
   const [checkInTicket, { isLoading: checkInLoading }] =
     useCheckInTicketMutation();
 
+  const accessToken = useAppSelector(selectAccessToken);
+  const [exporting, setExporting] = useState(false);
+
   const handleCheckIn = async (attendee: Attendee) => {
     try {
       await checkInTicket({
@@ -102,7 +109,55 @@ export default function AttendeesPage() {
     }
   };
 
-  const handleExport = () => toast.info("Export CSV bientôt disponible");
+  const handleExport = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (debouncedQuery.trim()) params.set("q", debouncedQuery.trim());
+      if (statusFilter !== "ALL") params.set("status", statusFilter);
+      const qs = params.toString();
+      const res = await fetch(
+        `${API_BASE_URL}/events/${eventId}/attendees/export${qs ? `?${qs}` : ""}`,
+        {
+          headers: accessToken
+            ? { Authorization: `Bearer ${accessToken}` }
+            : undefined,
+        },
+      );
+      if (!res.ok) {
+        let message = `Échec de l'export (${res.status})`;
+        try {
+          const body = (await res.json()) as { message?: string };
+          if (body?.message) message = body.message;
+        } catch {
+          /* response wasn't JSON */
+        }
+        throw new Error(message);
+      }
+      const blob = await res.blob();
+      const filename =
+        /filename="?([^";]+)"?/.exec(
+          res.headers.get("content-disposition") ?? "",
+        )?.[1] ?? `participants-${eventId}.csv`;
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Export téléchargé");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Impossible d'exporter",
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const attendees = attendeesPage?.data ?? [];
   const totalPages = attendeesPage?.meta.totalPages ?? 1;
@@ -161,9 +216,14 @@ export default function AttendeesPage() {
         <button
           type="button"
           onClick={handleExport}
-          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors shrink-0"
+          disabled={exporting}
+          className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download size={16} />
+          {exporting ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Download size={16} />
+          )}
           Exporter CSV
         </button>
       </div>
