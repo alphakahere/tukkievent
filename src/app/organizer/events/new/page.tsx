@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -39,6 +38,10 @@ import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 import { useCreateEventMutation } from "@/store/api/event/event.api";
 import type { CreateEventPayload } from "@/store/api/event/event.resource.type";
+import {
+	type EventFormValues,
+	eventFormSchema,
+} from "../_form/schema";
 
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
 	const h = String(Math.floor(i / 2)).padStart(2, "0");
@@ -54,68 +57,6 @@ function combineDateTime(date: string, time: string): string | null {
 	return new Date(`${date}T${t}:00`).toISOString();
 }
 
-// Coerce blank strings coming from number inputs into `undefined` so yup's
-// number validators surface a proper "required" error instead of NaN.
-const numberFromInput = (_value: unknown, originalValue: unknown) =>
-	originalValue === "" || originalValue === null ? undefined : Number(originalValue);
-
-const ticketSchema = yup.object({
-	name: yup.string().trim().required("Nom requis").max(80, "Au plus 80 caractères"),
-	price: yup
-		.number()
-		.transform(numberFromInput)
-		.typeError("Prix invalide")
-		.required("Prix requis")
-		.min(0, "Le prix doit être positif"),
-	quantity: yup
-		.number()
-		.transform(numberFromInput)
-		.typeError("Quantité invalide")
-		.required("Quantité requise")
-		.min(1, "Au moins 1 billet"),
-});
-
-const schema = yup.object({
-	title: yup
-		.string()
-		.trim()
-		.required("Le titre est requis")
-		.max(200, "Au plus 200 caractères"),
-	description: yup.string().trim().default("").max(5000, "Au plus 5000 caractères"),
-	categoryId: yup.string().default(""),
-	isOnline: yup.boolean().default(false),
-	city: yup.string().trim().default(""),
-	address: yup.string().trim().default(""),
-	onlineLink: yup
-		.string()
-		.trim()
-		.default("")
-		.when("isOnline", {
-			is: true,
-			then: (s) =>
-				s
-					.required("Le lien de connexion est requis")
-					.url("Lien invalide (https://...)"),
-			otherwise: (s) => s.notRequired(),
-		}),
-	capacity: yup
-		.number()
-		.transform(numberFromInput)
-		.typeError("Capacité invalide")
-		.required("La capacité est requise")
-		.min(0, "Doit être positif"),
-	startDate: yup.string().required("Date de début requise"),
-	startTime: yup.string().required("Heure de début requise"),
-	endDate: yup.string().default(""),
-	endTime: yup.string().default(""),
-	sameDayEnd: yup.boolean().default(false),
-	coverUrl: yup.string().default(""),
-	thumbnailUrl: yup.string().default(""),
-	tickets: yup.array().of(ticketSchema).default([]),
-});
-
-type FormValues = yup.InferType<typeof schema>;
-
 export default function CreateEventPage() {
 	const router = useRouter();
 	const { activeOrgId } = useOrganizerOrg();
@@ -130,8 +71,8 @@ export default function CreateEventPage() {
 		watch,
 		setValue,
 		formState: { errors, isSubmitting },
-	} = useForm<FormValues>({
-		resolver: yupResolver(schema),
+	} = useForm<EventFormValues>({
+		resolver: yupResolver(eventFormSchema),
 		mode: "onTouched",
 		defaultValues: {
 			title: "",
@@ -219,7 +160,7 @@ export default function CreateEventPage() {
 
 	const pendingActionRef = useRef<"draft" | "publish" | null>(null);
 
-	const onValid = async (data: FormValues) => {
+	const onValid = async (data: EventFormValues) => {
 		const asDraft = pendingActionRef.current !== "publish";
 		if (!activeOrgId) {
 			toast.error("Aucune organisation active");
