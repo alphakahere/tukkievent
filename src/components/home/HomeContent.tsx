@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useListVisitorEventsQuery } from "@/store/api/event/event.api";
 import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 import type { Event } from "@/store/api/event/event.type";
+import { assetUrl } from "@/lib/utils";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Concert: "🎵",
@@ -175,15 +176,13 @@ export default function HomeContent() {
                         href={`/events/${event.slug}`}
                         className="flex gap-4 bg-white rounded-2xl p-3 border border-gray-100 hover:border-gray-200 transition-colors"
                       >
-                        {event.coverImageUrl && (
-                          <Image
-                            src={event.coverImageUrl}
-                            alt={event.title}
-                            width={96}
-                            height={96}
-                            className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
-                          />
-                        )}
+                        <Image
+                          src={assetUrl(event.coverImageUrl)}
+                          alt={event.title}
+                          width={96}
+                          height={96}
+                          className="w-24 h-24 object-cover rounded-xl flex-shrink-0"
+                        />
                         <div className="flex-1 min-w-0">
                           <span className="inline-block px-2 py-1 bg-tukki-success/10 text-tukki-success rounded-full text-xs font-semibold mb-1">
                             NOUVEAU

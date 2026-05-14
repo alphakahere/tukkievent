@@ -7,6 +7,7 @@ import { Calendar, MapPin, TrendingUp, Heart } from "lucide-react";
 import { Event } from "@/store/api/event/event.type";
 import { format } from "date-fns";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { assetUrl } from "@/lib/utils";
 
 function getPriceRange(event: Event): { min: number; max: number } | null {
   if (!event.ticketTypes?.length) return null;
@@ -54,7 +55,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
       >
         <div className="relative h-40">
           <Image
-            src={event.coverImageUrl}
+            src={assetUrl(event.coverImageUrl)}
             alt={event.title}
             className="w-full h-full object-cover"
             width={256}
