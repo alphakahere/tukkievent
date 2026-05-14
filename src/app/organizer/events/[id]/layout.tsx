@@ -58,6 +58,15 @@ export default function EventLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // Standalone routes opt out of the sub-nav shell so they can render
+  // full-screen like /events/new.
+  const isStandalone = pathname.endsWith("/edit");
+  if (isStandalone) {
+    return (
+      <EventContext.Provider value={event}>{children}</EventContext.Provider>
+    );
+  }
+
   const base = `/organizer/events/${event.id}`;
   const navItems = [
     { href: base, label: "Aperçu", icon: BarChart3, exact: true },
@@ -98,7 +107,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           {/* Sidebar: sub-nav */}
-          <aside className="space-y-4">
+          <aside className="space-y-4 lg:sticky lg:top-5 lg:self-start">
             <nav className="bg-white rounded-2xl border border-gray-200 p-2 space-y-1">
               {navItems.map(({ href, label, icon: Icon, exact }) => {
                 const active = isActive(href, exact);

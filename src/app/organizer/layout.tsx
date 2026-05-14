@@ -196,7 +196,7 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
   const orgInitial = orgName.charAt(0);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex flex-col">
+    <div className="h-screen bg-[#F7F7F7] flex flex-col">
       {/* ── Top bar ── */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100 h-16 shrink-0">
         <div className="h-full px-4 lg:px-6 flex items-center justify-between">

@@ -40,6 +40,11 @@ export const eventFormSchema = yup.object({
 		.trim()
 		.default("")
 		.max(5000, "Au plus 5000 caractères"),
+	shortDescription: yup
+		.string()
+		.trim()
+		.default("")
+		.max(200, "Au plus 200 caractères"),
 	categoryId: yup.string().default(""),
 	isOnline: yup.boolean().default(false),
 	city: yup.string().trim().default(""),
@@ -62,6 +67,13 @@ export const eventFormSchema = yup.object({
 		.typeError("Capacité invalide")
 		.required("La capacité est requise")
 		.min(0, "Doit être positif"),
+	minAge: yup
+		.number()
+		.transform(numberFromInput)
+		.typeError("Âge invalide")
+		.min(0, "Doit être positif")
+		.max(120, "Valeur trop élevée")
+		.default(0),
 	startDate: yup.string().required("Date de début requise"),
 	startTime: yup.string().required("Heure de début requise"),
 	endDate: yup.string().default(""),
@@ -69,6 +81,16 @@ export const eventFormSchema = yup.object({
 	sameDayEnd: yup.boolean().default(false),
 	coverUrl: yup.string().default(""),
 	thumbnailUrl: yup.string().default(""),
+	metaTitle: yup
+		.string()
+		.trim()
+		.default("")
+		.max(70, "Au plus 70 caractères"),
+	metaDescription: yup
+		.string()
+		.trim()
+		.default("")
+		.max(160, "Au plus 160 caractères"),
 	tickets: yup.array().of(ticketSchema).default([]),
 });
 

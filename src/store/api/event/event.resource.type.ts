@@ -8,10 +8,22 @@ export type EventStatus =
 	| "REJECTED"
 	| "SUSPENDED";
 
+export interface EventCategorySummary {
+	id: string;
+	name: string;
+	slug: string;
+	description: string | null;
+	icon: string | null;
+	color: string | null;
+	isActive: boolean;
+	createdAt: string;
+}
+
 export interface EventResource {
 	id: string;
 	organizationId: string;
 	categoryId: string | null;
+	category?: EventCategorySummary | null;
 	title: string;
 	slug: string;
 	description: string | null;
@@ -28,6 +40,8 @@ export interface EventResource {
 	featuredUntil: string | null;
 	capacity: number;
 	minAge: number;
+	metaTitle: string | null;
+	metaDescription: string | null;
 	status: EventStatus;
 	createdAt: string;
 	updatedAt: string;

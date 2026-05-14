@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -38,6 +38,7 @@ import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 import { useCreateEventMutation } from "@/store/api/event/event.api";
 import type { CreateEventPayload } from "@/store/api/event/event.resource.type";
+import { useUploadImageMutation } from "@/store/api/uploads/uploads.api";
 import {
 	type EventFormValues,
 	eventFormSchema,
@@ -63,6 +64,11 @@ export default function CreateEventPage() {
 	const { data: categories = [], isLoading: categoriesLoading } =
 		useListVisitorEventCategoriesQuery();
 	const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
+	const [uploadImage] = useUploadImageMutation();
+	const [coverFile, setCoverFile] = useState<File | null>(null);
+	const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+	const [coverPreview, setCoverPreview] = useState<string>("");
+	const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
 
 	const {
 		register,
@@ -109,8 +115,6 @@ export default function CreateEventPage() {
 	const startDate = watch("startDate");
 	const startTime = watch("startTime");
 	const sameDayEnd = watch("sameDayEnd");
-	const coverUrl = watch("coverUrl");
-	const thumbnailUrl = watch("thumbnailUrl");
 
 	// Mirror start date into end date while "same day" is toggled on.
 	useEffect(() => {
@@ -124,20 +128,33 @@ export default function CreateEventPage() {
 	const coverInputRef = useRef<HTMLInputElement>(null);
 	const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-	function readFileAsDataUrl(file: File): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => resolve(String(reader.result));
-			reader.onerror = () => reject(reader.error);
-			reader.readAsDataURL(file);
-		});
+	// Object URLs we created locally so they can be revoked on replace/unmount.
+	// Remote/already-uploaded URLs in `coverPreview` are not tracked here.
+	const objectUrlsRef = useRef<Set<string>>(new Set());
+
+	function revokeObjectUrl(url: string) {
+		if (objectUrlsRef.current.has(url)) {
+			URL.revokeObjectURL(url);
+			objectUrlsRef.current.delete(url);
+		}
 	}
 
-	async function handleImageChange(
+	useEffect(() => {
+		const urls = objectUrlsRef.current;
+		return () => {
+			urls.forEach((u) => URL.revokeObjectURL(u));
+			urls.clear();
+		};
+	}, []);
+
+	function handleImageChange(
 		e: React.ChangeEvent<HTMLInputElement>,
 		field: "coverUrl" | "thumbnailUrl",
 	) {
 		const file = e.target.files?.[0];
+		// Reset the native input so picking the same file twice still fires a
+		// change event.
+		e.target.value = "";
 		if (!file) return;
 		if (!file.type.startsWith("image/")) {
 			toast.error("Le fichier doit être une image");
@@ -147,15 +164,35 @@ export default function CreateEventPage() {
 			toast.error("L'image ne doit pas dépasser 5 Mo");
 			return;
 		}
-		try {
-			const dataUrl = await readFileAsDataUrl(file);
-			setValue(field, dataUrl, { shouldDirty: true });
-			if (field === "thumbnailUrl") thumbnailFileNameRef.current = file.name;
-		} catch {
-			toast.error("Impossible de lire le fichier");
-		} finally {
-			e.target.value = "";
+		const preview = URL.createObjectURL(file);
+		objectUrlsRef.current.add(preview);
+		if (field === "coverUrl") {
+			revokeObjectUrl(coverPreview);
+			setCoverFile(file);
+			setCoverPreview(preview);
+		} else {
+			revokeObjectUrl(thumbnailPreview);
+			setThumbnailFile(file);
+			setThumbnailPreview(preview);
+			thumbnailFileNameRef.current = file.name;
 		}
+		// Clear any stale URL stored on the form — it'll be filled in by the
+		// upload call at submit time.
+		setValue(field, "", { shouldDirty: true });
+	}
+
+	function clearImage(field: "coverUrl" | "thumbnailUrl") {
+		if (field === "coverUrl") {
+			revokeObjectUrl(coverPreview);
+			setCoverFile(null);
+			setCoverPreview("");
+		} else {
+			revokeObjectUrl(thumbnailPreview);
+			setThumbnailFile(null);
+			setThumbnailPreview("");
+			thumbnailFileNameRef.current = "";
+		}
+		setValue(field, "", { shouldDirty: true });
 	}
 
 	const pendingActionRef = useRef<"draft" | "publish" | null>(null);
@@ -176,6 +213,22 @@ export default function CreateEventPage() {
 			? combineDateTime(data.endDate, data.endTime || "23:59")
 			: undefined;
 
+		let coverImageUrl = data.coverUrl;
+		let thumbnailUrl = data.thumbnailUrl;
+		try {
+			const [coverRes, thumbRes] = await Promise.all([
+				coverFile ? uploadImage(coverFile).unwrap() : Promise.resolve(null),
+				thumbnailFile
+					? uploadImage(thumbnailFile).unwrap()
+					: Promise.resolve(null),
+			]);
+			if (coverRes) coverImageUrl = coverRes.path;
+			if (thumbRes) thumbnailUrl = thumbRes.path;
+		} catch (err) {
+			toast.error(getApiErrorMessage(err, "Échec de l'envoi des images"));
+			return;
+		}
+
 		const payload: CreateEventPayload = {
 			organizationId: activeOrgId,
 			title: data.title,
@@ -193,8 +246,8 @@ export default function CreateEventPage() {
 			if (data.city) payload.city = data.city;
 			if (data.address) payload.address = data.address;
 		}
-		if (data.coverUrl) payload.coverImageUrl = data.coverUrl;
-		if (data.thumbnailUrl) payload.thumbnailUrl = data.thumbnailUrl;
+		if (coverImageUrl) payload.coverImageUrl = coverImageUrl;
+		if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
 
 		try {
 			await createEvent(payload).unwrap();
@@ -265,11 +318,11 @@ export default function CreateEventPage() {
 				/>
 
 				<div className="relative h-56 md:h-72 bg-gradient-to-br from-gray-100 to-gray-50 group">
-					{coverUrl ? (
+					{coverPreview ? (
 						<>
 							{/* eslint-disable-next-line @next/next/no-img-element */}
 							<img
-								src={coverUrl}
+								src={coverPreview}
 								alt="Couverture"
 								className="w-full h-full object-cover"
 							/>
@@ -285,9 +338,7 @@ export default function CreateEventPage() {
 								</button>
 								<button
 									type="button"
-									onClick={() =>
-										setValue("coverUrl", "", { shouldDirty: true })
-									}
+									onClick={() => clearImage("coverUrl")}
 									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-xs font-semibold text-gray-800 shadow-sm hover:bg-white transition-colors"
 									aria-label="Retirer la couverture"
 								>
@@ -317,10 +368,10 @@ export default function CreateEventPage() {
 				<div className="px-5 md:px-6 pt-4 border-t border-gray-100 bg-gray-50/50">
 					<div className="flex items-center justify-between gap-3 py-1">
 						<div className="flex items-center gap-3 min-w-0">
-							{thumbnailUrl ? (
+							{thumbnailPreview ? (
 								/* eslint-disable-next-line @next/next/no-img-element */
 								<img
-									src={thumbnailUrl}
+									src={thumbnailPreview}
 									alt="Miniature"
 									className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
 								/>
@@ -346,15 +397,12 @@ export default function CreateEventPage() {
 								className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
 							>
 								<Pencil size={12} />
-								{thumbnailUrl ? "Modifier" : "Ajouter"}
+								{thumbnailPreview ? "Modifier" : "Ajouter"}
 							</button>
-							{thumbnailUrl && (
+							{thumbnailPreview && (
 								<button
 									type="button"
-									onClick={() => {
-										setValue("thumbnailUrl", "", { shouldDirty: true });
-										thumbnailFileNameRef.current = "";
-									}}
+									onClick={() => clearImage("thumbnailUrl")}
 									aria-label="Retirer la miniature"
 									className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
 								>

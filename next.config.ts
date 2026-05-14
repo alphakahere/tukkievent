@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
 			"res.cloudinary.com",
 			"picsum.photos",
 			"taxotu.org.au",
+			"localhost",
 		],
 	},
 };

@@ -9,6 +9,8 @@ import {
   Calendar,
   Copy,
   Eye,
+  LayoutGrid,
+  List as ListIcon,
   Loader2,
   MoreVertical,
   Trash2,
@@ -33,9 +35,10 @@ import type {
   EventResource,
   EventStatus,
 } from "@/store/api/event/event.resource.type";
-import { formatPrice } from "@/lib/utils";
+import { assetUrl, formatPrice } from "@/lib/utils";
 
 type TabId = "all" | "PUBLISHED" | "DRAFT" | "COMPLETED";
+type ViewMode = "list" | "grid";
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   DRAFT: "Brouillon",
@@ -63,19 +66,11 @@ function StatusBadge({ status }: { status: EventStatus }) {
   );
 }
 
-function EventRow({ event }: { event: EventResource }) {
+function useEventActions(event: EventResource) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [duplicateEvent, { isLoading: isDuplicating }] = useCreateEventMutation();
   const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
-
-  const start = new Date(event.startDatetime);
-  const dayNumber = format(start, "d");
-  const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
-  const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
-  const relative = formatDistanceToNow(start, { locale: fr, addSuffix: true });
-  const attendees = 0;
-  const revenue = 0;
 
   async function handleDuplicate() {
     setMenuOpen(false);
@@ -121,8 +116,102 @@ function EventRow({ event }: { event: EventResource }) {
     }
   }
 
+  return {
+    menuOpen,
+    setMenuOpen,
+    confirmOpen,
+    setConfirmOpen,
+    isDuplicating,
+    isDeleting,
+    handleDuplicate,
+    openDeleteConfirm,
+    handleDelete,
+  };
+}
+
+function ActionsMenu({
+  event,
+  menuOpen,
+  setMenuOpen,
+  isDuplicating,
+  isDeleting,
+  onDuplicate,
+  onDelete,
+}: {
+  event: EventResource;
+  menuOpen: boolean;
+  setMenuOpen: (open: boolean) => void;
+  isDuplicating: boolean;
+  isDeleting: boolean;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
   return (
-		<div className="relative bg-white rounded-2xl border border-gray-200 overflow-hidden flex items-stretch hover:border-gray-300 transition-colors">
+    <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="Actions"
+          className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        >
+          <MoreVertical size={18} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-1">
+        <Link
+          href={`/events/${event.slug}`}
+          onClick={() => setMenuOpen(false)}
+          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Eye size={16} className="text-gray-400" />
+          Voir la page de l&apos;événement
+        </Link>
+        <button
+          type="button"
+          onClick={onDuplicate}
+          disabled={isDuplicating}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          <Copy size={16} className="text-gray-400" />
+          Dupliquer
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+        >
+          <Trash2 size={16} />
+          Supprimer
+        </button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function EventRow({ event }: { event: EventResource }) {
+  const {
+    menuOpen,
+    setMenuOpen,
+    confirmOpen,
+    setConfirmOpen,
+    isDuplicating,
+    isDeleting,
+    handleDuplicate,
+    openDeleteConfirm,
+    handleDelete,
+  } = useEventActions(event);
+
+  const start = new Date(event.startDatetime);
+  const dayNumber = format(start, "d");
+  const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
+  const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
+  const relative = formatDistanceToNow(start, { locale: fr, addSuffix: true });
+  const attendees = 0;
+  const revenue = 0;
+
+  return (
+		<div className="relative bg-white rounded-2xl overflow-hidden flex items-stretch transition-colors">
 			{/* Stretched link covers the whole card */}
 			<Link
 				href={`/organizer/events/${event.id}`}
@@ -134,7 +223,7 @@ function EventRow({ event }: { event: EventResource }) {
 			<div className="relative h-32 w-40 sm:w-48 shrink-0 bg-gray-100">
 				{event.coverImageUrl ? (
 					<Image
-						src={event.coverImageUrl}
+						src={assetUrl(event.coverImageUrl)}
 						alt={event.title}
 						fill
 						sizes="192px"
@@ -187,51 +276,15 @@ function EventRow({ event }: { event: EventResource }) {
 						Revenu
 					</div>
 				</div>
-				<Popover open={menuOpen} onOpenChange={setMenuOpen}>
-					<PopoverTrigger asChild>
-						<button
-							type="button"
-							aria-label="Actions"
-							className="p-2 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-						>
-							<MoreVertical size={18} />
-						</button>
-					</PopoverTrigger>
-					<PopoverContent align="end" className="w-56 p-1">
-						<Link
-							href={`/events/${event.slug}`}
-							onClick={() => setMenuOpen(false)}
-							className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-						>
-							<Eye
-								size={16}
-								className="text-gray-400"
-							/>
-							Voir la page de l&apos;événement
-						</Link>
-						<button
-							type="button"
-							onClick={handleDuplicate}
-							disabled={isDuplicating}
-							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-						>
-							<Copy
-								size={16}
-								className="text-gray-400"
-							/>
-							Dupliquer
-						</button>
-						<button
-							type="button"
-							onClick={openDeleteConfirm}
-							disabled={isDeleting}
-							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-						>
-							<Trash2 size={16} />
-							Supprimer
-						</button>
-					</PopoverContent>
-				</Popover>
+				<ActionsMenu
+					event={event}
+					menuOpen={menuOpen}
+					setMenuOpen={setMenuOpen}
+					isDuplicating={isDuplicating}
+					isDeleting={isDeleting}
+					onDuplicate={handleDuplicate}
+					onDelete={openDeleteConfirm}
+				/>
 			</div>
 			<ConfirmDialog
 				open={confirmOpen}
@@ -254,9 +307,111 @@ function EventRow({ event }: { event: EventResource }) {
   );
 }
 
+function EventCard({ event }: { event: EventResource }) {
+  const {
+    menuOpen,
+    setMenuOpen,
+    confirmOpen,
+    setConfirmOpen,
+    isDuplicating,
+    isDeleting,
+    handleDuplicate,
+    openDeleteConfirm,
+    handleDelete,
+  } = useEventActions(event);
+
+  const start = new Date(event.startDatetime);
+  const dayNumber = format(start, "d");
+  const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
+  const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
+  const attendees = 0;
+  const revenue = 0;
+
+  return (
+    <div className="relative bg-white rounded-2xl overflow-hidden transition-colors flex flex-col">
+      <Link
+        href={`/organizer/events/${event.id}`}
+        aria-label={event.title}
+        className="absolute inset-0 z-0"
+      />
+
+      <div className="relative h-44 w-full bg-gray-100">
+        {event.coverImageUrl ? (
+          <Image
+            src={assetUrl(event.coverImageUrl)}
+            alt={event.title}
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        ) : null}
+        <span className="absolute top-2.5 left-2.5">
+          <StatusBadge status={event.status as EventStatus} />
+        </span>
+        <span className="absolute bottom-2.5 left-2.5 bg-white rounded-lg px-2.5 py-1 text-center shadow-sm">
+          <span className="block text-base font-bold leading-none text-gray-900">
+            {dayNumber}
+          </span>
+          <span className="block text-[10px] font-semibold leading-none mt-0.5 text-gray-500">
+            {monthShort}
+          </span>
+        </span>
+      </div>
+
+      <div className="p-5 flex-1 flex flex-col">
+        <p className="font-semibold text-gray-900 line-clamp-2">{event.title}</p>
+        <div className="mt-1.5 text-sm text-gray-700">{dateTimeLabel}</div>
+
+        <div className="relative z-10 mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="text-center">
+            <div className="text-lg font-bold text-gray-900 leading-tight">{attendees}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">
+              Participants
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-emerald-600 leading-tight">
+              {formatPrice(revenue)}
+            </div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mt-0.5">
+              Revenu
+            </div>
+          </div>
+          <ActionsMenu
+            event={event}
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+            isDuplicating={isDuplicating}
+            isDeleting={isDeleting}
+            onDuplicate={handleDuplicate}
+            onDelete={openDeleteConfirm}
+          />
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Supprimer cet événement ?"
+        description={
+          <>
+            Cette action est irréversible. <strong>{event.title}</strong> et toutes ses
+            données associées seront définitivement supprimés.
+          </>
+        }
+        confirmLabel="Supprimer"
+        destructive
+        loading={isDeleting}
+        onConfirm={handleDelete}
+      />
+    </div>
+  );
+}
+
 export default function OrganizerEventsPage() {
   const { activeOrgId } = useOrganizerOrg();
   const [activeTab, setActiveTab] = useState<TabId>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   const { data, isLoading } = useListEventsQuery(
     activeOrgId ? { organizationId: activeOrgId, limit: 50 } : undefined,
@@ -289,22 +444,52 @@ export default function OrganizerEventsPage() {
         </Link>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-        {tabs.map((tab) => (
+      {/* Tabs + view mode toggle */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar flex-1 min-w-0">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-primary text-white"
+                  : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {tab.label} ({tab.count})
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-full p-1 shrink-0">
           <button
-            key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              activeTab === tab.id
+            onClick={() => setViewMode("list")}
+            aria-label="Vue liste"
+            aria-pressed={viewMode === "list"}
+            className={`px-4 py-1.5 rounded-full transition-colors ${
+              viewMode === "list"
                 ? "bg-primary text-white"
-                : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+                : "text-gray-500 hover:bg-gray-50"
             }`}
           >
-            {tab.label} ({tab.count})
+            <ListIcon size={16} />
           </button>
-        ))}
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            aria-label="Vue cartes"
+            aria-pressed={viewMode === "grid"}
+            className={`px-4 py-1.5 rounded-full transition-colors ${
+              viewMode === "grid"
+                ? "bg-primary text-white"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <LayoutGrid size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Events list */}
@@ -325,7 +510,7 @@ export default function OrganizerEventsPage() {
             Créer un événement
           </Link>
         </div>
-      ) : (
+      ) : viewMode === "list" ? (
         <div className="space-y-3">
           {filteredEvents.map((event, index) => (
             <motion.div
@@ -335,6 +520,19 @@ export default function OrganizerEventsPage() {
               transition={{ delay: index * 0.05 }}
             >
               <EventRow event={event} />
+            </motion.div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEvents.map((event, index) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <EventCard event={event} />
             </motion.div>
           ))}
         </div>
