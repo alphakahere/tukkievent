@@ -35,7 +35,7 @@ export default function TicketsPage() {
   return (
 		<div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
 			<header className="bg-white border-b border-gray-100 px-4 pt-12 md:pt-4 pb-4 sticky top-0 z-40 md:top-16">
-				<div className="max-w-lg md:">
+				<div className="max-w-lg md:max-w-6xl mx-auto">
 					<h1 className="text-2xl font-bold text-gray-900 mb-4 md:hidden">
 						Mes Billets
 					</h1>
@@ -69,7 +69,7 @@ export default function TicketsPage() {
 				</div>
 			</header>
 
-			<div className="max-w-lg md: px-4 py-6">
+			<div className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
 				<div className="md:flex md:gap-8">
 					<AccountSidebar />
 

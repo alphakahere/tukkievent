@@ -47,7 +47,7 @@ export default function SettingsPage() {
 				</div>
 			</header>
 
-			<div className="max-w-lg md: px-4 py-6">
+			<div className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
 				<div className="md:flex md:gap-8">
 					<AccountSidebar />
 					<div className="flex-1 space-y-6">

@@ -28,7 +28,7 @@ export default function FavoritesPage() {
 				</div>
 			</header>
 
-			<main className="max-w-lg md: px-4 py-6">
+			<main className="max-w-lg md:max-w-6xl mx-auto px-4 py-6">
 				<div className="md:flex md:gap-8">
 					<AccountSidebar />
 
