@@ -23,3 +23,26 @@ export interface CreateOrganizationPayload {
 }
 
 export type UpdateOrganizationPayload = Partial<Omit<CreateOrganizationPayload, "slug">>;
+
+export type OrganizationRole =
+	| "OWNER"
+	| "ADMIN"
+	| "EDITOR"
+	| "VIEWER"
+	| "STAFF";
+
+export interface OrganizationMember {
+	id: string;
+	organizationId: string;
+	userId: string;
+	role: OrganizationRole;
+	isOwner: boolean;
+	createdAt: string;
+	user: {
+		id: string;
+		email: string;
+		firstname: string;
+		lastname: string;
+		avatarUrl: string | null;
+	};
+}

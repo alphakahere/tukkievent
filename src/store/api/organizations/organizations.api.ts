@@ -6,13 +6,14 @@ import type {
 	CreateOrganizationPayload,
 	ListOrganizationsParams,
 	Organization,
+	OrganizationMember,
 	UpdateOrganizationPayload,
 } from "./organizations.type";
 
 export const organizationsApi = createApi({
 	reducerPath: "organizationsApi",
 	baseQuery,
-	tagTypes: ["organizations", "organization"],
+	tagTypes: ["organizations", "organization", "organization-members"],
 	endpoints: (builder) => ({
 		getVisitorOrganizationBySlug: builder.query<VisitorOrganization, string>({
 			query: (slug) => `/visitor/organizations/slug/${slug}`,
@@ -58,6 +59,12 @@ export const organizationsApi = createApi({
 				{ type: "organizations", id: "MINE" },
 			],
 		}),
+		listOrganizationMembers: builder.query<OrganizationMember[], string>({
+			query: (id) => `/organizations/${id}/members`,
+			providesTags: (_r, _e, id) => [
+				{ type: "organization-members" as const, id },
+			],
+		}),
 		deleteOrganization: builder.mutation<void, string>({
 			query: (id) => ({ url: `/organizations/${id}`, method: "DELETE" }),
 			invalidatesTags: (_r, _e, id) => [
@@ -77,5 +84,6 @@ export const {
 	useGetOrganizationBySlugQuery,
 	useCreateOrganizationMutation,
 	useUpdateOrganizationMutation,
+	useListOrganizationMembersQuery,
 	useDeleteOrganizationMutation,
 } = organizationsApi;
