@@ -1,40 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import { motion } from "motion/react";
 import {
 	Check,
 	Copy,
 	EyeOff,
-	Globe,
-	Image as ImageIcon,
 	Loader2,
-	MapPin,
 	Pencil,
 	Trash2,
+	UserPlus,
+	Users,
 	XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FormInput } from "@/components/ui/form-input";
-import { FormSelect } from "@/components/ui/form-select";
-import { FormTextarea } from "@/components/ui/form-textarea";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { useOrganizerOrg } from "@/contexts/OrganizerOrgContext";
-import { assetUrl } from "@/lib/utils";
 import { getApiErrorMessage } from "@/store/api/auth/error";
-import { useListVisitorEventCategoriesQuery } from "@/store/api/event-categories/event-categories.api";
 import {
 	useCreateEventMutation,
 	useDeleteEventMutation,
@@ -43,38 +27,8 @@ import {
 import type {
 	CreateEventPayload,
 	EventStatus,
-	UpdateEventPayload,
 } from "@/store/api/event/event.resource.type";
-import { useUploadImageMutation } from "@/store/api/uploads/uploads.api";
-import {
-	type EventFormValues,
-	eventFormSchema,
-} from "../../_form/schema";
 import { useEvent } from "../layout";
-
-const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
-	const h = String(Math.floor(i / 2)).padStart(2, "0");
-	const m = i % 2 === 0 ? "00" : "30";
-	return `${h}:${m}`;
-});
-
-function combineDateTime(date: string, time: string): string | null {
-	if (!date) return null;
-	const t = time || "00:00";
-	return new Date(`${date}T${t}:00`).toISOString();
-}
-
-function splitIso(iso: string | null): { date: string; time: string } {
-	if (!iso) return { date: "", time: "" };
-	const d = new Date(iso);
-	if (Number.isNaN(d.getTime())) return { date: "", time: "" };
-	const yyyy = d.getFullYear();
-	const mm = String(d.getMonth() + 1).padStart(2, "0");
-	const dd = String(d.getDate()).padStart(2, "0");
-	const hh = String(d.getHours()).padStart(2, "0");
-	const mi = String(d.getMinutes()).padStart(2, "0");
-	return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mi}` };
-}
 
 const STATUS_META: Record<
 	EventStatus,
@@ -102,238 +56,16 @@ const STATUS_TONE_CLASS: Record<
 export default function SettingsPage() {
 	const event = useEvent();
 	const router = useRouter();
-	const { activeOrgId } = useOrganizerOrg();
-	const { data: categories = [], isLoading: categoriesLoading } =
-		useListVisitorEventCategoriesQuery();
-	const [updateEvent, { isLoading: isSaving }] = useUpdateEventMutation();
+	const { activeOrg, activeOrgId } = useOrganizerOrg();
+	const [updateEvent] = useUpdateEventMutation();
 	const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
 	const [createEvent, { isLoading: isDuplicating }] = useCreateEventMutation();
-	const [uploadImage] = useUploadImageMutation();
 
 	const [statusActionLoading, setStatusActionLoading] = useState<
 		"publish" | "unpublish" | "cancel" | "reactivate" | null
 	>(null);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const [confirmCancel, setConfirmCancel] = useState(false);
-
-	const [coverFile, setCoverFile] = useState<File | null>(null);
-	const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-	const [coverPreview, setCoverPreview] = useState<string>(() =>
-		event.coverImageUrl ? assetUrl(event.coverImageUrl) : "",
-	);
-	const [thumbnailPreview, setThumbnailPreview] = useState<string>(() =>
-		event.thumbnailUrl ? assetUrl(event.thumbnailUrl) : "",
-	);
-
-	const initialDefaults = useMemo<EventFormValues>(() => {
-		const start = splitIso(event.startDatetime);
-		const end = splitIso(event.endDatetime);
-		return {
-			title: event.title,
-			description: event.description ?? "",
-			shortDescription: event.shortDescription ?? "",
-			categoryId: event.categoryId ?? "",
-			isOnline: event.isOnline,
-			city: event.city ?? "",
-			address: event.address ?? "",
-			onlineLink: event.onlineLink ?? "",
-			capacity: event.capacity,
-			minAge: event.minAge,
-			startDate: start.date,
-			startTime: start.time,
-			endDate: end.date,
-			endTime: end.time,
-			sameDayEnd: Boolean(end.date) && end.date === start.date,
-			coverUrl: event.coverImageUrl ?? "",
-			thumbnailUrl: event.thumbnailUrl ?? "",
-			tickets: [],
-		};
-	}, [event]);
-
-	const {
-		register,
-		control,
-		handleSubmit,
-		watch,
-		setValue,
-		reset,
-		formState: { errors, isDirty, isSubmitting },
-	} = useForm<EventFormValues>({
-		resolver: yupResolver(eventFormSchema),
-		mode: "onTouched",
-		defaultValues: initialDefaults,
-	});
-
-	useEffect(() => {
-		reset(initialDefaults);
-		setCoverFile(null);
-		setThumbnailFile(null);
-		setCoverPreview(
-			event.coverImageUrl ? assetUrl(event.coverImageUrl) : "",
-		);
-		setThumbnailPreview(
-			event.thumbnailUrl ? assetUrl(event.thumbnailUrl) : "",
-		);
-	}, [event, initialDefaults, reset]);
-
-	// Warn on tab close when there are unsaved edits.
-	useEffect(() => {
-		const dirty = isDirty || coverFile !== null || thumbnailFile !== null;
-		if (!dirty) return;
-		const handler = (e: BeforeUnloadEvent) => {
-			e.preventDefault();
-			e.returnValue = "";
-		};
-		window.addEventListener("beforeunload", handler);
-		return () => window.removeEventListener("beforeunload", handler);
-	}, [isDirty, coverFile, thumbnailFile]);
-
-	const isOnline = watch("isOnline");
-	const sameDayEnd = watch("sameDayEnd");
-	const startDate = watch("startDate");
-	const startTime = watch("startTime");
-	const endTime = watch("endTime");
-
-	// Mirror start date into end date while "same day" is toggled on.
-	useEffect(() => {
-		if (sameDayEnd) {
-			setValue("endDate", startDate, { shouldValidate: true });
-		}
-	}, [sameDayEnd, startDate, setValue]);
-
-	const timeOptions = useMemo(() => {
-		const set = new Set(TIME_OPTIONS);
-		if (startTime) set.add(startTime);
-		if (endTime) set.add(endTime);
-		return Array.from(set)
-			.sort()
-			.map((t) => ({ value: t, label: t }));
-	}, [startTime, endTime]);
-
-	// Cover + thumbnail upload pickers
-	const coverInputRef = useRef<HTMLInputElement>(null);
-	const thumbnailInputRef = useRef<HTMLInputElement>(null);
-	const objectUrlsRef = useRef<Set<string>>(new Set());
-
-	useEffect(() => {
-		const urls = objectUrlsRef.current;
-		return () => {
-			urls.forEach((u) => URL.revokeObjectURL(u));
-			urls.clear();
-		};
-	}, []);
-
-	function revokeIfLocal(url: string) {
-		if (objectUrlsRef.current.has(url)) {
-			URL.revokeObjectURL(url);
-			objectUrlsRef.current.delete(url);
-		}
-	}
-
-	function handleImageChange(
-		e: React.ChangeEvent<HTMLInputElement>,
-		field: "coverUrl" | "thumbnailUrl",
-	) {
-		const file = e.target.files?.[0];
-		e.target.value = "";
-		if (!file) return;
-		if (!file.type.startsWith("image/")) {
-			toast.error("Le fichier doit être une image");
-			return;
-		}
-		if (file.size > 5 * 1024 * 1024) {
-			toast.error("L'image ne doit pas dépasser 5 Mo");
-			return;
-		}
-		const preview = URL.createObjectURL(file);
-		objectUrlsRef.current.add(preview);
-		if (field === "coverUrl") {
-			revokeIfLocal(coverPreview);
-			setCoverFile(file);
-			setCoverPreview(preview);
-		} else {
-			revokeIfLocal(thumbnailPreview);
-			setThumbnailFile(file);
-			setThumbnailPreview(preview);
-		}
-		setValue(field, "", { shouldDirty: true });
-	}
-
-	function clearImage(field: "coverUrl" | "thumbnailUrl") {
-		if (field === "coverUrl") {
-			revokeIfLocal(coverPreview);
-			setCoverFile(null);
-			setCoverPreview("");
-		} else {
-			revokeIfLocal(thumbnailPreview);
-			setThumbnailFile(null);
-			setThumbnailPreview("");
-		}
-		setValue(field, "", { shouldDirty: true });
-	}
-
-	const onValid = async (data: EventFormValues) => {
-		const startDatetime = combineDateTime(data.startDate, data.startTime);
-		if (!startDatetime) {
-			toast.error("Date de début invalide");
-			return;
-		}
-		const endDatetime = data.endDate
-			? combineDateTime(data.endDate, data.endTime || "23:59")
-			: undefined;
-
-		let coverImageUrl = data.coverUrl;
-		let thumbnailUrl = data.thumbnailUrl;
-		try {
-			const [coverRes, thumbRes] = await Promise.all([
-				coverFile ? uploadImage(coverFile).unwrap() : Promise.resolve(null),
-				thumbnailFile
-					? uploadImage(thumbnailFile).unwrap()
-					: Promise.resolve(null),
-			]);
-			if (coverRes) coverImageUrl = coverRes.path;
-			if (thumbRes) thumbnailUrl = thumbRes.path;
-		} catch (err) {
-			toast.error(getApiErrorMessage(err, "Échec de l'envoi des images"));
-			return;
-		}
-
-		const patch: UpdateEventPayload = {
-			title: data.title,
-			description: data.description || undefined,
-			shortDescription: data.shortDescription || undefined,
-			categoryId: data.categoryId || undefined,
-			capacity: data.capacity,
-			minAge: data.minAge,
-			startDatetime,
-			endDatetime: endDatetime ?? undefined,
-			isOnline: data.isOnline,
-			coverImageUrl: coverImageUrl || undefined,
-			thumbnailUrl: thumbnailUrl || undefined,
-		};
-		if (data.isOnline) {
-			patch.onlineLink = data.onlineLink || undefined;
-			patch.city = undefined;
-			patch.address = undefined;
-		} else {
-			patch.city = data.city || undefined;
-			patch.address = data.address || undefined;
-			patch.onlineLink = undefined;
-		}
-
-		try {
-			await updateEvent({ id: event.id, patch }).unwrap();
-			toast.success("Modifications enregistrées !");
-			setCoverFile(null);
-			setThumbnailFile(null);
-		} catch (err) {
-			toast.error(getApiErrorMessage(err));
-		}
-	};
-
-	const onInvalid = () => {
-		toast.error("Veuillez corriger les champs en erreur");
-	};
 
 	async function changeStatus(
 		next: EventStatus,
@@ -359,7 +91,9 @@ export default function SettingsPage() {
 			setConfirmDelete(false);
 			router.push("/organizer/events");
 		} catch (err) {
-			toast.error(getApiErrorMessage(err, "Impossible de supprimer l'événement"));
+			toast.error(
+				getApiErrorMessage(err, "Impossible de supprimer l'événement"),
+			);
 		}
 	}
 
@@ -390,6 +124,9 @@ export default function SettingsPage() {
 		if (event.coverImageUrl) payload.coverImageUrl = event.coverImageUrl;
 		if (event.thumbnailUrl) payload.thumbnailUrl = event.thumbnailUrl;
 		if (event.minAge) payload.minAge = event.minAge;
+		if (event.metaTitle) payload.metaTitle = event.metaTitle;
+		if (event.metaDescription)
+			payload.metaDescription = event.metaDescription;
 		try {
 			const created = await createEvent(payload).unwrap();
 			toast.success("Événement dupliqué en brouillon");
@@ -402,21 +139,36 @@ export default function SettingsPage() {
 	const statusMeta = STATUS_META[event.status];
 	const canPublish = event.status === "DRAFT";
 	const canUnpublish = event.status === "PUBLISHED";
-	const canCancel =
-		event.status === "DRAFT" || event.status === "PUBLISHED";
+	const canCancel = event.status === "DRAFT" || event.status === "PUBLISHED";
 	const canReactivate = event.status === "CANCELLED";
 
-	const formDirty = isDirty || coverFile !== null || thumbnailFile !== null;
-	const saveDisabled = isSubmitting || isSaving || !formDirty;
+	const editHref = `/organizer/events/${event.id}/edit`;
 
 	return (
-		<motion.form
-			noValidate
-			onSubmit={handleSubmit(onValid, onInvalid)}
+		<motion.div
 			initial={{ opacity: 0, y: 8 }}
 			animate={{ opacity: 1, y: 0 }}
 			className="space-y-6"
 		>
+			{/* Edit shortcut */}
+			<section className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center justify-between gap-4 flex-wrap">
+				<div>
+					<h2 className="text-base font-semibold text-gray-900">
+						Détails de l&apos;événement
+					</h2>
+					<p className="text-xs text-gray-500 mt-0.5">
+						Titre, description, dates, lieu, médias, référencement…
+					</p>
+				</div>
+				<Link
+					href={editHref}
+					className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+				>
+					<Pencil size={14} />
+					Éditer
+				</Link>
+			</section>
+
 			{/* Status & visibility */}
 			<section className="bg-white rounded-2xl border border-gray-200">
 				<div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
@@ -533,406 +285,48 @@ export default function SettingsPage() {
 				</div>
 			</section>
 
-			{/* Media */}
-			<section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-				<div className="px-6 py-4 border-b border-gray-100">
-					<h2 className="text-base font-semibold text-gray-900">Médias</h2>
-					<p className="text-xs text-gray-500 mt-0.5">
-						Image de couverture et miniature utilisées sur les pages publiques.
-					</p>
-				</div>
-				<input
-					ref={coverInputRef}
-					type="file"
-					accept="image/*"
-					className="hidden"
-					onChange={(e) => handleImageChange(e, "coverUrl")}
-				/>
-				<input
-					ref={thumbnailInputRef}
-					type="file"
-					accept="image/*"
-					className="hidden"
-					onChange={(e) => handleImageChange(e, "thumbnailUrl")}
-				/>
-				<div className="relative h-56 md:h-64 bg-gradient-to-br from-gray-100 to-gray-50 group">
-					{coverPreview ? (
-						<>
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img
-								src={coverPreview}
-								alt="Couverture"
-								className="w-full h-full object-cover"
-							/>
-							<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-							<div className="absolute top-4 right-4 flex items-center gap-2">
-								<button
-									type="button"
-									onClick={() => coverInputRef.current?.click()}
-									className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur text-xs font-semibold text-gray-800 shadow-sm hover:bg-white transition-colors"
-								>
-									<Pencil size={12} />
-									Modifier
-								</button>
-								<button
-									type="button"
-									onClick={() => clearImage("coverUrl")}
-									aria-label="Retirer la couverture"
-									className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/95 backdrop-blur text-gray-700 shadow-sm hover:bg-white transition-colors"
-								>
-									<Trash2 size={12} />
-								</button>
-							</div>
-						</>
-					) : (
-						<button
-							type="button"
-							onClick={() => coverInputRef.current?.click()}
-							className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-primary hover:bg-primary/5 transition-colors"
-						>
-							<div className="flex items-center justify-center w-14 h-14 rounded-full bg-white border border-gray-200 shadow-sm">
-								<ImageIcon size={24} />
-							</div>
-							<p className="text-sm font-medium">
-								Ajouter une image de couverture
-							</p>
-							<p className="text-xs text-gray-400">
-								JPG ou PNG, max 5 Mo (recommandé 1280×720)
-							</p>
-						</button>
-					)}
-				</div>
-				<div className="px-5 md:px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between gap-3 flex-wrap">
-					<div className="flex items-center gap-3 min-w-0">
-						{thumbnailPreview ? (
-							/* eslint-disable-next-line @next/next/no-img-element */
-							<img
-								src={thumbnailPreview}
-								alt="Miniature"
-								className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
-							/>
-						) : (
-							<div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 shrink-0">
-								<ImageIcon size={18} />
-							</div>
-						)}
-						<div className="min-w-0">
-							<p className="text-sm font-medium text-gray-700">
-								Miniature (facultatif)
-							</p>
-							<p className="text-xs text-gray-500">
-								Utilisée dans les listes et résultats de recherche.
-							</p>
-						</div>
-					</div>
-					<div className="flex items-center gap-2 shrink-0">
-						<button
-							type="button"
-							onClick={() => thumbnailInputRef.current?.click()}
-							className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-						>
-							<Pencil size={12} />
-							{thumbnailPreview ? "Modifier" : "Ajouter"}
-						</button>
-						{thumbnailPreview && (
-							<button
-								type="button"
-								onClick={() => clearImage("thumbnailUrl")}
-								aria-label="Retirer la miniature"
-								className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-							>
-								<Trash2 size={12} />
-							</button>
-						)}
-					</div>
-				</div>
-			</section>
-
-			{/* Information */}
+			{/* Team / admins */}
 			<section className="bg-white rounded-2xl border border-gray-200">
-				<div className="px-6 py-4 border-b border-gray-100">
-					<h2 className="text-base font-semibold text-gray-900">Informations</h2>
-					<p className="text-xs text-gray-500 mt-0.5">
-						Le contenu principal de votre événement.
-					</p>
-				</div>
-				<div className="p-6 space-y-5">
-					<FormInput
-						id="title"
-						label="Titre"
-						required
-						placeholder="Nom de votre événement"
-						error={errors.title?.message}
-						{...register("title")}
-					/>
+				<div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
 					<div>
-						<label
-							htmlFor="categoryId"
-							className="text-sm font-medium text-gray-700 block mb-1.5"
-						>
-							Catégorie
-						</label>
-						<Controller
-							control={control}
-							name="categoryId"
-							render={({ field }) => (
-								<Select
-									value={field.value}
-									onValueChange={field.onChange}
-									disabled={categoriesLoading}
-								>
-									<SelectTrigger id="categoryId" className="w-full">
-										<SelectValue
-											placeholder={
-												categoriesLoading
-													? "Chargement..."
-													: "Choisir une catégorie"
-											}
-										/>
-									</SelectTrigger>
-									<SelectContent>
-										{categories.map((c) => (
-											<SelectItem key={c.id} value={c.id}>
-												{c.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
-						/>
-					</div>
-					<FormTextarea
-						id="shortDescription"
-						label="Accroche"
-						helperText="Une phrase courte affichée sur les cartes et résultats."
-						rows={2}
-						placeholder="Un résumé en une ou deux phrases."
-						error={errors.shortDescription?.message}
-						{...register("shortDescription")}
-					/>
-					<FormTextarea
-						id="description"
-						label="Description"
-						placeholder="Décrivez le programme, les intervenants, l'ambiance..."
-						error={errors.description?.message}
-						{...register("description")}
-					/>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<FormInput
-							id="capacity"
-							label="Capacité totale"
-							required
-							type="number"
-							min={0}
-							error={errors.capacity?.message}
-							{...register("capacity")}
-						/>
-						<FormInput
-							id="minAge"
-							label="Âge minimum"
-							helperText="0 si l'événement est ouvert à tous."
-							type="number"
-							min={0}
-							error={errors.minAge?.message}
-							{...register("minAge")}
-						/>
-					</div>
-				</div>
-			</section>
-
-			{/* Date & time */}
-			<section className="bg-white rounded-2xl border border-gray-200">
-				<div className="px-6 py-4 border-b border-gray-100">
-					<h2 className="text-base font-semibold text-gray-900">
-						Date &amp; heure
-					</h2>
-					<p className="text-xs text-gray-500 mt-0.5">
-						Quand votre événement commence et se termine.
-					</p>
-				</div>
-				<div className="p-6 space-y-4">
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<Controller
-							control={control}
-							name="startDate"
-							render={({ field, fieldState }) => (
-								<DatePicker
-									id="startDate"
-									label="Date de début"
-									required
-									value={field.value}
-									onChange={field.onChange}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-						<Controller
-							control={control}
-							name="startTime"
-							render={({ field, fieldState }) => (
-								<FormSelect
-									id="startTime"
-									label="Heure de début"
-									required
-									value={field.value}
-									onValueChange={field.onChange}
-									placeholder="Choisir une heure"
-									options={timeOptions}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-					</div>
-					<div className="flex items-center gap-2">
-						<Controller
-							control={control}
-							name="sameDayEnd"
-							render={({ field }) => (
-								<Checkbox
-									id="sameDayEnd"
-									checked={field.value}
-									onCheckedChange={(c) => field.onChange(c === true)}
-								/>
-							)}
-						/>
-						<label
-							htmlFor="sameDayEnd"
-							className="text-sm text-gray-700 cursor-pointer select-none"
-						>
-							La date de fin est la même que la date de début
-						</label>
-					</div>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<Controller
-							control={control}
-							name="endDate"
-							render={({ field, fieldState }) => (
-								<DatePicker
-									id="endDate"
-									label="Date de fin"
-									value={field.value}
-									onChange={field.onChange}
-									disabled={sameDayEnd}
-									disabledDates={(d) =>
-										startDate ? d < new Date(`${startDate}T00:00:00`) : false
-									}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-						<Controller
-							control={control}
-							name="endTime"
-							render={({ field, fieldState }) => (
-								<FormSelect
-									id="endTime"
-									label="Heure de fin"
-									value={field.value}
-									onValueChange={field.onChange}
-									placeholder="Choisir une heure"
-									options={timeOptions}
-									error={fieldState.error?.message}
-								/>
-							)}
-						/>
-					</div>
-				</div>
-			</section>
-
-			{/* Location */}
-			<section className="bg-white rounded-2xl border border-gray-200">
-				<div className="px-6 py-4 border-b border-gray-100 flex items-start justify-between gap-3 flex-wrap">
-					<div>
-						<h2 className="text-base font-semibold text-gray-900">Lieu</h2>
+						<h2 className="text-base font-semibold text-gray-900">Équipe</h2>
 						<p className="text-xs text-gray-500 mt-0.5">
-							Où se déroule l&apos;événement ?
+							Les personnes qui peuvent gérer cet événement.
 						</p>
 					</div>
-					<div className="inline-flex items-center gap-1 p-1 rounded-full bg-gray-100">
-						<button
-							type="button"
-							onClick={() =>
-								setValue("isOnline", false, {
-									shouldValidate: true,
-									shouldDirty: true,
-								})
-							}
-							className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-								!isOnline
-									? "bg-white text-gray-900 shadow-sm"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
-						>
-							<MapPin size={12} className="inline mr-1 -mt-0.5" />
-							Présentiel
-						</button>
-						<button
-							type="button"
-							onClick={() =>
-								setValue("isOnline", true, {
-									shouldValidate: true,
-									shouldDirty: true,
-								})
-							}
-							className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-								isOnline
-									? "bg-white text-gray-900 shadow-sm"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
-						>
-							<Globe size={12} className="inline mr-1 -mt-0.5" />
-							En ligne
-						</button>
-					</div>
+					<button
+						type="button"
+						onClick={() =>
+							toast.info("Invitations d'équipe bientôt disponibles")
+						}
+						className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+					>
+						<UserPlus size={14} />
+						Inviter
+					</button>
 				</div>
-				<div className="p-6 space-y-4">
-					{isOnline ? (
-						<FormInput
-							id="onlineLink"
-							label="Lien de connexion"
-							type="url"
-							placeholder="https://meet.example.com/..."
-							error={errors.onlineLink?.message}
-							{...register("onlineLink")}
-						/>
-					) : (
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-							<FormInput
-								id="city"
-								label="Ville"
-								placeholder="Dakar"
-								error={errors.city?.message}
-								{...register("city")}
-							/>
-							<FormInput
-								id="address"
-								label="Adresse"
-								placeholder="Place de l'Obélisque"
-								error={errors.address?.message}
-								{...register("address")}
-							/>
+				<div className="p-6 space-y-3">
+					<div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
+						<div className="flex items-center gap-3 min-w-0">
+							<div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+								<Users size={16} />
+							</div>
+							<div className="min-w-0">
+								<p className="text-sm font-medium text-gray-900 truncate">
+									{activeOrg?.name ?? "Organisation propriétaire"}
+								</p>
+								<p className="text-xs text-gray-500">Propriétaire</p>
+							</div>
 						</div>
-					)}
+						<span className="text-xs font-medium text-gray-400">
+							Accès total
+						</span>
+					</div>
+					<p className="text-xs text-gray-400">
+						Inviter des co-organisateurs sera bientôt possible — chacun pourra
+						gérer les billets, les participants et les paramètres.
+					</p>
 				</div>
-			</section>
-
-			{/* Save bar */}
-			<section className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center justify-between gap-3 flex-wrap">
-				<p className="text-xs text-gray-500">
-					{formDirty
-						? "Vous avez des modifications non enregistrées."
-						: "Aucune modification en attente."}
-				</p>
-				<button
-					type="submit"
-					disabled={saveDisabled}
-					className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-				>
-					{(isSubmitting || isSaving) && (
-						<Loader2 size={16} className="animate-spin" />
-					)}
-					Enregistrer les modifications
-				</button>
 			</section>
 
 			{/* Danger zone */}
@@ -1030,6 +424,6 @@ export default function SettingsPage() {
 				loading={isDeleting}
 				onConfirm={handleDelete}
 			/>
-		</motion.form>
+		</motion.div>
 	);
 }
