@@ -6,6 +6,9 @@ import type {
 	EventOrdersStats,
 	InitiatePaymentInput,
 	ListEventOrdersParams,
+	ListMyOrdersParams,
+	MyOrderListItem,
+	MyStats,
 	Order,
 	OrderListItem,
 	OrderPreview,
@@ -23,6 +26,8 @@ export const orderApi = createApi({
 		"event-orders",
 		"event-orders-stats",
 		"org-revenue",
+		"my-orders",
+		"my-stats",
 	],
 	endpoints: (builder) => ({
 		previewOrder: builder.mutation<OrderPreview, CreateOrderInput>({
@@ -85,6 +90,23 @@ export const orderApi = createApi({
 				{ type: "org-revenue" as const, id: orgId },
 			],
 		}),
+
+		// -- Buyer (current user) ------------------------------------------
+
+		listMyOrders: builder.query<
+			Paginated<MyOrderListItem>,
+			ListMyOrdersParams | void
+		>({
+			query: (params) => ({
+				url: "/users/me/orders",
+				params: params ?? {},
+			}),
+			providesTags: [{ type: "my-orders", id: "LIST" }],
+		}),
+		getMyStats: builder.query<MyStats, void>({
+			query: () => "/users/me/stats",
+			providesTags: [{ type: "my-stats", id: "ME" }],
+		}),
 	}),
 });
 
@@ -99,4 +121,6 @@ export const {
 	useListEventOrdersQuery,
 	useGetEventOrdersStatsQuery,
 	useGetOrganizationRevenueQuery,
+	useListMyOrdersQuery,
+	useGetMyStatsQuery,
 } = orderApi;

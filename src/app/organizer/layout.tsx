@@ -297,13 +297,14 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
 
           {/* Sidebar footer */}
           <div className="p-4 border-t border-gray-100 space-y-1">
-            <Link
-              href="/"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+            <button
+              type="button"
+              onClick={() => setLogoutOpen(true)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-red-50 transition-colors"
             >
-              <Home size={18} strokeWidth={2} />
-              Mode utilisateur
-            </Link>
+              <LogOut size={18} strokeWidth={2} />
+              Déconnexion
+            </button>
           </div>
         </aside>
 

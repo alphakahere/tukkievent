@@ -7,12 +7,15 @@ import { authApi } from "./api/auth/auth.api";
 import { cityApi } from "./api/city/city.api";
 import { eventApi } from "./api/event/event.api";
 import { eventCategoriesApi } from "./api/event-categories/event-categories.api";
+import { favoritesApi } from "./api/favorites/favorites.api";
+import { notificationsApi } from "./api/notifications/notifications.api";
 import { orderApi } from "./api/order/order.api";
 import { organizationsApi } from "./api/organizations/organizations.api";
 import { promoCodeApi } from "./api/promo-code/promo-code.api";
 import { ticketApi } from "./api/tickets/tickets.api";
 import { ticketTypeApi } from "./api/ticket-types/ticket-types.api";
 import { uploadsApi } from "./api/uploads/uploads.api";
+import { userSettingsApi } from "./api/user-settings/user-settings.api";
 import { usersApi } from "./api/users/users.api";
 import authReducer from "./features/auth.slice";
 import cartReducer from "./features/cart.slice";
@@ -37,6 +40,9 @@ const rootReducer = combineReducers({
 	[ticketApi.reducerPath]: ticketApi.reducer,
 	[ticketTypeApi.reducerPath]: ticketTypeApi.reducer,
 	[uploadsApi.reducerPath]: uploadsApi.reducer,
+	[favoritesApi.reducerPath]: favoritesApi.reducer,
+	[notificationsApi.reducerPath]: notificationsApi.reducer,
+	[userSettingsApi.reducerPath]: userSettingsApi.reducer,
 	auth: authReducer,
 	cart: cartReducer,
 });
@@ -63,6 +69,9 @@ export const store = configureStore({
 			ticketApi.middleware,
 			ticketTypeApi.middleware,
 			uploadsApi.middleware,
+			favoritesApi.middleware,
+			notificationsApi.middleware,
+			userSettingsApi.middleware,
 		),
 });
 

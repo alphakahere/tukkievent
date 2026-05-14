@@ -22,6 +22,7 @@ import AccountSidebar from "@/components/AccountSidebar";
 import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useAppSelector } from "@/store/features/hooks";
+import { useGetMyStatsQuery } from "@/store/api/order/order.api";
 
 const menuItems = [
   { icon: Ticket, label: "Mes billets", path: "/tickets", color: "#FF6B35" },
@@ -40,6 +41,11 @@ export default function ProfilePage() {
   const { favoriteIds } = useFavorites();
   const favoritesCount = favoriteIds.length;
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const { data: stats } = useGetMyStatsQuery(undefined, {
+    skip: !accessToken,
+  });
+  const eventsCount = stats?.eventsAttended ?? 0;
+  const ticketsCount = stats?.ticketsOwned ?? 0;
 
   useEffect(() => {
     if (!accessToken) router.replace("/auth/login?redirect=/profile");
@@ -103,7 +109,7 @@ export default function ProfilePage() {
 						<div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
 							<div className="text-center">
 								<p className="text-xl font-bold text-primary">
-									12
+									{eventsCount}
 								</p>
 								<p className="text-xs font-medium text-gray-500">
 									Événements
@@ -111,18 +117,18 @@ export default function ProfilePage() {
 							</div>
 							<div className="text-center border-x border-gray-100">
 								<p className="text-xl font-bold text-primary">
-									{favoritesCount}
+									{ticketsCount}
 								</p>
 								<p className="text-xs font-medium text-gray-500">
-									Favoris
+									Billets
 								</p>
 							</div>
 							<div className="text-center">
 								<p className="text-xl font-bold text-primary">
-									24
+									{favoritesCount}
 								</p>
 								<p className="text-xs font-medium text-gray-500">
-									Points
+									Favoris
 								</p>
 							</div>
 						</div>
@@ -178,7 +184,7 @@ export default function ProfilePage() {
 							<div className="grid grid-cols-3 gap-4 pt-5 mt-5 border-t border-gray-100">
 								<div className="text-center">
 									<p className="text-2xl font-bold text-primary">
-										12
+										{eventsCount}
 									</p>
 									<p className="text-sm font-medium text-gray-500">
 										Événements
@@ -186,18 +192,18 @@ export default function ProfilePage() {
 								</div>
 								<div className="text-center border-x border-gray-100">
 									<p className="text-2xl font-bold text-primary">
-										{favoritesCount}
+										{ticketsCount}
 									</p>
 									<p className="text-sm font-medium text-gray-500">
-										Favoris
+										Billets
 									</p>
 								</div>
 								<div className="text-center">
 									<p className="text-2xl font-bold text-primary">
-										24
+										{favoritesCount}
 									</p>
 									<p className="text-sm font-medium text-gray-500">
-										Points
+										Favoris
 									</p>
 								</div>
 							</div>

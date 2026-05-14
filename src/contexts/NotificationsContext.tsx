@@ -1,127 +1,123 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo } from "react";
+import { useAppSelector } from "@/store/features/hooks";
+import { selectIsAuthenticated } from "@/store/selectors/auth.selectors";
+import {
+	type Notification as ServerNotification,
+	type NotificationType,
+	useListMyNotificationsQuery,
+	useMarkAllNotificationsReadMutation,
+	useMarkNotificationReadMutation,
+} from "@/store/api/notifications/notifications.api";
 
-const STORAGE_KEY = "tukki-event-notifications";
+export type { NotificationType };
 
-export type NotificationType = "booking" | "reminder" | "promo" | "cancelled";
-
+/**
+ * UI-facing shape preserved from the previous localStorage-backed context so
+ * that downstream components don't need to be touched in a single sweep.
+ */
 export interface AppNotification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  read: boolean;
-  createdAt: string;
+	id: string;
+	type: NotificationType;
+	title: string;
+	body: string;
+	read: boolean;
+	createdAt: string;
 }
 
 type NotificationsContextValue = {
-  notifications: AppNotification[];
-  unreadCount: number;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  dismiss: (id: string) => void;
+	notifications: AppNotification[];
+	unreadCount: number;
+	isLoading: boolean;
+	markAsRead: (id: string) => void;
+	markAllAsRead: () => void;
+	/** No server endpoint yet — UI hides the notification optimistically. */
+	dismiss: (id: string) => void;
 };
 
-const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+const NotificationsContext = createContext<NotificationsContextValue | null>(
+	null,
+);
 
-const defaultNotifications: AppNotification[] = [
-  {
-    id: "notif-1",
-    type: "booking",
-    title: "Réservation confirmée",
-    body: "Votre billet pour Festival Mbalakh a été confirmé. Numéro: TKK-001234.",
-    read: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "notif-2",
-    type: "reminder",
-    title: "Rappel d'événement",
-    body: "Concert Ndongo Darou commence demain à 20h00. Ne soyez pas en retard !",
-    read: false,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "notif-3",
-    type: "promo",
-    title: "Nouvel événement disponible",
-    body: "Gala de l'Excellence Sénégalaise vient d'être publié. Réservez vos places dès maintenant.",
-    read: true,
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "notif-4",
-    type: "cancelled",
-    title: "Événement annulé",
-    body: "Match de Football Dakar a été annulé. Un remboursement sera effectué sous 5 jours.",
-    read: true,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
+function toAppNotification(n: ServerNotification): AppNotification {
+	return {
+		id: n.id,
+		type: n.type,
+		title: n.title,
+		body: n.body ?? "",
+		read: n.readAt !== null,
+		createdAt: n.createdAt,
+	};
+}
 
-export function NotificationsProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [mounted, setMounted] = useState(false);
+export function NotificationsProvider({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	const isAuthenticated = useAppSelector(selectIsAuthenticated);
+	const {
+		data: serverNotifications,
+		isLoading,
+	} = useListMyNotificationsQuery(undefined, { skip: !isAuthenticated });
+	const [markRead] = useMarkNotificationReadMutation();
+	const [markAllRead] = useMarkAllNotificationsReadMutation();
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as AppNotification[];
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setNotifications(parsed);
-          setMounted(true);
-          return;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    setNotifications(defaultNotifications);
-    setMounted(true);
-  }, []);
+	const notifications = useMemo<AppNotification[]>(
+		() =>
+			isAuthenticated
+				? (serverNotifications ?? []).map(toAppNotification)
+				: [],
+		[isAuthenticated, serverNotifications],
+	);
 
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-    } catch {
-      // ignore
-    }
-  }, [mounted, notifications]);
+	const unreadCount = useMemo(
+		() => notifications.filter((n) => !n.read).length,
+		[notifications],
+	);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+	const markAsRead = useCallback(
+		(id: string) => {
+			if (!isAuthenticated) return;
+			markRead(id).unwrap().catch(() => {});
+		},
+		[isAuthenticated, markRead],
+	);
 
-  const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  }, []);
+	const markAllAsRead = useCallback(() => {
+		if (!isAuthenticated) return;
+		markAllRead().unwrap().catch(() => {});
+	}, [isAuthenticated, markAllRead]);
 
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+	const dismiss = useCallback(
+		(id: string) => {
+			// No backend dismiss yet — fall back to marking as read.
+			void id;
+			markAsRead(id);
+		},
+		[markAsRead],
+	);
 
-  const dismiss = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
+	const value: NotificationsContextValue = {
+		notifications,
+		unreadCount,
+		isLoading: isAuthenticated && isLoading,
+		markAsRead,
+		markAllAsRead,
+		dismiss,
+	};
 
-  const value: NotificationsContextValue = {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    dismiss,
-  };
-
-  return (
-    <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>
-  );
+	return (
+		<NotificationsContext.Provider value={value}>
+			{children}
+		</NotificationsContext.Provider>
+	);
 }
 
 export function useNotifications(): NotificationsContextValue {
-  const ctx = useContext(NotificationsContext);
-  if (!ctx) throw new Error("useNotifications must be used within NotificationsProvider");
-  return ctx;
+	const ctx = useContext(NotificationsContext);
+	if (!ctx)
+		throw new Error("useNotifications must be used within NotificationsProvider");
+	return ctx;
 }

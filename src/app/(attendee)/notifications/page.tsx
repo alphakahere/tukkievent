@@ -11,10 +11,21 @@ import AccountSidebar from "@/components/AccountSidebar";
 
 function getNotificationIcon(type: NotificationType) {
   switch (type) {
-    case "booking":  return { Icon: Ticket,  color: "#10B981", bg: "#ECFDF5" };
-    case "reminder": return { Icon: Clock,   color: "#F59E0B", bg: "#FFFBEB" };
-    case "promo":    return { Icon: Tag,     color: "#3B82F6", bg: "#EFF6FF" };
-    case "cancelled":return { Icon: XCircle, color: "#EF4444", bg: "#FEF2F2" };
+    case "ORDER_PAID":
+      return { Icon: Ticket, color: "#10B981", bg: "#ECFDF5" };
+    case "ORDER_FAILED":
+      return { Icon: XCircle, color: "#EF4444", bg: "#FEF2F2" };
+    case "ORDER_REFUNDED":
+      return { Icon: Tag, color: "#3B82F6", bg: "#EFF6FF" };
+    case "EVENT_REMINDER":
+      return { Icon: Clock, color: "#F59E0B", bg: "#FFFBEB" };
+    case "EVENT_CANCELLED":
+      return { Icon: XCircle, color: "#EF4444", bg: "#FEF2F2" };
+    case "PROMO_APPLIED":
+      return { Icon: Tag, color: "#3B82F6", bg: "#EFF6FF" };
+    case "SYSTEM":
+    default:
+      return { Icon: Bell, color: "#6B7280", bg: "#F3F4F6" };
   }
 }
 

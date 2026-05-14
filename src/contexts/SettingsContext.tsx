@@ -1,6 +1,20 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import { toast } from "sonner";
+import { useAppSelector } from "@/store/features/hooks";
+import { selectIsAuthenticated } from "@/store/selectors/auth.selectors";
+import {
+	useGetMySettingsQuery,
+	useUpdateMySettingsMutation,
+} from "@/store/api/user-settings/user-settings.api";
 
 const STORAGE_KEY = "tukki-event-settings";
 
@@ -8,106 +22,156 @@ export type Currency = "XOF" | "EUR";
 export type Theme = "light" | "dark";
 
 export interface Settings {
-  theme: Theme;
-  currency: Currency;
-  notifications: {
-    push: boolean;
-    email: boolean;
-    sms: boolean;
-  };
+	theme: Theme;
+	currency: Currency;
+	notifications: {
+		push: boolean;
+		email: boolean;
+		/** SMS is a UI-only toggle — no backend support. */
+		sms: boolean;
+	};
 }
 
 const defaultSettings: Settings = {
-  theme: "light",
-  currency: "XOF",
-  notifications: {
-    push: true,
-    email: true,
-    sms: false,
-  },
+	theme: "light",
+	currency: "XOF",
+	notifications: { push: true, email: true, sms: false },
 };
 
 type SettingsContextValue = {
-  settings: Settings;
-  updateTheme: (theme: Theme) => void;
-  updateCurrency: (currency: Currency) => void;
-  updateNotificationPref: (key: keyof Settings["notifications"], value: boolean) => void;
+	settings: Settings;
+	updateTheme: (theme: Theme) => void;
+	updateCurrency: (currency: Currency) => void;
+	updateNotificationPref: (
+		key: keyof Settings["notifications"],
+		value: boolean,
+	) => void;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
+function applyTheme(theme: Theme) {
+	if (typeof document === "undefined") return;
+	if (theme === "dark") document.documentElement.classList.add("dark");
+	else document.documentElement.classList.remove("dark");
+}
+
+function loadLocal(): Settings {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (raw) {
+			const parsed = JSON.parse(raw) as Settings;
+			if (parsed && typeof parsed === "object") {
+				return {
+					...defaultSettings,
+					...parsed,
+					notifications: {
+						...defaultSettings.notifications,
+						...parsed.notifications,
+					},
+				};
+			}
+		}
+	} catch {
+		/* ignore */
+	}
+	return defaultSettings;
+}
+
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [mounted, setMounted] = useState(false);
+	const isAuthenticated = useAppSelector(selectIsAuthenticated);
+	const [local, setLocal] = useState<Settings>(defaultSettings);
+	const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Settings;
-        if (parsed && typeof parsed === "object") {
-          const merged = { ...defaultSettings, ...parsed, notifications: { ...defaultSettings.notifications, ...parsed.notifications } };
-          setSettings(merged);
-          applyTheme(merged.theme);
-          setMounted(true);
-          return;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    applyTheme(defaultSettings.theme);
-    setMounted(true);
-  }, []);
+	useEffect(() => {
+		const loaded = loadLocal();
+		setLocal(loaded);
+		applyTheme(loaded.theme);
+		setMounted(true);
+	}, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    } catch {
-      // ignore
-    }
-  }, [mounted, settings]);
+	useEffect(() => {
+		if (!mounted) return;
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
+		} catch {
+			/* ignore */
+		}
+	}, [mounted, local]);
 
-  function applyTheme(theme: Theme) {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }
+	const { data: serverSettings } = useGetMySettingsQuery(undefined, {
+		skip: !isAuthenticated,
+	});
+	const [updateSettings] = useUpdateMySettingsMutation();
 
-  const updateTheme = useCallback((theme: Theme) => {
-    applyTheme(theme);
-    setSettings((prev) => ({ ...prev, theme }));
-  }, []);
+	const settings = useMemo<Settings>(() => {
+		if (!isAuthenticated || !serverSettings) return local;
+		return {
+			...local,
+			currency:
+				serverSettings.preferredCurrency === "USD"
+					? "XOF"
+					: serverSettings.preferredCurrency,
+			notifications: {
+				push: serverSettings.notificationsPush,
+				email: serverSettings.notificationsEmail,
+				sms: local.notifications.sms,
+			},
+		};
+	}, [isAuthenticated, serverSettings, local]);
 
-  const updateCurrency = useCallback((currency: Currency) => {
-    setSettings((prev) => ({ ...prev, currency }));
-  }, []);
+	const persistRemote = useCallback(
+		(patch: Parameters<typeof updateSettings>[0]) => {
+			if (!isAuthenticated) return;
+			updateSettings(patch)
+				.unwrap()
+				.catch(() => toast.error("Impossible d'enregistrer la préférence"));
+		},
+		[isAuthenticated, updateSettings],
+	);
 
-  const updateNotificationPref = useCallback(
-    (key: keyof Settings["notifications"], value: boolean) => {
-      setSettings((prev) => ({
-        ...prev,
-        notifications: { ...prev.notifications, [key]: value },
-      }));
-    },
-    []
-  );
+	const updateTheme = useCallback((theme: Theme) => {
+		applyTheme(theme);
+		setLocal((prev) => ({ ...prev, theme }));
+	}, []);
 
-  const value: SettingsContextValue = {
-    settings,
-    updateTheme,
-    updateCurrency,
-    updateNotificationPref,
-  };
+	const updateCurrency = useCallback(
+		(currency: Currency) => {
+			setLocal((prev) => ({ ...prev, currency }));
+			persistRemote({ preferredCurrency: currency });
+		},
+		[persistRemote],
+	);
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+	const updateNotificationPref = useCallback(
+		(key: keyof Settings["notifications"], value: boolean) => {
+			setLocal((prev) => ({
+				...prev,
+				notifications: { ...prev.notifications, [key]: value },
+			}));
+			if (key === "push") persistRemote({ notificationsPush: value });
+			else if (key === "email") persistRemote({ notificationsEmail: value });
+			// sms is local-only.
+		},
+		[persistRemote],
+	);
+
+	const value: SettingsContextValue = {
+		settings,
+		updateTheme,
+		updateCurrency,
+		updateNotificationPref,
+	};
+
+	return (
+		<SettingsContext.Provider value={value}>
+			{children}
+		</SettingsContext.Provider>
+	);
 }
 
 export function useSettings(): SettingsContextValue {
-  const ctx = useContext(SettingsContext);
-  if (!ctx) throw new Error("useSettings must be used within SettingsProvider");
-  return ctx;
+	const ctx = useContext(SettingsContext);
+	if (!ctx) throw new Error("useSettings must be used within SettingsProvider");
+	return ctx;
 }

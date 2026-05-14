@@ -178,3 +178,39 @@ export interface OrganizationRevenue {
 	ordersCount: number;
 	perEvent: OrganizationEventRevenue[];
 }
+
+// -- Buyer (current user) reads ------------------------------------------
+
+export interface MyOrderEvent {
+	id: string;
+	title: string;
+	slug: string;
+	city: string | null;
+	coverImageUrl: string | null;
+	startDatetime: string;
+}
+
+export interface MyOrderListItem {
+	id: string;
+	eventId: string;
+	status: OrderStatus | string;
+	subtotal: number;
+	fees: number;
+	totalAmount: number;
+	ticketCount: number;
+	paidAt: string | null;
+	createdAt: string;
+	event: MyOrderEvent;
+}
+
+export interface ListMyOrdersParams {
+	page?: number;
+	limit?: number;
+	status?: OrderStatus;
+}
+
+export interface MyStats {
+	eventsAttended: number;
+	ticketsOwned: number;
+	ordersCount: number;
+}
