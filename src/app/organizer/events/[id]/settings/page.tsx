@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ export default function SettingsPage() {
   const [updateEvent, { isLoading: isSaving }] = useUpdateEventMutation();
   const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [city, setCity] = useState("");
@@ -74,13 +76,10 @@ export default function SettingsPage() {
   }
 
   async function handleDelete() {
-    const ok = window.confirm(
-      `Supprimer définitivement "${event.title}" ? Cette action est irréversible.`,
-    );
-    if (!ok) return;
     try {
       await deleteEvent(event.id).unwrap();
       toast.success("Événement supprimé");
+      setConfirmOpen(false);
       router.push("/organizer/events");
     } catch {
       toast.error("Impossible de supprimer l'événement");
@@ -179,7 +178,7 @@ export default function SettingsPage() {
           </div>
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
             disabled={isDeleting}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
           >
@@ -188,6 +187,22 @@ export default function SettingsPage() {
           </button>
         </div>
       </section>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Supprimer cet événement ?"
+        description={
+          <>
+            Cette action est irréversible. <strong>{event.title}</strong> et
+            toutes ses données associées seront définitivement supprimés.
+          </>
+        }
+        confirmLabel="Supprimer"
+        destructive
+        loading={isDeleting}
+        onConfirm={handleDelete}
+      />
     </motion.div>
   );
 }

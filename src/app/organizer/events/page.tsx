@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Popover,
   PopoverContent,
@@ -64,6 +65,7 @@ function StatusBadge({ status }: { status: EventStatus }) {
 
 function EventRow({ event }: { event: EventResource }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [duplicateEvent, { isLoading: isDuplicating }] = useCreateEventMutation();
   const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
 
@@ -104,13 +106,16 @@ function EventRow({ event }: { event: EventResource }) {
     }
   }
 
-  async function handleDelete() {
+  function openDeleteConfirm() {
     setMenuOpen(false);
-    const ok = window.confirm(`Supprimer définitivement "${event.title}" ?`);
-    if (!ok) return;
+    setConfirmOpen(true);
+  }
+
+  async function handleDelete() {
     try {
       await deleteEvent(event.id).unwrap();
       toast.success("Événement supprimé");
+      setConfirmOpen(false);
     } catch {
       toast.error("Impossible de supprimer l'événement");
     }
@@ -218,7 +223,7 @@ function EventRow({ event }: { event: EventResource }) {
 						</button>
 						<button
 							type="button"
-							onClick={handleDelete}
+							onClick={openDeleteConfirm}
 							disabled={isDeleting}
 							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
 						>
@@ -228,6 +233,21 @@ function EventRow({ event }: { event: EventResource }) {
 					</PopoverContent>
 				</Popover>
 			</div>
+			<ConfirmDialog
+				open={confirmOpen}
+				onOpenChange={setConfirmOpen}
+				title="Supprimer cet événement ?"
+				description={
+					<>
+						Cette action est irréversible. <strong>{event.title}</strong> et
+						toutes ses données associées seront définitivement supprimés.
+					</>
+				}
+				confirmLabel="Supprimer"
+				destructive
+				loading={isDeleting}
+				onConfirm={handleDelete}
+			/>
 		</div>
   );
 }

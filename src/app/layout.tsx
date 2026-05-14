@@ -41,7 +41,7 @@ export default function RootLayout({
 							  <NotificationsProvider>
 								  <PaymentMethodsProvider>
 									  <AppShell>{children}</AppShell>
-									  <Toaster richColors position="top-center" />
+									  <Toaster richColors position="bottom-right" />
 								  </PaymentMethodsProvider>
 							  </NotificationsProvider>
 						  </OrdersProvider>
