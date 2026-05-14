@@ -1,21 +1,19 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AlertCircle, RefreshCw, ArrowLeft, Phone, HelpCircle } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, HelpCircle } from "lucide-react";
 import { PageLoading } from "@/components/ui/page-loading";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense } from "react";
+import { useGetOrderByIdQuery } from "@/store/api/order/order.api";
 
 function FailedInner() {
 	const searchParams = useSearchParams();
 	const orderId = searchParams.get("orderId");
 	const errorCode = searchParams.get("error") || "unknown";
-	const [isLoading, setIsLoading] = useState(true);
 
-	useEffect(() => {
-		// Simulate loading state for better UX
-		const timer = setTimeout(() => setIsLoading(false), 500);
-		return () => clearTimeout(timer);
-	}, []);
+	const { data: order, isLoading } = useGetOrderByIdQuery(orderId ?? "", {
+		skip: !orderId,
+	});
 
 	if (isLoading) {
 		return (
@@ -26,6 +24,10 @@ function FailedInner() {
 			/>
 		);
 	}
+
+	const retryHref = order?.event?.slug
+		? `/checkout/event/${order.event.slug}`
+		: "/";
 
 	// Error messages mapping
 	const getErrorMessage = (code: string) => {
@@ -136,25 +138,14 @@ function FailedInner() {
 
 				{/* Action Buttons */}
 				<div className="sm:flex sm:justify-center flex-wrap gap-4">
-					{/* Retry Payment */}
 					<Link
-						href="/checkout/payment"
+						href={retryHref}
 						className="w-full sm:w-auto px-6 py-3 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold inline-flex items-center justify-center transition-colors whitespace-nowrap"
 					>
 						<RefreshCw className="w-5 h-5 mr-2" />
 						Réessayer le paiement
 					</Link>
 
-					{/* Change Payment Method */}
-					<Link
-						href="/checkout/payment"
-						className="w-full sm:w-auto px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold inline-flex items-center justify-center transition-colors whitespace-nowrap"
-					>
-						<Phone className="w-5 h-5 mr-2" />
-						Changer de numéro
-					</Link>
-
-					{/* Back to Event */}
 					<Link
 						href="/"
 						className="w-full sm:w-auto px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold inline-flex items-center justify-center transition-colors whitespace-nowrap"

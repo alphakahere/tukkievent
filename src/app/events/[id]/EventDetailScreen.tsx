@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,7 +20,15 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import type { Event } from "@/store/api/event/event.type";
+import type { Event, TicketType } from "@/store/api/event/event.type";
+import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
+import { setTicketsForEvent } from "@/store/features/cart.slice";
+import { selectCartItemByEventId } from "@/store/selectors/cart.selectors";
+import {
+  getTicketAvailability,
+  hasAnyBuyableTicket,
+  type TicketAvailability,
+} from "@/lib/ticketAvailability";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import BottomNav from "@/components/BottomNav";
@@ -29,10 +37,26 @@ type Props = { event: Event };
 
 export default function EventDetailScreen({ event }: Props) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const cartItem = useAppSelector((s) => selectCartItemByEventId(s, event.id));
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(event.id);
-  const [selectedTickets, setSelectedTickets] = useState<Record<string, number>>({});
   const [showFullDescription, setShowFullDescription] = useState(false);
+
+  const ticketTypes = useMemo(() => event.ticketTypes ?? [], [event.ticketTypes]);
+  const now = useMemo(() => new Date(), []);
+  const availabilityById = useMemo(() => {
+    const map = new Map<string, TicketAvailability>();
+    ticketTypes.forEach((tt) => map.set(tt.id, getTicketAvailability(tt, now)));
+    return map;
+  }, [ticketTypes, now]);
+  const eventIsBuyable = hasAnyBuyableTicket(ticketTypes, now);
+
+  const selections = cartItem?.tickets ?? [];
+  const totalPrice = selections.reduce((s, t) => s + t.unitPrice * t.quantity, 0);
+  const totalQuantity = selections.reduce((s, t) => s + t.quantity, 0);
+  const getQuantity = (ticketId: string) =>
+    selections.find((t) => t.ticketTypeId === ticketId)?.quantity ?? 0;
 
   const handleFavoriteClick = () => {
     toggleFavorite(event.id);
@@ -41,32 +65,48 @@ export default function EventDetailScreen({ event }: Props) {
 
   const handleShare = () => {
     if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({ title: event.title, text: event.shortDescription || event.title, url: window.location.href }).catch(() => {});
+      navigator
+        .share({
+          title: event.title,
+          text: event.shortDescription || event.title,
+          url: window.location.href,
+        })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Lien copié dans le presse-papier");
     }
   };
 
-  const handleTicketChange = (ticketId: string, delta: number) => {
-    setSelectedTickets((prev) => {
-      const current = prev[ticketId] || 0;
-      const newValue = Math.max(0, current + delta);
-      if (newValue === 0) {
-        const next = { ...prev };
-        delete next[ticketId];
-        return next;
-      }
-      return { ...prev, [ticketId]: newValue };
-    });
-  };
+  const adjustQuantity = (ticket: TicketType, delta: number) => {
+    const av = availabilityById.get(ticket.id);
+    if (!av || av.kind !== "ok") return;
+    const current = getQuantity(ticket.id);
+    const newQty = Math.max(0, Math.min(av.cap, current + delta));
+    if (newQty === current) return;
 
-  const ticketTypes = event.ticketTypes || [];
-  const totalPrice = Object.entries(selectedTickets).reduce((sum, [ticketId, quantity]) => {
-    const tt = ticketTypes.find((t) => t.id === ticketId);
-    return sum + (tt?.price ?? 0) * quantity;
-  }, 0);
-  const totalQuantity = Object.values(selectedTickets).reduce((s, q) => s + q, 0);
+    const others = selections.filter((t) => t.ticketTypeId !== ticket.id);
+    const next =
+      newQty > 0
+        ? [
+            ...others,
+            {
+              ticketTypeId: ticket.id,
+              ticketTypeName: ticket.name,
+              quantity: newQty,
+              unitPrice: Number(ticket.price),
+            },
+          ]
+        : others;
+    dispatch(
+      setTicketsForEvent({
+        eventId: event.id,
+        eventTitle: event.title,
+        eventDate: event.startDatetime,
+        tickets: next,
+      }),
+    );
+  };
 
   const dateStr = format(new Date(event.startDatetime), "EEEE d MMMM yyyy", { locale: fr });
   const timeStr = format(new Date(event.startDatetime), "HH:mm");
@@ -284,102 +324,82 @@ export default function EventDetailScreen({ event }: Props) {
 				</motion.div>
 
 				{/* Ticket selection */}
-				<motion.div
-					initial={{ opacity: 0, y: 16 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.1 }}
-					className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-				>
-					<div className="px-5 py-4 border-b border-gray-100">
-						<p className="text-base font-semibold text-gray-900">
-							Choisissez votre billet
-						</p>
-					</div>
-					<div className="divide-y divide-gray-100">
-						{ticketTypes.map((ticket) => (
-							<div key={ticket.id} className="p-4">
-								<div className="flex justify-between items-start mb-3">
-									<div className="flex-1">
-										<p className="text-sm font-semibold text-gray-900 mb-0.5">
-											{ticket.name}
-										</p>
-										{ticket.description && (
-											<p className="text-xs text-gray-500 mb-1">
-												{
-													ticket.description
-												}
+				{ticketTypes.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0, y: 16 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.1 }}
+						className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+					>
+						<div className="px-5 py-4 border-b border-gray-100">
+							<p className="text-base font-semibold text-gray-900">
+								Choisissez votre billet
+							</p>
+						</div>
+						<div className="divide-y divide-gray-100">
+							{ticketTypes.map((ticket) => {
+								const av = availabilityById.get(ticket.id);
+								if (!av || av.kind === "hidden") return null;
+								const buyable = av.kind === "ok";
+								const quantity = getQuantity(ticket.id);
+								return (
+									<div key={ticket.id} className="p-4">
+										<div className="flex justify-between items-start mb-3">
+											<div className="flex-1">
+												<p className="text-sm font-semibold text-gray-900 mb-0.5">
+													{ticket.name}
+												</p>
+												{ticket.description && (
+													<p className="text-xs text-gray-500 mb-1">
+														{ticket.description}
+													</p>
+												)}
+												<TicketStatusLine availability={av} ticket={ticket} />
+											</div>
+											<p className="text-lg font-bold text-primary ml-4">
+												{Number(ticket.price) === 0
+													? "Gratuit"
+													: `${Number(ticket.price).toLocaleString()} FCFA`}
 											</p>
+										</div>
+										{buyable ? (
+											<div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
+												<span className="text-sm text-gray-500">
+													Quantité
+												</span>
+												<div className="flex items-center gap-3">
+													<button
+														type="button"
+														onClick={() => adjustQuantity(ticket, -1)}
+														disabled={quantity === 0}
+														className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 disabled:opacity-40"
+													>
+														<Minus size={15} className="text-gray-600" />
+													</button>
+													<span className="w-6 text-center text-sm font-semibold text-gray-900">
+														{quantity}
+													</span>
+													<button
+														type="button"
+														onClick={() => adjustQuantity(ticket, 1)}
+														disabled={quantity >= av.cap}
+														className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white disabled:opacity-40"
+													>
+														<Plus size={15} />
+													</button>
+												</div>
+											</div>
+										) : (
+											<div className="bg-gray-50 rounded-xl px-4 py-2.5 text-sm text-gray-500">
+												Indisponible
+											</div>
 										)}
-										<p className="text-xs text-gray-400">
-											{ticket.availableQuantity ??
-												ticket.totalQuantity ??
-												99}{" "}
-											places
-											disponibles
-										</p>
 									</div>
-									<p className="text-lg font-bold text-primary ml-4">
-										{ticket.price === 0
-											? "Gratuit"
-											: `${ticket.price.toLocaleString()} FCFA`}
-									</p>
-								</div>
-								<div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-									<span className="text-sm text-gray-500">
-										Quantité
-									</span>
-									<div className="flex items-center gap-3">
-										<button
-											type="button"
-											onClick={() =>
-												handleTicketChange(
-													ticket.id,
-													-1,
-												)
-											}
-											disabled={
-												!selectedTickets[
-													ticket
-														.id
-												]
-											}
-											className="w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200 disabled:opacity-40"
-										>
-											<Minus
-												size={
-													15
-												}
-												className="text-gray-600"
-											/>
-										</button>
-										<span className="w-6 text-center text-sm font-semibold text-gray-900">
-											{selectedTickets[
-												ticket
-													.id
-											] || 0}
-										</span>
-										<button
-											type="button"
-											onClick={() =>
-												handleTicketChange(
-													ticket.id,
-													1,
-												)
-											}
-											className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white"
-										>
-											<Plus
-												size={
-													15
-												}
-											/>
-										</button>
-									</div>
-								</div>
-							</div>
-						))}
-					</div>
-				</motion.div>
+								);
+							})}
+						</div>
+					</motion.div>
+				)}
 
 				{/* Map preview */}
 				{showMap && mapEmbedUrl && directionsUrl && (
@@ -423,7 +443,7 @@ export default function EventDetailScreen({ event }: Props) {
 			</div>
 
 			{/* Fixed bottom CTA */}
-			{totalQuantity > 0 && (
+			{totalQuantity > 0 && eventIsBuyable && (
 				<motion.div
 					initial={{ y: 100 }}
 					animate={{ y: 0 }}
@@ -457,4 +477,35 @@ export default function EventDetailScreen({ event }: Props) {
 			<BottomNav />
 		</div>
   );
+}
+
+function TicketStatusLine({
+	availability,
+	ticket,
+}: {
+	availability: TicketAvailability;
+	ticket: TicketType;
+}) {
+	if (availability.kind === "ok") {
+		const remaining = availability.remaining ?? ticket.totalQuantity;
+		return (
+			<p className="text-xs text-gray-400">
+				{remaining !== undefined ? `${remaining} places disponibles` : "Disponible"}
+			</p>
+		);
+	}
+	if (availability.kind === "sold_out") {
+		return <p className="text-xs text-red-500">Épuisé</p>;
+	}
+	if (availability.kind === "ended") {
+		return <p className="text-xs text-red-500">Vente terminée</p>;
+	}
+	if (availability.kind === "not_started") {
+		return (
+			<p className="text-xs text-amber-600">
+				Vente le {format(availability.from, "d MMM", { locale: fr })}
+			</p>
+		);
+	}
+	return null;
 }
