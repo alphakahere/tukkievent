@@ -10,8 +10,8 @@ export const checkoutFormSchema = yup.object({
 	email: yup
 		.string()
 		.trim()
-		.required("L'email est requis")
-		.email("Email invalide"),
+		.email("Email invalide")
+		.default(""),
 	phone: yup
 		.string()
 		.trim()

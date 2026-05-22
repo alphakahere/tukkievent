@@ -12,10 +12,9 @@ import {
 	Minus,
 	ChevronRight,
 	Check,
-	CreditCard,
-	Smartphone,
 	Shield,
 	Loader2,
+	Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Event, TicketType } from "@/store/api/event/event.type";
@@ -24,7 +23,7 @@ import {
 	useInitiatePaymentMutation,
 	usePreviewOrderMutation,
 } from "@/store/api/order/order.api";
-import type { OrderPreview, PaymentMethod } from "@/store/api/order/order.type";
+import type { OrderPreview } from "@/store/api/order/order.type";
 import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useAppDispatch, useAppSelector } from "@/store/features/hooks";
 import { setTicketsForEvent } from "@/store/features/cart.slice";
@@ -43,19 +42,6 @@ import {
 } from "./_form/schema";
 
 type Props = { event: Event };
-
-const PAYMENT_METHODS: {
-	id: PaymentMethod;
-	label: string;
-	sub: string;
-	icon: typeof Smartphone;
-	color: string;
-	bg: string;
-}[] = [
-	{ id: "WAVE", label: "Wave", sub: "Paiement mobile", icon: Smartphone, color: "#00A9E0", bg: "#E0F7FD" },
-	{ id: "ORANGE_MONEY", label: "Orange Money", sub: "Paiement mobile", icon: Smartphone, color: "#FF7900", bg: "#FFF3E0" },
-	{ id: "CARD", label: "Carte Bancaire", sub: "Visa, Mastercard", icon: CreditCard, color: "#6B7280", bg: "#F3F4F6" },
-];
 
 export default function CheckoutEventScreen({ event }: Props) {
 	const router = useRouter();
@@ -83,13 +69,11 @@ export default function CheckoutEventScreen({ event }: Props) {
 		selections.find((t) => t.ticketTypeId === ticketId)?.quantity ?? 0;
 
 	// Start at step 2 if cart already has selections for this event
-	const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(() =>
+	const [currentStep, setCurrentStep] = useState<1 | 2>(() =>
 		totalTickets > 0 ? 2 : 1,
 	);
-	const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("WAVE");
 
 	const [preview, setPreview] = useState<OrderPreview | null>(null);
-	const [previewFailed, setPreviewFailed] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 
 	const {
@@ -117,7 +101,6 @@ export default function CheckoutEventScreen({ event }: Props) {
 	useEffect(() => {
 		if (currentStep < 2 || selections.length === 0) {
 			setPreview(null);
-			setPreviewFailed(false);
 			return;
 		}
 		let cancelled = false;
@@ -129,17 +112,15 @@ export default function CheckoutEventScreen({ event }: Props) {
 						ticketTypeId: t.ticketTypeId,
 						quantity: t.quantity,
 					})),
-					buyer: { firstName: "", lastName: "", email: "", phone: "" },
+					buyer: { firstName: "", lastName: "", phone: "" },
 					currency: "XOF",
 				}).unwrap();
 				if (!cancelled) {
 					setPreview(result);
-					setPreviewFailed(false);
 				}
 			} catch {
 				if (!cancelled) {
 					setPreview(null);
-					setPreviewFailed(true);
 				}
 			}
 		}, 300);
@@ -211,11 +192,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 	};
 
 	const onStep2Valid = async () => {
-		if (isFree) {
-			await submitOrder({ skipPayment: true });
-			return;
-		}
-		setCurrentStep(3);
+		await submitOrder({ skipPayment: isFree });
 	};
 
 	const submitOrder = async ({ skipPayment }: { skipPayment: boolean }) => {
@@ -233,7 +210,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 				buyer: {
 					firstName: first,
 					lastName: last,
-					email: values.email,
+					...(values.email?.trim() ? { email: values.email.trim() } : {}),
 					phone: values.phone,
 				},
 				currency: "XOF",
@@ -247,7 +224,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 			const payment = await initiatePayment({
 				orderId: order.id,
 				payload: {
-					method: paymentMethod,
+					method: "WAVE",
 					phone: values.phone,
 					returnUrl:
 						typeof window !== "undefined"
@@ -267,15 +244,15 @@ export default function CheckoutEventScreen({ event }: Props) {
 	};
 
 	const handlePreviousStep = () => {
-		if (currentStep > 1) setCurrentStep((s) => (s - 1) as 1 | 2 | 3);
+		if (currentStep > 1) setCurrentStep(1);
 	};
 
-	const stepLabels = ["Billets", "Informations", "Paiement"];
+	const stepLabels = ["Billets", "Informations"];
 	const isBusy = submitting || isCreating || isInitiating;
 	const ctaLabel = (() => {
 		if (isBusy) return "Traitement...";
-		if (currentStep === 3) return "Confirmer";
 		if (currentStep === 2 && isFree) return "Confirmer la réservation";
+		if (currentStep === 2) return "Payer avec Wave";
 		return "Continuer";
 	})();
 
@@ -296,11 +273,11 @@ export default function CheckoutEventScreen({ event }: Props) {
 						<div className="flex-1">
 							<p className="font-bold text-gray-900">Réservation</p>
 							<p className="text-xs text-gray-500">
-								Étape {currentStep}/{isFree ? 2 : 3} — {stepLabels[currentStep - 1]}
+								Étape {currentStep}/2 — {stepLabels[currentStep - 1]}
 							</p>
 						</div>
 						<div className="flex gap-1.5">
-							{(isFree ? [1, 2] : [1, 2, 3]).map((s) => (
+							{[1, 2].map((s) => (
 								<div
 									key={s}
 									className={`h-1.5 rounded-full transition-all ${
@@ -318,7 +295,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 						<motion.div
 							initial={{ width: 0 }}
 							animate={{
-								width: `${(currentStep / (isFree ? 2 : 3)) * 100}%`,
+								width: `${(currentStep / 2) * 100}%`,
 							}}
 							transition={{ duration: 0.4, ease: "easeOut" }}
 							className="absolute h-full bg-primary rounded-full"
@@ -481,16 +458,6 @@ export default function CheckoutEventScreen({ event }: Props) {
 									{...register("fullName")}
 								/>
 								<FormInput
-									id="checkout-email"
-									label="Email"
-									required
-									type="email"
-									autoComplete="email"
-									placeholder="exemple@email.com"
-									error={errors.email?.message}
-									{...register("email")}
-								/>
-								<FormInput
 									id="checkout-phone"
 									label="Téléphone"
 									required
@@ -498,8 +465,18 @@ export default function CheckoutEventScreen({ event }: Props) {
 									autoComplete="tel"
 									placeholder="+221 77 123 45 67"
 									error={errors.phone?.message}
-									helperText="Votre billet sera envoyé par SMS et email"
+									helperText="Votre billet sera envoyé par SMS"
 									{...register("phone")}
+								/>
+								<FormInput
+									id="checkout-email"
+									label="Email"
+									type="email"
+									autoComplete="email"
+									placeholder="exemple@email.com"
+									error={errors.email?.message}
+									helperText="Optionnel — pour recevoir votre billet par email"
+									{...register("email")}
 								/>
 							</form>
 
@@ -510,84 +487,27 @@ export default function CheckoutEventScreen({ event }: Props) {
 								discount={discount}
 								grandTotal={grandTotal}
 								isPreviewing={isPreviewing}
-								previewFailed={previewFailed}
 								hasPreview={!!preview}
 							/>
+
+							{!isFree && (
+								<div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-3">
+									<div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+										<Shield size={16} className="text-emerald-600" />
+									</div>
+									<div>
+										<p className="text-sm font-semibold text-emerald-900 mb-0.5">
+											Paiement sécurisé via Wave
+										</p>
+										<p className="text-xs text-emerald-700">
+											Vos informations sont cryptées. Vos billets seront envoyés par SMS après confirmation.
+										</p>
+									</div>
+								</div>
+							)}
 						</motion.div>
 					)}
 
-					{currentStep === 3 && (
-						<motion.div
-							key="step3"
-							initial={{ opacity: 0, x: 20 }}
-							animate={{ opacity: 1, x: 0 }}
-							exit={{ opacity: 0, x: -20 }}
-							transition={{ duration: 0.25 }}
-							className="space-y-4"
-						>
-							<p className="text-base font-semibold text-gray-900">
-								Mode de paiement
-							</p>
-							<div className="space-y-3">
-								{PAYMENT_METHODS.map(({ id, label, sub, icon: Icon, color, bg }) => (
-									<button
-										key={id}
-										type="button"
-										onClick={() => setPaymentMethod(id)}
-										className={`w-full bg-white rounded-2xl p-4 border-2 transition-all text-left flex items-center gap-4 ${
-											paymentMethod === id
-												? "border-primary bg-primary/[0.02]"
-												: "border-gray-100 hover:border-gray-200"
-										}`}
-									>
-										<div
-											className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-											style={{ backgroundColor: bg }}
-										>
-											<Icon size={20} style={{ color }} />
-										</div>
-										<div className="flex-1">
-											<p className="text-sm font-semibold text-gray-900">
-												{label}
-											</p>
-											<p className="text-xs text-gray-500">{sub}</p>
-										</div>
-										{paymentMethod === id && (
-											<div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center shrink-0">
-												<Check size={12} className="text-white" />
-											</div>
-										)}
-									</button>
-								))}
-							</div>
-
-							<RecapCard
-								selections={selections}
-								subtotal={subtotal}
-								fees={fees}
-								discount={discount}
-								grandTotal={grandTotal}
-								isPreviewing={isPreviewing}
-								previewFailed={previewFailed}
-								hasPreview={!!preview}
-								title="Détails de la commande"
-							/>
-
-							<div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-3">
-								<div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
-									<Shield size={16} className="text-emerald-600" />
-								</div>
-								<div>
-									<p className="text-sm font-semibold text-emerald-900 mb-0.5">
-										Paiement sécurisé
-									</p>
-									<p className="text-xs text-emerald-700">
-										Vos informations sont cryptées. Vos billets seront envoyés après confirmation.
-									</p>
-								</div>
-							</div>
-						</motion.div>
-					)}
 				</AnimatePresence>
 			</div>
 
@@ -601,42 +521,30 @@ export default function CheckoutEventScreen({ event }: Props) {
 							{grandTotal.toLocaleString()} FCFA
 						</p>
 					</div>
-					{currentStep < 3 && !isFree ? (
+					{currentStep === 1 ? (
 						<button
 							type="button"
 							onClick={handleNext}
-							disabled={currentStep === 1 && !!step1Error}
+							disabled={!!step1Error}
 							className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
 						>
 							{ctaLabel} <ChevronRight size={18} />
-						</button>
-					) : currentStep === 2 && isFree ? (
-						<button
-							type="button"
-							onClick={handleNext}
-							disabled={isBusy}
-							className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-						>
-							{ctaLabel}
-							{!isBusy && <Check size={18} />}
-						</button>
-					) : currentStep === 3 ? (
-						<button
-							type="button"
-							onClick={() => submitOrder({ skipPayment: false })}
-							disabled={isBusy}
-							className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-						>
-							{ctaLabel}
-							{!isBusy && <Check size={18} />}
 						</button>
 					) : (
 						<button
 							type="button"
 							onClick={handleNext}
-							className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+							disabled={isBusy}
+							className="px-8 py-3.5 bg-primary text-white rounded-full font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
 						>
-							{ctaLabel} <ChevronRight size={18} />
+							{isBusy ? (
+								<Loader2 size={18} className="animate-spin" />
+							) : isFree ? (
+								<Check size={18} />
+							) : (
+								<Smartphone size={18} />
+							)}
+							{ctaLabel}
 						</button>
 					)}
 				</div>
@@ -684,7 +592,6 @@ function RecapCard({
 	discount,
 	grandTotal,
 	isPreviewing,
-	previewFailed,
 	hasPreview,
 	title = "Récapitulatif",
 }: {
@@ -694,7 +601,6 @@ function RecapCard({
 	discount: number;
 	grandTotal: number;
 	isPreviewing: boolean;
-	previewFailed: boolean;
 	hasPreview: boolean;
 	title?: string;
 }) {
@@ -749,11 +655,6 @@ function RecapCard({
 							{grandTotal.toLocaleString()} FCFA
 						</span>
 					</div>
-					{previewFailed && (
-						<p className="text-xs text-amber-600">
-							Impossible de calculer les frais en temps réel. Le montant final pourra inclure des frais de service.
-						</p>
-					)}
 				</div>
 			</div>
 		</div>
