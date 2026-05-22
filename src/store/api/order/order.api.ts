@@ -63,6 +63,17 @@ export const orderApi = createApi({
 			}),
 			invalidatesTags: (_r, _e, { orderId }) => [{ type: "order", id: orderId }],
 		}),
+		autoConfirmOrder: builder.mutation<
+			{ ok: boolean; orderId: string; status: string },
+			{ orderId: string; phone?: string }
+		>({
+			query: ({ orderId, phone }) => ({
+				url: `/visitor/orders/${orderId}/auto-confirm`,
+				method: "POST",
+				body: { phone },
+			}),
+			invalidatesTags: (_r, _e, { orderId }) => [{ type: "order", id: orderId }],
+		}),
 
 		// -- Organizer-side --------------------------------------------------
 
@@ -118,6 +129,7 @@ export const {
 	useGetOrderStatusQuery,
 	useLazyGetOrderStatusQuery,
 	useInitiatePaymentMutation,
+	useAutoConfirmOrderMutation,
 	useListEventOrdersQuery,
 	useGetEventOrdersStatsQuery,
 	useGetOrganizationRevenueQuery,

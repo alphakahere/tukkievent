@@ -19,8 +19,8 @@ import {
 import { toast } from "sonner";
 import type { Event, TicketType } from "@/store/api/event/event.type";
 import {
+	useAutoConfirmOrderMutation,
 	useCreateOrderMutation,
-	useInitiatePaymentMutation,
 	usePreviewOrderMutation,
 } from "@/store/api/order/order.api";
 import type { OrderPreview } from "@/store/api/order/order.type";
@@ -49,8 +49,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 	const cartItem = useAppSelector((s) => selectCartItemByEventId(s, event.id));
 
 	const [createOrder, { isLoading: isCreating }] = useCreateOrderMutation();
-	const [initiatePayment, { isLoading: isInitiating }] =
-		useInitiatePaymentMutation();
+	const [autoConfirmOrder, { isLoading: isConfirming }] = useAutoConfirmOrderMutation();
 	const [previewOrder, { isLoading: isPreviewing }] = usePreviewOrderMutation();
 
 	const ticketTypes = useMemo(() => event.ticketTypes ?? [], [event.ticketTypes]);
@@ -216,26 +215,12 @@ export default function CheckoutEventScreen({ event }: Props) {
 				currency: "XOF",
 			}).unwrap();
 
-			if (skipPayment) {
-				router.push(`/checkout/success?orderId=${order.id}`);
-				return;
+			if (!skipPayment) {
+				// v1: auto-confirm without Wave gateway
+				await autoConfirmOrder({ orderId: order.id, phone: values.phone }).unwrap();
 			}
 
-			const payment = await initiatePayment({
-				orderId: order.id,
-				payload: {
-					method: "WAVE",
-					phone: values.phone,
-					returnUrl:
-						typeof window !== "undefined"
-							? `${window.location.origin}/checkout/processing?orderId=${order.id}`
-							: undefined,
-				},
-			}).unwrap();
-
-			router.push(
-				`/checkout/processing?orderId=${order.id}&redirect=${encodeURIComponent(payment.redirectUrl)}`,
-			);
+			router.push(`/checkout/success?orderId=${order.id}`);
 		} catch (err) {
 			toast.error(getApiErrorMessage(err, "Le paiement a échoué."));
 		} finally {
@@ -248,7 +233,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 	};
 
 	const stepLabels = ["Billets", "Informations"];
-	const isBusy = submitting || isCreating || isInitiating;
+	const isBusy = submitting || isCreating || isConfirming;
 	const ctaLabel = (() => {
 		if (isBusy) return "Traitement...";
 		if (currentStep === 2 && isFree) return "Confirmer la réservation";
