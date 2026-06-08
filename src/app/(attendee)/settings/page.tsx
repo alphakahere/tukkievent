@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { ArrowLeft, Sun, Moon, DollarSign, Bell, BellOff, Mail, MessageSquare } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import BottomNav from "@/components/BottomNav";
 import AccountSidebar from "@/components/AccountSidebar";
 
@@ -26,6 +28,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function SettingsPage() {
   const router = useRouter();
   const { settings, updateTheme, updateCurrency, updateNotificationPref } = useSettings();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
 		<div className="min-h-screen bg-[#F7F7F7] pb-24 md:pb-8">
@@ -338,6 +341,7 @@ export default function SettingsPage() {
 							<div className="bg-white rounded-2xl border border-red-100 overflow-hidden">
 								<button
 									type="button"
+									onClick={() => setDeleteOpen(true)}
 									className="w-full px-4 py-4 text-left text-sm font-semibold text-destructive hover:bg-red-50 transition-colors"
 								>
 									Supprimer mon compte
@@ -353,6 +357,7 @@ export default function SettingsPage() {
 				</div>
 			</div>
 
+			<DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
 			<BottomNav />
 		</div>
   );

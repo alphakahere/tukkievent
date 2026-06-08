@@ -3,7 +3,6 @@ import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/Provider";
 import { FavoritesProvider } from "@/contexts/FavoritesContext";
-import { OrdersProvider } from "@/contexts/OrdersContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { PaymentMethodsProvider } from "@/contexts/PaymentMethodsContext";
@@ -37,14 +36,12 @@ export default function RootLayout({
 			  <ReduxProvider>
 				  <SettingsProvider>
 					  <FavoritesProvider>
-						  <OrdersProvider>
-							  <NotificationsProvider>
-								  <PaymentMethodsProvider>
-									  <AppShell>{children}</AppShell>
-									  <Toaster richColors position="bottom-right" />
-								  </PaymentMethodsProvider>
-							  </NotificationsProvider>
-						  </OrdersProvider>
+						  <NotificationsProvider>
+							  <PaymentMethodsProvider>
+								  <AppShell>{children}</AppShell>
+								  <Toaster richColors position="bottom-right" />
+							  </PaymentMethodsProvider>
+						  </NotificationsProvider>
 					  </FavoritesProvider>
 				  </SettingsProvider>
 			  </ReduxProvider>

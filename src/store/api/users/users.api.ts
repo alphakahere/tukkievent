@@ -38,6 +38,9 @@ export const usersApi = createApi({
 				}
 			},
 		}),
+		deleteMe: builder.mutation<void, void>({
+			query: () => ({ url: "/users/me", method: "DELETE" }),
+		}),
 		listUsers: builder.query<Paginated<User>, ListUsersParams | void>({
 			query: (params) => ({ url: "/users", params: params ?? {} }),
 			providesTags: (result) =>
@@ -66,6 +69,7 @@ export const {
 	useGetMeQuery,
 	useLazyGetMeQuery,
 	useUpdateMeMutation,
+	useDeleteMeMutation,
 	useListUsersQuery,
 	useGetUserQuery,
 	useAdminUpdateUserMutation,

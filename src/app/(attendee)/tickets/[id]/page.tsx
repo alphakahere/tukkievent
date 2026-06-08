@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -17,12 +18,13 @@ import {
 	User,
 	XCircle,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import BottomNav from "@/components/BottomNav";
 import { assetUrl, formatPrice } from "@/lib/utils";
+import { downloadTicketsPdf } from "@/lib/pdf";
 import { useGetOrderByIdQuery } from "@/store/api/order/order.api";
 import type { OrderTicket } from "@/store/api/order/order.type";
 
@@ -41,6 +43,7 @@ export default function TicketDetailPage() {
 	const params = useParams();
 	const router = useRouter();
 	const orderId = params?.id as string;
+	const qrRefs = useRef<Record<string, HTMLCanvasElement | null>>({});
 
 	const { data: order, isLoading, isError } = useGetOrderByIdQuery(orderId, {
 		skip: !orderId,
@@ -106,8 +109,19 @@ export default function TicketDetailPage() {
 			toast.success("Lien copié dans le presse-papiers");
 		}
 	};
-	const handleDownload = () =>
-		toast.info("Téléchargement du billet bientôt disponible");
+	const handleDownload = () => {
+		const qrImages: Record<string, string> = {};
+		for (const [id, canvas] of Object.entries(qrRefs.current)) {
+			if (canvas) {
+				try {
+					qrImages[id] = canvas.toDataURL("image/png");
+				} catch {
+					/* tainted canvas — skip QR for this ticket */
+				}
+			}
+		}
+		downloadTicketsPdf(order, qrImages);
+	};
 
 	return (
 		<div className="min-h-screen bg-[#F7F7F7] pb-24">
@@ -233,11 +247,14 @@ export default function TicketDetailPage() {
 									</p>
 									<div className="w-56 h-56 mx-auto bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center p-4 mb-3">
 										{ticket.qrCode ? (
-											<QRCodeSVG
+											<QRCodeCanvas
+												ref={(el) => {
+													qrRefs.current[ticket.id] = el;
+												}}
 												value={ticket.qrCode}
 												size={200}
 												level="H"
-												includeMargin={false}
+												marginSize={2}
 											/>
 										) : (
 											<p className="text-xs text-gray-400">

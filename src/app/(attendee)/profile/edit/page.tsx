@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -9,19 +9,50 @@ import { ArrowLeft, Camera, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { FormInput } from "@/components/ui/form-input";
+import { DeleteAccountDialog } from "@/components/auth/DeleteAccountDialog";
 import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useAppSelector } from "@/store/features/hooks";
 import { selectAuthUser } from "@/store/selectors/auth.selectors";
 import { useUpdateMeMutation } from "@/store/api/users/users.api";
+import { useUploadImageMutation } from "@/store/api/uploads/uploads.api";
+import { assetUrl } from "@/lib/utils";
 import {
 	type ProfileEditValues,
 	profileEditSchema,
 } from "./_form/schema";
 
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export default function EditProfilePage() {
 	const router = useRouter();
 	const user = useAppSelector(selectAuthUser);
 	const [updateMe, { isLoading: saving }] = useUpdateMeMutation();
+	const [uploadImage, { isLoading: uploading }] = useUploadImageMutation();
+	const fileInputRef = useRef<HTMLInputElement>(null);
+	const [deleteOpen, setDeleteOpen] = useState(false);
+
+	const handleAvatarSelect = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		e.target.value = ""; // allow re-selecting the same file
+		if (!file) return;
+		if (!file.type.startsWith("image/")) {
+			toast.error("Veuillez choisir une image");
+			return;
+		}
+		if (file.size > MAX_AVATAR_BYTES) {
+			toast.error("L'image ne doit pas dépasser 5 Mo");
+			return;
+		}
+		try {
+			const { path } = await uploadImage(file).unwrap();
+			await updateMe({ avatarUrl: path }).unwrap();
+			toast.success("Photo de profil mise à jour !");
+		} catch (err) {
+			toast.error(getApiErrorMessage(err, "Échec du téléversement"));
+		}
+	};
 
 	const {
 		register,
@@ -122,18 +153,32 @@ export default function EditProfilePage() {
 								{user?.avatarUrl ? (
 									// eslint-disable-next-line @next/next/no-img-element
 									<img
-										src={user.avatarUrl}
+										src={assetUrl(user.avatarUrl)}
 										alt={initials}
 										className="w-full h-full object-cover"
 									/>
 								) : (
 									initials
 								)}
+								{uploading && (
+									<div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+										<Loader2 size={22} className="animate-spin text-white" />
+									</div>
+								)}
 							</div>
+							<input
+								ref={fileInputRef}
+								type="file"
+								accept="image/*"
+								className="hidden"
+								onChange={handleAvatarSelect}
+							/>
 							<button
 								type="button"
-								className="absolute bottom-0 right-0 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
-								onClick={() => toast.info("Fonctionnalité bientôt disponible")}
+								disabled={uploading}
+								className="absolute bottom-0 right-0 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
+								onClick={() => fileInputRef.current?.click()}
+								aria-label="Changer la photo de profil"
 							>
 								<Camera size={14} className="text-gray-600" />
 							</button>
@@ -229,7 +274,7 @@ export default function EditProfilePage() {
 						<div className="p-5">
 							<button
 								type="button"
-								onClick={() => toast.error("Fonctionnalité bientôt disponible")}
+								onClick={() => setDeleteOpen(true)}
 								className="w-full py-3 px-4 rounded-full border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
 							>
 								Supprimer mon compte
@@ -239,6 +284,7 @@ export default function EditProfilePage() {
 				</div>
 			</form>
 
+			<DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
 			<BottomNav />
 		</div>
 	);

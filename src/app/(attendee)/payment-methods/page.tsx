@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import Link from "next/link";
 import {
+  AlertCircle,
   ArrowLeft,
   Plus,
   Trash2,
@@ -11,13 +13,17 @@ import {
   Smartphone,
   X,
   ChevronRight,
+  Loader2,
   ShoppingBag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { usePaymentMethods, type PaymentMethodType } from "@/contexts/PaymentMethodsContext";
-import { useOrders } from "@/contexts/OrdersContext";
+import { formatPrice } from "@/lib/utils";
+import { getApiErrorMessage } from "@/store/api/auth/error";
+import { useListMyOrdersQuery } from "@/store/api/order/order.api";
+import { OrderStatus } from "@/store/api/order/order.type";
 import BottomNav from "@/components/BottomNav";
 import AccountSidebar from "@/components/AccountSidebar";
 
@@ -133,12 +139,15 @@ function AddMethodSheet({
 export default function PaymentMethodsPage() {
   const router = useRouter();
   const { paymentMethods, addPaymentMethod, removePaymentMethod } = usePaymentMethods();
-  const { orders } = useOrders();
   const [showSheet, setShowSheet] = useState(false);
 
-  const recentTransactions = [...orders]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const {
+    data: ordersPage,
+    isLoading: ordersLoading,
+    isError: ordersError,
+    error: ordersErrorObj,
+  } = useListMyOrdersQuery({ status: OrderStatus.PAID, limit: 5 });
+  const recentTransactions = ordersPage?.data ?? [];
 
   function handleAdd(type: PaymentMethodType, identifier: string) {
     const meta = METHOD_META[type];
@@ -322,8 +331,32 @@ export default function PaymentMethodsPage() {
 									Transactions récentes
 								</p>
 								<div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-									{recentTransactions.length ===
-									0 ? (
+									{ordersLoading ? (
+										<div className="p-8 text-center">
+											<Loader2
+												size={
+													24
+												}
+												className="mx-auto text-primary animate-spin"
+											/>
+										</div>
+									) : ordersError ? (
+										<div className="p-8 text-center">
+											<AlertCircle
+												size={
+													32
+												}
+												className="mx-auto text-red-300 mb-2"
+											/>
+											<p className="text-sm text-gray-400">
+												{getApiErrorMessage(
+													ordersErrorObj,
+													"Impossible de charger les transactions",
+												)}
+											</p>
+										</div>
+									) : recentTransactions.length ===
+									  0 ? (
 										<div className="p-8 text-center">
 											<ShoppingBag
 												size={
@@ -345,7 +378,8 @@ export default function PaymentMethodsPage() {
 													const date =
 														format(
 															new Date(
-																order.createdAt,
+																order.paidAt ??
+																	order.createdAt,
 															),
 															"d MMM yyyy",
 															{
@@ -353,11 +387,12 @@ export default function PaymentMethodsPage() {
 															},
 														);
 													return (
-														<div
+														<Link
 															key={
-																order.orderId
+																order.id
 															}
-															className="flex items-center gap-4 p-4"
+															href={`/history/${order.id}`}
+															className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
 														>
 															<div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
 																<Smartphone
@@ -381,16 +416,20 @@ export default function PaymentMethodsPage() {
 																	}{" "}
 																	·{" "}
 																	{
-																		order
-																			.formData
-																			.paymentMethod
-																	}
+																		order.ticketCount
+																	}{" "}
+																	billet
+																	{order.ticketCount >
+																	1
+																		? "s"
+																		: ""}
 																</p>
 															</div>
 															<div className="flex items-center gap-1">
 																<span className="text-sm font-bold text-primary">
-																	{order.total.toLocaleString()}{" "}
-																	F
+																	{formatPrice(
+																		order.totalAmount,
+																	)}
 																</span>
 																<ChevronRight
 																	size={
@@ -399,7 +438,7 @@ export default function PaymentMethodsPage() {
 																	className="text-gray-300"
 																/>
 															</div>
-														</div>
+														</Link>
 													);
 												},
 											)}

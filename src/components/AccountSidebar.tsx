@@ -125,7 +125,6 @@ export default function AccountSidebar() {
 						Passer en mode organisateur
 					</Link>
 				</div>
-
 				{/* Logout */}
 				<div className="p-2 border-t border-gray-100">
 					<button

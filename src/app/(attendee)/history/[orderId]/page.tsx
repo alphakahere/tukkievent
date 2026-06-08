@@ -19,9 +19,9 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { formatPrice } from "@/lib/utils";
+import { downloadOrderReceiptPdf } from "@/lib/pdf";
 import { useGetOrderByIdQuery } from "@/store/api/order/order.api";
 import type { OrderTicket } from "@/store/api/order/order.type";
 
@@ -94,19 +94,28 @@ export default function OrderDetailPage() {
 		.trim();
 
 	// Group tickets by ticketTypeId so we can show "Standard × 2" style lines.
-	const groups = new Map<string, { name: string; quantity: number }>();
+	// Resolve the human name + unit price from the event's ticket types.
+	const ticketTypes = event?.ticketTypes ?? [];
+	const groups = new Map<
+		string,
+		{ name: string; quantity: number; unitPrice: number }
+	>();
 	for (const t of tickets) {
 		const key = t.ticketTypeId;
 		const existing = groups.get(key);
 		if (existing) {
 			existing.quantity += 1;
 		} else {
-			groups.set(key, { name: t.ticketTypeId, quantity: 1 });
+			const tt = ticketTypes.find((x) => x.id === key);
+			groups.set(key, {
+				name: tt?.name ?? "Billet",
+				quantity: 1,
+				unitPrice: tt?.price ?? 0,
+			});
 		}
 	}
 
-	const handleDownload = () =>
-		toast.info("Téléchargement du reçu bientôt disponible");
+	const handleDownload = () => downloadOrderReceiptPdf(order, ticketTypes);
 
 	return (
 		<div className="min-h-screen bg-[#F7F7F7] pb-24">
@@ -215,10 +224,16 @@ export default function OrderDetailPage() {
 							Array.from(groups.values()).map((g, idx) => (
 								<div
 									key={idx}
-									className="px-5 py-4 flex items-center justify-between"
+									className="px-5 py-4 flex items-center justify-between gap-3"
 								>
 									<p className="text-sm font-semibold text-gray-900">
-										Billet × {g.quantity}
+										{g.name}{" "}
+										<span className="text-gray-400 font-normal">
+											× {g.quantity}
+										</span>
+									</p>
+									<p className="text-sm text-gray-700 shrink-0">
+										{formatPrice(g.unitPrice * g.quantity)}
 									</p>
 								</div>
 							))
