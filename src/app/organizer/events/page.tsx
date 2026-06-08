@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
@@ -30,6 +30,7 @@ import {
   useDeleteEventMutation,
   useListEventsQuery,
 } from "@/store/api/event/event.api";
+import { useGetOrganizationRevenueQuery } from "@/store/api/order/order.api";
 import type {
   CreateEventPayload,
   EventResource,
@@ -39,6 +40,9 @@ import { assetUrl, formatPrice } from "@/lib/utils";
 
 type TabId = "all" | "PUBLISHED" | "DRAFT" | "COMPLETED";
 type ViewMode = "list" | "grid";
+
+type EventStats = { attendees: number; revenue: number };
+const EMPTY_STATS: EventStats = { attendees: 0, revenue: 0 };
 
 const STATUS_LABELS: Record<EventStatus, string> = {
   DRAFT: "Brouillon",
@@ -189,7 +193,13 @@ function ActionsMenu({
   );
 }
 
-function EventRow({ event }: { event: EventResource }) {
+function EventRow({
+  event,
+  stats = EMPTY_STATS,
+}: {
+  event: EventResource;
+  stats?: EventStats;
+}) {
   const {
     menuOpen,
     setMenuOpen,
@@ -207,8 +217,7 @@ function EventRow({ event }: { event: EventResource }) {
   const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
   const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
   const relative = formatDistanceToNow(start, { locale: fr, addSuffix: true });
-  const attendees = 0;
-  const revenue = 0;
+  const { attendees, revenue } = stats;
 
   return (
 		<div className="relative bg-white rounded-2xl overflow-hidden flex items-stretch transition-colors">
@@ -307,7 +316,13 @@ function EventRow({ event }: { event: EventResource }) {
   );
 }
 
-function EventCard({ event }: { event: EventResource }) {
+function EventCard({
+  event,
+  stats = EMPTY_STATS,
+}: {
+  event: EventResource;
+  stats?: EventStats;
+}) {
   const {
     menuOpen,
     setMenuOpen,
@@ -324,8 +339,7 @@ function EventCard({ event }: { event: EventResource }) {
   const dayNumber = format(start, "d");
   const monthShort = format(start, "MMM", { locale: fr }).toUpperCase().replace(".", "");
   const dateTimeLabel = format(start, "d MMMM yyyy HH:mm", { locale: fr });
-  const attendees = 0;
-  const revenue = 0;
+  const { attendees, revenue } = stats;
 
   return (
     <div className="relative bg-white rounded-2xl overflow-hidden transition-colors flex flex-col">
@@ -417,6 +431,18 @@ export default function OrganizerEventsPage() {
     activeOrgId ? { organizationId: activeOrgId, limit: 50 } : undefined,
     { skip: !activeOrgId },
   );
+  const { data: revenue } = useGetOrganizationRevenueQuery(activeOrgId ?? "", {
+    skip: !activeOrgId,
+  });
+
+  // Per-event sold-tickets + revenue from the org revenue breakdown.
+  const statsByEvent = useMemo(() => {
+    const map = new Map<string, EventStats>();
+    for (const e of revenue?.perEvent ?? []) {
+      map.set(e.eventId, { attendees: e.soldTickets, revenue: e.revenue });
+    }
+    return map;
+  }, [revenue]);
 
   const events = data?.data ?? [];
 
@@ -519,7 +545,7 @@ export default function OrganizerEventsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <EventRow event={event} />
+              <EventRow event={event} stats={statsByEvent.get(event.id)} />
             </motion.div>
           ))}
         </div>
@@ -532,7 +558,7 @@ export default function OrganizerEventsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <EventCard event={event} />
+              <EventCard event={event} stats={statsByEvent.get(event.id)} />
             </motion.div>
           ))}
         </div>

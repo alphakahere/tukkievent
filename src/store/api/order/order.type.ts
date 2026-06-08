@@ -139,6 +139,20 @@ export interface OrderListItem {
 	createdAt: string;
 }
 
+export interface RefundOrderInput {
+	/** Omit for a full refund of the remaining balance. */
+	amount?: number;
+	reason?: string;
+}
+
+export interface RefundResult {
+	refundId: string;
+	orderId: string;
+	amount: number;
+	fullyRefunded: boolean;
+	orderStatus: OrderStatus | string;
+}
+
 export interface ListEventOrdersParams {
 	page?: number;
 	limit?: number;

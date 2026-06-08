@@ -53,3 +53,29 @@ export interface CheckInPayload {
 	ticketId: string;
 	checkedIn: boolean;
 }
+
+export interface CheckInByQrPayload {
+	eventId: string;
+	qrCode: string;
+	checkedIn?: boolean;
+}
+
+export interface CheckInResult {
+	attendee: Attendee;
+	alreadyCheckedIn: boolean;
+}
+
+export interface AddAttendeePayload {
+	eventId: string;
+	ticketTypeId: string;
+	quantity?: number;
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+	phone?: string;
+}
+
+export interface AddAttendeeResult {
+	id: string;
+	tickets: { id: string }[];
+}

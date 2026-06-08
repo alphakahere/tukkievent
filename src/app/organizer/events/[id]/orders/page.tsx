@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 import {
 	AlertCircle,
 	ChevronLeft,
@@ -11,18 +12,30 @@ import {
 	Loader2,
 	Mail,
 	Phone,
+	RotateCcw,
 	Search,
 	Wallet,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { getApiErrorMessage } from "@/store/api/auth/error";
 import {
 	useGetEventOrdersStatsQuery,
 	useListEventOrdersQuery,
+	useRefundOrderMutation,
 } from "@/store/api/order/order.api";
 import {
 	OrderStatus,
 	type OrderListItem,
+	type RefundOrderInput,
 } from "@/store/api/order/order.type";
 import { useEvent } from "../layout";
 
@@ -160,13 +173,14 @@ export default function OrdersPage() {
 
 			{/* Orders table */}
 			<div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-				<div className="hidden md:grid md:grid-cols-[1.4fr_1fr_90px_110px_120px_140px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
+				<div className="hidden md:grid md:grid-cols-[1.4fr_1fr_90px_110px_120px_140px_64px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
 					<span>Acheteur</span>
 					<span>Contact</span>
 					<span>Billets</span>
 					<span>Statut</span>
 					<span>Montant</span>
 					<span>Date</span>
+					<span className="text-right">Actions</span>
 				</div>
 
 				{ordersError ? (
@@ -197,7 +211,12 @@ export default function OrdersPage() {
 						className={`divide-y divide-gray-100 ${ordersFetching ? "opacity-60 transition-opacity" : ""}`}
 					>
 						{orders.map((order, index) => (
-							<OrderRow key={order.id} order={order} index={index} />
+							<OrderRow
+								key={order.id}
+								order={order}
+								index={index}
+								eventId={eventId}
+							/>
 						))}
 					</ul>
 				)}
@@ -255,18 +274,28 @@ function StatCard({
 	);
 }
 
-function OrderRow({ order, index }: { order: OrderListItem; index: number }) {
+function OrderRow({
+	order,
+	index,
+	eventId,
+}: {
+	order: OrderListItem;
+	index: number;
+	eventId: string;
+}) {
+	const [refundOpen, setRefundOpen] = useState(false);
 	const date = format(new Date(order.createdAt), "d MMM yyyy 'à' HH:mm", {
 		locale: fr,
 	});
 	const status = order.status as OrderStatus | string;
+	const canRefund = status === OrderStatus.PAID;
 
 	return (
 		<motion.li
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			transition={{ delay: index * 0.02 }}
-			className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1.4fr_1fr_90px_110px_120px_140px] md:gap-4 md:items-center"
+			className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1.4fr_1fr_90px_110px_120px_140px_64px] md:gap-4 md:items-center"
 		>
 			{/* Mobile layout */}
 			<div className="md:hidden space-y-2">
@@ -298,6 +327,16 @@ function OrderRow({ order, index }: { order: OrderListItem; index: number }) {
 					<p className="text-xs text-gray-400 font-mono truncate">
 						{order.paymentReference}
 					</p>
+				)}
+				{canRefund && (
+					<button
+						type="button"
+						onClick={() => setRefundOpen(true)}
+						className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700"
+					>
+						<RotateCcw size={13} />
+						Rembourser
+					</button>
 				)}
 			</div>
 
@@ -349,7 +388,143 @@ function OrderRow({ order, index }: { order: OrderListItem; index: number }) {
 				)}
 			</div>
 			<p className="hidden md:block text-xs text-gray-500">{date}</p>
+			<div className="hidden md:flex md:justify-end">
+				{canRefund && (
+					<button
+						type="button"
+						onClick={() => setRefundOpen(true)}
+						title="Rembourser"
+						aria-label="Rembourser la commande"
+						className="p-1.5 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+					>
+						<RotateCcw size={15} />
+					</button>
+				)}
+			</div>
+
+			{canRefund && (
+				<RefundDialog
+					order={order}
+					eventId={eventId}
+					open={refundOpen}
+					onOpenChange={setRefundOpen}
+				/>
+			)}
 		</motion.li>
+	);
+}
+
+function RefundDialog({
+	order,
+	eventId,
+	open,
+	onOpenChange,
+}: {
+	order: OrderListItem;
+	eventId: string;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}) {
+	const [refund, { isLoading }] = useRefundOrderMutation();
+	const [amount, setAmount] = useState("");
+	const [reason, setReason] = useState("");
+
+	const submit = async () => {
+		const trimmedAmount = amount.trim();
+		const body: RefundOrderInput = {};
+		if (trimmedAmount) {
+			const parsed = Number(trimmedAmount);
+			if (!Number.isFinite(parsed) || parsed <= 0) {
+				toast.error("Montant invalide");
+				return;
+			}
+			if (parsed > order.totalAmount) {
+				toast.error("Le montant dépasse le total de la commande");
+				return;
+			}
+			body.amount = parsed;
+		}
+		if (reason.trim()) body.reason = reason.trim();
+
+		try {
+			const res = await refund({ eventId, orderId: order.id, body }).unwrap();
+			toast.success(
+				res.fullyRefunded
+					? "Commande remboursée"
+					: `Remboursement de ${formatPrice(res.amount)} effectué`,
+			);
+			onOpenChange(false);
+			setAmount("");
+			setReason("");
+		} catch (err) {
+			toast.error(getApiErrorMessage(err, "Le remboursement a échoué"));
+		}
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={(next) => !isLoading && onOpenChange(next)}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Rembourser la commande</DialogTitle>
+					<DialogDescription>
+						Total de la commande : {formatPrice(order.totalAmount)}. Laissez le
+						montant vide pour un remboursement total.
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="space-y-4">
+					<div className="space-y-1.5">
+						<label
+							htmlFor="refund-amount"
+							className="text-sm font-medium text-gray-700"
+						>
+							Montant (optionnel)
+						</label>
+						<input
+							id="refund-amount"
+							type="number"
+							min={1}
+							max={order.totalAmount}
+							value={amount}
+							onChange={(e) => setAmount(e.target.value)}
+							placeholder={`Total : ${order.totalAmount}`}
+							className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+						/>
+					</div>
+					<div className="space-y-1.5">
+						<label
+							htmlFor="refund-reason"
+							className="text-sm font-medium text-gray-700"
+						>
+							Motif (optionnel)
+						</label>
+						<textarea
+							id="refund-reason"
+							value={reason}
+							onChange={(e) => setReason(e.target.value)}
+							rows={3}
+							maxLength={500}
+							placeholder="Raison du remboursement…"
+							className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+						/>
+					</div>
+				</div>
+
+				<DialogFooter>
+					<Button
+						variant="outline"
+						onClick={() => onOpenChange(false)}
+						disabled={isLoading}
+					>
+						Annuler
+					</Button>
+					<Button variant="destructive" onClick={submit} disabled={isLoading}>
+						{isLoading && <Loader2 size={16} className="mr-2 animate-spin" />}
+						Rembourser
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }
 

@@ -8,6 +8,8 @@ import {
   XCircle,
   Download,
   Users,
+  UserPlus,
+  QrCode,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
@@ -25,6 +27,8 @@ import { getApiErrorMessage } from "@/store/api/auth/error";
 import { useAppSelector } from "@/store/features/hooks";
 import { selectAccessToken } from "@/store/selectors/auth.selectors";
 import { useEvent } from "../layout";
+import { AddAttendeeSheet } from "./_form/AddAttendeeSheet";
+import { ScanCheckInDialog } from "./_components/ScanCheckInDialog";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -91,6 +95,8 @@ export default function AttendeesPage() {
 
   const accessToken = useAppSelector(selectAccessToken);
   const [exporting, setExporting] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   const handleCheckIn = async (attendee: Attendee) => {
     try {
@@ -167,6 +173,29 @@ export default function AttendeesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header actions */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-lg font-semibold text-gray-900">Participants</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setScanOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            <QrCode size={16} />
+            <span className="hidden sm:inline">Scanner</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            <UserPlus size={16} />
+            <span className="hidden sm:inline">Ajouter</span>
+          </button>
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
@@ -196,7 +225,7 @@ export default function AttendeesPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Rechercher par nom, email, numéro..."
+            placeholder="Rechercher par nom, email, téléphone, numéro..."
             className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
           />
         </div>
@@ -397,6 +426,13 @@ export default function AttendeesPage() {
           </div>
         )}
       </div>
+
+      <ScanCheckInDialog
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        eventId={eventId}
+      />
+      <AddAttendeeSheet open={addOpen} onOpenChange={setAddOpen} eventId={eventId} />
     </div>
   );
 }

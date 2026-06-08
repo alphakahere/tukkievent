@@ -15,6 +15,8 @@ import type {
 	OrderStatusResponse,
 	OrganizationRevenue,
 	PaymentInitiationResponse,
+	RefundOrderInput,
+	RefundResult,
 } from "./order.type";
 
 export const orderApi = createApi({
@@ -101,6 +103,22 @@ export const orderApi = createApi({
 				{ type: "org-revenue" as const, id: orgId },
 			],
 		}),
+		refundOrder: builder.mutation<
+			RefundResult,
+			{ eventId: string; orderId: string; body: RefundOrderInput }
+		>({
+			query: ({ eventId, orderId, body }) => ({
+				url: `/events/${eventId}/orders/${orderId}/refund`,
+				method: "POST",
+				body,
+			}),
+			invalidatesTags: (_r, _e, { eventId, orderId }) => [
+				{ type: "event-orders" as const, id: eventId },
+				{ type: "event-orders-stats" as const, id: eventId },
+				{ type: "order" as const, id: orderId },
+				"org-revenue" as const,
+			],
+		}),
 
 		// -- Buyer (current user) ------------------------------------------
 
@@ -133,6 +151,7 @@ export const {
 	useListEventOrdersQuery,
 	useGetEventOrdersStatsQuery,
 	useGetOrganizationRevenueQuery,
+	useRefundOrderMutation,
 	useListMyOrdersQuery,
 	useGetMyStatsQuery,
 } = orderApi;

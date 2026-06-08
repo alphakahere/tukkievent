@@ -18,6 +18,7 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useGetAttendeeStatsQuery } from "@/store/api/tickets/tickets.api";
+import { useGetEventOrdersStatsQuery } from "@/store/api/order/order.api";
 import type { EventStatus } from "@/store/api/event/event.resource.type";
 import { assetUrl, formatPrice, getDuration } from "@/lib/utils";
 import { useEvent } from "./layout";
@@ -85,11 +86,13 @@ function DetailRow({
 export default function OverviewPage() {
   const event = useEvent();
   const { data: stats } = useGetAttendeeStatsQuery(event.id);
+  const { data: orderStats } = useGetEventOrdersStatsQuery(event.id);
   const category = event.category ?? null;
 
   const totalAttendees = stats?.total ?? 0;
   const checkedIn = stats?.checkedIn ?? 0;
-  const revenue = 0;
+  // Net revenue: completed payments minus completed refunds.
+  const revenue = (orderStats?.revenue ?? 0) - (orderStats?.refunded ?? 0);
   const remaining = Math.max(0, event.capacity - totalAttendees);
 
   const startDate = format(new Date(event.startDatetime), "EEEE d MMMM yyyy", { locale: fr });

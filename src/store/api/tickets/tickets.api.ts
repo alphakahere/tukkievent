@@ -2,9 +2,13 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQuery } from "../baseQuery";
 import type { Paginated } from "../types";
 import type {
+	AddAttendeePayload,
+	AddAttendeeResult,
 	Attendee,
 	AttendeeStats,
+	CheckInByQrPayload,
 	CheckInPayload,
+	CheckInResult,
 	ListAttendeesParams,
 } from "./tickets.type";
 
@@ -42,6 +46,28 @@ export const ticketApi = createApi({
 				{ type: "attendee-stats" as const, id: eventId },
 			],
 		}),
+		checkInByQr: builder.mutation<CheckInResult, CheckInByQrPayload>({
+			query: ({ qrCode, checkedIn }) => ({
+				url: `/tickets/check-in/by-qr`,
+				method: "POST",
+				body: { qrCode, checkedIn },
+			}),
+			invalidatesTags: (_r, _e, { eventId }) => [
+				{ type: "attendees" as const, id: eventId },
+				{ type: "attendee-stats" as const, id: eventId },
+			],
+		}),
+		addAttendee: builder.mutation<AddAttendeeResult, AddAttendeePayload>({
+			query: ({ eventId, ...body }) => ({
+				url: `/events/${eventId}/attendees`,
+				method: "POST",
+				body,
+			}),
+			invalidatesTags: (_r, _e, { eventId }) => [
+				{ type: "attendees" as const, id: eventId },
+				{ type: "attendee-stats" as const, id: eventId },
+			],
+		}),
 	}),
 });
 
@@ -49,4 +75,6 @@ export const {
 	useListEventAttendeesQuery,
 	useGetAttendeeStatsQuery,
 	useCheckInTicketMutation,
+	useCheckInByQrMutation,
+	useAddAttendeeMutation,
 } = ticketApi;
