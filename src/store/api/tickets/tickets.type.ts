@@ -73,9 +73,19 @@ export interface AddAttendeePayload {
 	lastName?: string;
 	email?: string;
 	phone?: string;
+	sendEmail?: boolean;
 }
 
 export interface AddAttendeeResult {
 	id: string;
 	tickets: { id: string }[];
+}
+
+export interface ResendTicketEmailPayload {
+	eventId: string;
+	ticketId: string;
+}
+
+export interface ResendTicketEmailResult {
+	queued: boolean;
 }
