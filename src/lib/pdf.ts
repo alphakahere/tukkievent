@@ -4,6 +4,8 @@ import { fr } from "date-fns/locale";
 import { formatPrice } from "./utils";
 import type { Order, OrderTicket } from "@/store/api/order/order.type";
 import type { TicketType } from "@/store/api/event/event.type";
+import type { Attendee } from "@/store/api/tickets/tickets.type";
+import type { EventResource } from "@/store/api/event/event.resource.type";
 
 // A4 in points (jsPDF default "pt" unit).
 const PAGE_W = 595.28;
@@ -282,4 +284,94 @@ export function downloadTicketsPdf(
 	});
 
 	doc.save(`billet-${order.id.slice(-8).toUpperCase()}.pdf`);
+}
+
+const ATTENDEE_STATUS_LABELS: Record<string, string> = {
+	VALID: "Valide",
+	USED: "Enregistré",
+	PENDING: "En attente",
+	CANCELLED: "Annulé",
+	REFUNDED: "Remboursé",
+};
+
+/**
+ * Generates a single-page PDF ticket for one organizer-side attendee.
+ * `qrImage` is a PNG data URL read from a rendered QR canvas (optional).
+ */
+export function downloadAttendeeTicketPdf(
+	event: EventResource,
+	attendee: Attendee,
+	qrImage?: string,
+): void {
+	const doc = new jsPDF({ unit: "pt", format: "a4" });
+	let y = drawHeader(doc, "Billet électronique");
+
+	// Event
+	doc.setFont("helvetica", "bold");
+	doc.setFontSize(15);
+	doc.setTextColor(...INK);
+	doc.text(event.title, MARGIN, y);
+	y += 22;
+	doc.setFont("helvetica", "normal");
+	doc.setFontSize(11);
+	doc.setTextColor(...MUTED);
+	const date = event.startDatetime
+		? format(new Date(event.startDatetime), "EEEE d MMMM yyyy 'à' HH:mm", {
+				locale: fr,
+			})
+		: null;
+	const location =
+		event.city || event.address || (event.isOnline ? "En ligne" : null);
+	if (date) {
+		doc.text(date, MARGIN, y);
+		y += 16;
+	}
+	if (location) {
+		doc.text(location, MARGIN, y);
+		y += 16;
+	}
+	y += 10;
+	y = divider(doc, y);
+
+	// QR code
+	const qrSize = 200;
+	const qrX = (PAGE_W - qrSize) / 2;
+	if (qrImage) {
+		doc.addImage(qrImage, "PNG", qrX, y, qrSize, qrSize);
+		y += qrSize + 12;
+		doc.setFontSize(9);
+		doc.setTextColor(...MUTED);
+		doc.text("Présentez ce QR code à l'entrée", PAGE_W / 2, y, {
+			align: "center",
+		});
+		y += 24;
+	} else {
+		doc.setFontSize(11);
+		doc.setTextColor(...MUTED);
+		doc.text("QR code en attente", PAGE_W / 2, y + 40, { align: "center" });
+		y += 80;
+	}
+	y = divider(doc, y);
+
+	// Details
+	if (attendee.ticketNumber) {
+		y = row(doc, "Numéro de billet", attendee.ticketNumber, y, { bold: true });
+	}
+	const holder = [attendee.holderFirstName, attendee.holderLastName]
+		.filter(Boolean)
+		.join(" ")
+		.trim();
+	if (holder) y = row(doc, "Détenteur", holder, y);
+	if (attendee.holderEmail) y = row(doc, "E-mail", attendee.holderEmail, y);
+	if (attendee.holderPhone) y = row(doc, "Téléphone", attendee.holderPhone, y);
+	y = row(doc, "Type de billet", attendee.ticketType.name, y);
+	y = row(
+		doc,
+		"Statut",
+		ATTENDEE_STATUS_LABELS[attendee.status] ?? attendee.status,
+		y,
+	);
+
+	const fileTag = attendee.ticketNumber ?? attendee.id.slice(-8).toUpperCase();
+	doc.save(`billet-${fileTag}.pdf`);
 }
