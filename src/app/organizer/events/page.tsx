@@ -163,12 +163,12 @@ function ActionsMenu({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">
         <Link
-          href={`/events/${event.slug}`}
+          href={`/organizer/events/${event.id}`}
           onClick={() => setMenuOpen(false)}
           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <Eye size={16} className="text-gray-400" />
-          Voir la page de l&apos;événement
+          Voir l&apos;événement
         </Link>
         <button
           type="button"

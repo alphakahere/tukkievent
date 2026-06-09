@@ -176,7 +176,7 @@ export default function AdminEventsPage() {
 						className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
 					/>
 					<input
-						type="text"
+						type="search"
 						placeholder="Rechercher un événement…"
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}

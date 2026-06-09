@@ -98,7 +98,7 @@ export default function SearchPage() {
             <div className="flex-1 relative md:max-w-3xl">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="text"
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un événement..."

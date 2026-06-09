@@ -148,7 +148,7 @@ export default function OrdersPage() {
 						className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
 					/>
 					<input
-						type="text"
+						type="search"
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						placeholder="Rechercher par email, nom, référence..."

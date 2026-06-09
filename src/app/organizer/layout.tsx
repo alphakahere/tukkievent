@@ -228,7 +228,7 @@ function OrganizerShell({ children }: { children: React.ReactNode }) {
             <div className="relative w-full">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="text"
+                type="search"
                 placeholder="Rechercher..."
                 className="w-full pl-10 pr-4 py-2 bg-gray-100 border-none rounded-full text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white transition-colors"
               />
