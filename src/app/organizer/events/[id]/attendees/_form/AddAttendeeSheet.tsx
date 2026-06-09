@@ -5,6 +5,7 @@ import { Controller, type Resolver, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FormInput } from "@/components/ui/form-input";
 import { FormSelect } from "@/components/ui/form-select";
 import {
@@ -33,6 +34,7 @@ const EMPTY_DEFAULTS: AddAttendeeFormValues = {
 	lastName: "",
 	email: undefined,
 	phone: undefined,
+	sendEmail: false,
 };
 
 export function AddAttendeeSheet({
@@ -82,6 +84,7 @@ export function AddAttendeeSheet({
 				lastName: data.lastName,
 				email: data.email || undefined,
 				phone: data.phone || undefined,
+				sendEmail: data.sendEmail,
 			}).unwrap();
 			toast.success(
 				data.quantity > 1
@@ -182,6 +185,33 @@ export function AddAttendeeSheet({
 						placeholder="+221 77 000 00 00"
 						error={errors.phone?.message}
 						{...register("phone")}
+					/>
+
+					<Controller
+						control={control}
+						name="sendEmail"
+						render={({ field }) => (
+							<label
+								htmlFor="attendee-send-email"
+								className="flex items-start gap-3 cursor-pointer rounded-xl border border-gray-200 p-3"
+							>
+								<Checkbox
+									id="attendee-send-email"
+									checked={field.value}
+									onCheckedChange={(v) => field.onChange(v === true)}
+									className="mt-0.5"
+								/>
+								<span className="text-sm">
+									<span className="font-medium text-gray-900">
+										Envoyer le billet par email
+									</span>
+									<span className="block text-xs text-gray-500">
+										Le participant recevra son billet avec QR code. L&apos;email
+										est requis.
+									</span>
+								</span>
+							</label>
+						)}
 					/>
 				</form>
 
