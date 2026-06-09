@@ -52,6 +52,7 @@ export function AddAttendeeSheet({
 		control,
 		handleSubmit,
 		reset,
+		watch,
 		formState: { errors, isSubmitting },
 	} = useForm<AddAttendeeFormValues>({
 		// Cast required: yupResolver widens optional `?:` keys vs yup.InferType output.
@@ -96,6 +97,8 @@ export function AddAttendeeSheet({
 			toast.error(getApiErrorMessage(err, "Impossible d'ajouter le participant"));
 		}
 	};
+
+	const sendEmail = watch("sendEmail");
 
 	const onInvalid = () => {
 		toast.error("Veuillez corriger les champs en erreur");
@@ -172,7 +175,8 @@ export function AddAttendeeSheet({
 
 					<FormInput
 						id="attendee-email"
-						label="Email (facultatif)"
+						label={sendEmail ? "Email" : "Email (facultatif)"}
+						required={sendEmail}
 						type="email"
 						placeholder="awa.diop@email.com"
 						error={errors.email?.message}
