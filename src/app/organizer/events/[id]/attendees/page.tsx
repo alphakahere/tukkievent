@@ -29,6 +29,7 @@ import { selectAccessToken } from "@/store/selectors/auth.selectors";
 import { useEvent } from "../layout";
 import { AddAttendeeSheet } from "./_form/AddAttendeeSheet";
 import { ScanCheckInDialog } from "./_components/ScanCheckInDialog";
+import { ViewTicketSheet } from "./_components/ViewTicketSheet";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -97,6 +98,7 @@ export default function AttendeesPage() {
   const [exporting, setExporting] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [viewAttendee, setViewAttendee] = useState<Attendee | null>(null);
 
   const handleCheckIn = async (attendee: Attendee) => {
     try {
@@ -222,7 +224,7 @@ export default function AttendeesPage() {
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
           />
           <input
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par nom, email, téléphone, numéro..."
@@ -305,7 +307,8 @@ export default function AttendeesPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.02 }}
-                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] md:gap-4 md:items-center"
+                  onClick={() => setViewAttendee(attendee)}
+                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   {/* Mobile layout */}
                   <div className="md:hidden flex items-center justify-between">
@@ -316,6 +319,11 @@ export default function AttendeesPage() {
                       <p className="text-xs text-gray-500">
                         {attendee.holderEmail ?? "—"}
                       </p>
+                      {attendee.holderPhone && (
+                        <p className="text-xs text-gray-500">
+                          {attendee.holderPhone}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400 font-mono mt-1">
                         {attendee.ticketNumber ?? "—"} ·{" "}
                         {attendee.ticketType.name}
@@ -333,7 +341,10 @@ export default function AttendeesPage() {
                       )}
                       <button
                         type="button"
-                        onClick={() => handleCheckIn(attendee)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCheckIn(attendee);
+                        }}
                         disabled={checkInLoading || !canCheckIn}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           used
@@ -360,9 +371,16 @@ export default function AttendeesPage() {
                       </p>
                     </div>
                   </div>
-                  <p className="hidden md:block text-sm text-gray-500 truncate">
-                    {attendee.holderEmail ?? "—"}
-                  </p>
+                  <div className="hidden md:block min-w-0">
+                    <p className="text-sm text-gray-500 truncate">
+                      {attendee.holderEmail ?? "—"}
+                    </p>
+                    {attendee.holderPhone && (
+                      <p className="text-xs text-gray-400 truncate">
+                        {attendee.holderPhone}
+                      </p>
+                    )}
+                  </div>
                   <p className="hidden md:block text-sm text-gray-700">
                     {attendee.ticketType.name}
                   </p>
@@ -379,7 +397,10 @@ export default function AttendeesPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleCheckIn(attendee)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCheckIn(attendee);
+                    }}
                     disabled={checkInLoading || !canCheckIn}
                     className={`hidden md:inline-flex px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       used
@@ -433,6 +454,14 @@ export default function AttendeesPage() {
         eventId={eventId}
       />
       <AddAttendeeSheet open={addOpen} onOpenChange={setAddOpen} eventId={eventId} />
+      <ViewTicketSheet
+        open={!!viewAttendee}
+        onOpenChange={(o) => {
+          if (!o) setViewAttendee(null);
+        }}
+        attendee={viewAttendee}
+        event={event}
+      />
     </div>
   );
 }
