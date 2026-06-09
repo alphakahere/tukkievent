@@ -82,6 +82,7 @@ export interface AddAttendeeResult {
 }
 
 export interface ResendTicketEmailPayload {
+	// eventId is carried for future cache-tag invalidation, mirroring CheckInPayload.
 	eventId: string;
 	ticketId: string;
 }
