@@ -34,12 +34,17 @@ export const addAttendeeFormSchema = yup.object({
 		.string()
 		.transform(emptyToUndefined)
 		.email("Email invalide")
-		.optional(),
+		.when("sendEmail", {
+			is: true,
+			then: (s) => s.required("L'email est requis pour envoyer le billet"),
+			otherwise: (s) => s.optional(),
+		}),
 	phone: yup
 		.string()
 		.transform(emptyToUndefined)
 		.matches(/^\+?[0-9 ()-]{7,30}$/, "Téléphone invalide")
 		.optional(),
+	sendEmail: yup.boolean().default(false),
 });
 
 export type AddAttendeeFormValues = yup.InferType<typeof addAttendeeFormSchema>;
