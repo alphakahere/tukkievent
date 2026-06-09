@@ -73,7 +73,6 @@ export interface AddAttendeePayload {
 	lastName?: string;
 	email?: string;
 	phone?: string;
-	sendEmail?: boolean;
 }
 
 export interface AddAttendeeResult {
