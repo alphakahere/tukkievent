@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -261,7 +262,7 @@ export default function AttendeesPage() {
 
       {/* Attendees table / list */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
+        <div className="hidden md:grid md:grid-cols-[1fr_1fr_110px_90px_140px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
           <span>Participant</span>
           <span>Email</span>
           <span>Billet</span>
@@ -308,7 +309,7 @@ export default function AttendeesPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.02 }}
                   onClick={() => setViewAttendee(attendee)}
-                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_120px_100px_80px] md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_110px_90px_140px] md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   {/* Mobile layout */}
                   <div className="md:hidden flex items-center justify-between">
@@ -339,6 +340,17 @@ export default function AttendeesPage() {
                           <XCircle size={14} /> Valide
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewAttendee(attendee);
+                        }}
+                        className="p-2 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                        aria-label="Voir le billet"
+                      >
+                        <Eye size={15} />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -395,21 +407,33 @@ export default function AttendeesPage() {
                       </span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCheckIn(attendee);
-                    }}
-                    disabled={checkInLoading || !canCheckIn}
-                    className={`hidden md:inline-flex px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      used
-                        ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                    }`}
-                  >
-                    {used ? "Annuler" : "Check-in"}
-                  </button>
+                  <div className="hidden md:flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewAttendee(attendee);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                    >
+                      <Eye size={14} /> Voir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckIn(attendee);
+                      }}
+                      disabled={checkInLoading || !canCheckIn}
+                      className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        used
+                          ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      }`}
+                    >
+                      {used ? "Annuler" : "Check-in"}
+                    </button>
+                  </div>
                 </motion.div>
               );
             })}
