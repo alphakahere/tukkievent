@@ -10,6 +10,8 @@ import type {
 	CheckInPayload,
 	CheckInResult,
 	ListAttendeesParams,
+	ResendTicketEmailPayload,
+	ResendTicketEmailResult,
 } from "./tickets.type";
 
 export const ticketApi = createApi({
@@ -68,6 +70,15 @@ export const ticketApi = createApi({
 				{ type: "attendee-stats" as const, id: eventId },
 			],
 		}),
+		resendTicketEmail: builder.mutation<
+			ResendTicketEmailResult,
+			ResendTicketEmailPayload
+		>({
+			query: ({ ticketId }) => ({
+				url: `/tickets/${ticketId}/resend-email`,
+				method: "POST",
+			}),
+		}),
 	}),
 });
 
@@ -77,4 +88,5 @@ export const {
 	useCheckInTicketMutation,
 	useCheckInByQrMutation,
 	useAddAttendeeMutation,
+	useResendTicketEmailMutation,
 } = ticketApi;
