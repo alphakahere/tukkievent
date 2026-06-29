@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
 import {
   Search,
-  CheckCircle,
-  XCircle,
+  BadgeCheck,
+  LogIn,
   Download,
   Users,
   UserPlus,
@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Loader2,
   Eye,
+  UserCheck,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -262,7 +264,7 @@ export default function AttendeesPage() {
 
       {/* Attendees table / list */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[1fr_1fr_110px_90px_140px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
+        <div className="hidden md:grid md:grid-cols-[1fr_1fr_110px_90px_180px] gap-4 px-6 py-3 bg-gray-50 text-xs font-semibold text-gray-400 uppercase tracking-wide border-b border-gray-100">
           <span>Participant</span>
           <span>Email</span>
           <span>Billet</span>
@@ -309,7 +311,7 @@ export default function AttendeesPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.02 }}
                   onClick={() => setViewAttendee(attendee)}
-                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_110px_90px_140px] md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="p-4 md:px-6 md:py-3.5 md:grid md:grid-cols-[1fr_1fr_110px_90px_180px] md:gap-4 md:items-center cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   {/* Mobile layout */}
                   <div className="md:hidden flex items-center justify-between">
@@ -332,12 +334,12 @@ export default function AttendeesPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {used ? (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                          <CheckCircle size={14} /> Entré
+                        <span className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                          <LogIn size={14} /> Entré
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
-                          <XCircle size={14} /> Valide
+                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                          <BadgeCheck size={14} /> Valide
                         </span>
                       )}
                       <button
@@ -358,12 +360,13 @@ export default function AttendeesPage() {
                           handleCheckIn(attendee);
                         }}
                         disabled={checkInLoading || !canCheckIn}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           used
-                            ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            ? "bg-white border border-red-300 text-red-700 hover:bg-red-50"
+                            : "bg-emerald-600 text-white hover:bg-emerald-700"
                         }`}
                       >
+                        {used ? <Undo2 size={14} /> : <UserCheck size={14} />}
                         {used ? "Annuler" : "Check-in"}
                       </button>
                     </div>
@@ -398,12 +401,12 @@ export default function AttendeesPage() {
                   </p>
                   <div className="hidden md:block">
                     {used ? (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                        <CheckCircle size={14} /> Entré
+                      <span className="flex items-center gap-1 text-xs font-semibold text-slate-500">
+                        <LogIn size={14} /> Entré
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-xs font-semibold text-amber-500">
-                        <XCircle size={14} /> Valide
+                      <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                        <BadgeCheck size={14} /> Valide
                       </span>
                     )}
                   </div>
@@ -425,12 +428,13 @@ export default function AttendeesPage() {
                         handleCheckIn(attendee);
                       }}
                       disabled={checkInLoading || !canCheckIn}
-                      className={`inline-flex px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         used
-                          ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                          : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                          ? "bg-white border border-red-300 text-red-700 hover:bg-red-50"
+                          : "bg-emerald-600 text-white hover:bg-emerald-700"
                       }`}
                     >
+                      {used ? <Undo2 size={14} /> : <UserCheck size={14} />}
                       {used ? "Annuler" : "Check-in"}
                     </button>
                   </div>
