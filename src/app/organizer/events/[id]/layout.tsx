@@ -9,6 +9,7 @@ import {
   BarChart3,
   ExternalLink,
   Loader2,
+  Pencil,
   Settings,
   Tag,
   Ticket as TicketIcon,
@@ -93,16 +94,25 @@ export default function EventLayout({ children }: { children: React.ReactNode })
             <ArrowLeft size={16} />
             Événements
           </Link>
-          {isPubliclyVisible && (
+          <div className="flex items-center gap-2">
+            {isPubliclyVisible && (
+              <Link
+                href={`/events/${event.slug}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors"
+              >
+                <ExternalLink size={14} />
+                Voir la page publique
+              </Link>
+            )}
             <Link
-              href={`/events/${event.slug}`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors"
+              href={`${base}/edit`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-gray-200 text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
             >
-              <ExternalLink size={14} />
-              Voir la page publique
+              <Pencil size={14} />
+              Modifier
             </Link>
-          )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">

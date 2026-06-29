@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "motion/react";
 import {
   Calendar,
   Clock,
   Link2,
   MapPin,
-  Pencil,
   ShieldCheck,
   Sparkles,
   Ticket,
@@ -151,20 +149,13 @@ export default function OverviewPage() {
             ) : null}
           </div>
         </div>
-        <div className="px-6 py-5 flex items-start justify-between gap-4">
+        <div className="px-6 py-5">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{event.title}</h1>
             {event.shortDescription ? (
               <p className="mt-2 text-sm text-gray-600 leading-relaxed">{event.shortDescription}</p>
             ) : null}
           </div>
-          <Link
-            href={`/organizer/events/${event.id}/edit`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors shrink-0"
-          >
-            <Pencil size={14} />
-            Modifier
-          </Link>
         </div>
       </section>
 
