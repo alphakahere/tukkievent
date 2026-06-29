@@ -45,9 +45,9 @@ function getCategoryIcon(icon?: string | null): LucideIcon {
 }
 
 const SORT_OPTIONS: { value: VisitorEventSort; label: string }[] = [
+	{ value: "recent", label: "Plus récents" },
 	{ value: "starting_soon", label: "À venir" },
 	{ value: "popular", label: "Populaires" },
-	{ value: "recent", label: "Plus récents" },
 ];
 
 const PAGE_SIZE = 12;
@@ -63,7 +63,7 @@ function useDebounced<T>(value: T, delay = 300): T {
 
 export default function HomeContent() {
 	const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-	const [sort, setSort] = useState<VisitorEventSort>("starting_soon");
+	const [sort, setSort] = useState<VisitorEventSort>("recent");
 	const [page, setPage] = useState(1);
 	const [searchQuery, setSearchQuery] = useState("");
 	const debouncedQuery = useDebounced(searchQuery.trim(), 300);
