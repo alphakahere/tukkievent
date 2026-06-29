@@ -15,14 +15,13 @@ import {
 	MapPin,
 	Share2,
 	Ticket,
-	User,
 	XCircle,
 } from "lucide-react";
-import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import BottomNav from "@/components/BottomNav";
+import { EventTicket } from "@/components/ticket/EventTicket";
 import { assetUrl, formatPrice } from "@/lib/utils";
 import { downloadTicketsPdf } from "@/lib/pdf";
 import { useGetOrderByIdQuery } from "@/store/api/order/order.api";
@@ -94,6 +93,9 @@ export default function TicketDetailPage() {
 		.filter(Boolean)
 		.join(" ")
 		.trim();
+	const typeNameById = new Map(
+		(event?.ticketTypes ?? []).map((t) => [t.id, t.name] as const),
+	);
 
 	const handleShare = () => {
 		if (typeof navigator !== "undefined" && navigator.share) {
@@ -120,7 +122,7 @@ export default function TicketDetailPage() {
 				}
 			}
 		}
-		downloadTicketsPdf(order, qrImages);
+		void downloadTicketsPdf(order, qrImages);
 	};
 
 	return (
@@ -226,9 +228,9 @@ export default function TicketDetailPage() {
 								initial={{ opacity: 0, y: 16 }}
 								animate={{ opacity: 1, y: 0 }}
 								transition={{ delay: 0.05 + index * 0.05 }}
-								className="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+								className="space-y-2"
 							>
-								<div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+								<div className="flex items-center justify-between px-1">
 									<p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
 										Billet {index + 1} / {tickets.length}
 									</p>
@@ -240,66 +242,33 @@ export default function TicketDetailPage() {
 									</span>
 								</div>
 
-								{/* QR */}
-								<div className="p-6 border-b border-gray-100 text-center">
-									<p className="text-sm text-gray-500 mb-4">
-										Présentez ce QR code à l&apos;entrée
-									</p>
-									<div className="w-56 h-56 mx-auto bg-white border-2 border-gray-100 rounded-2xl flex items-center justify-center p-4 mb-3">
-										{ticket.qrCode ? (
-											<QRCodeCanvas
-												ref={(el) => {
-													qrRefs.current[ticket.id] = el;
-												}}
-												value={ticket.qrCode}
-												size={200}
-												level="H"
-												marginSize={2}
-											/>
-										) : (
-											<p className="text-xs text-gray-400">
-												QR en attente
-											</p>
-										)}
-									</div>
-									{ticket.qrCode && (
-										<p className="text-xs text-gray-400 font-mono mb-4 break-all">
-											{ticket.qrCode}
-										</p>
-									)}
-									{ticket.ticketNumber && (
-										<div className="bg-gray-50 rounded-xl p-3 text-center">
-											<p className="text-xs text-gray-400 mb-0.5">
-												Numéro de billet
-											</p>
-											<p className="font-mono font-bold text-gray-900 text-sm">
-												{ticket.ticketNumber}
-											</p>
-										</div>
-									)}
-								</div>
+								<EventTicket
+									title={event?.title ?? "Événement"}
+									dateLabel={eventDate.toUpperCase()}
+									timeLabel={eventTime}
+									locationName={
+										event?.city ?? (event?.isOnline ? "En ligne" : null)
+									}
+									locationLines={event?.address ? [event.address] : []}
+									typeLabel={
+										typeNameById.get(ticket.ticketTypeId) ?? "Entrée"
+									}
+									ticketNumber={ticket.ticketNumber}
+									qrValue={ticket.qrCode}
+									qrRef={(el) => {
+										qrRefs.current[ticket.id] = el;
+									}}
+								/>
 
-								{/* Holder */}
-								<div className="p-5 bg-gray-50 space-y-2">
-									<p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-										Détenteur
+								{(holder || buyerName) && (
+									<p className="text-xs text-gray-500 px-1">
+										Détenteur :{" "}
+										<span className="font-medium text-gray-700">
+											{holder || buyerName}
+										</span>
+										{ticket.holderEmail ? ` · ${ticket.holderEmail}` : ""}
 									</p>
-									<div className="flex items-center gap-3">
-										<div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-											<User size={16} className="text-primary" />
-										</div>
-										<div>
-											<p className="text-sm font-semibold text-gray-900">
-												{holder || buyerName || "—"}
-											</p>
-											{ticket.holderEmail && (
-												<p className="text-xs text-gray-500">
-													{ticket.holderEmail}
-												</p>
-											)}
-										</div>
-									</div>
-								</div>
+								)}
 							</motion.section>
 						);
 					})

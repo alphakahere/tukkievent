@@ -74,7 +74,7 @@ export function ViewTicketSheet({
 				/* tainted canvas — skip QR in the PDF */
 			}
 		}
-		downloadAttendeeTicketPdf(event, attendee, qrPng);
+		void downloadAttendeeTicketPdf(event, attendee, qrPng);
 	};
 
 	const handleWhatsApp = () => {
