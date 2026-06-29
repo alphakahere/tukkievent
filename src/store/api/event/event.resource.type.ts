@@ -1,3 +1,4 @@
+import type { CreateTicketTypePayload } from "../ticket-types/ticket-types.api";
 import type { PaginationParams } from "../types";
 
 export type EventStatus =
@@ -77,6 +78,8 @@ export interface CreateEventPayload {
 	status?: EventStatus;
 	metaTitle?: string;
 	metaDescription?: string;
+	/** Ticket types created atomically with the event by the API. */
+	ticketTypes?: CreateTicketTypePayload[];
 }
 
 export type UpdateEventPayload = Partial<Omit<CreateEventPayload, "organizationId" | "slug">>;

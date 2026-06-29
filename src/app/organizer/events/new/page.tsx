@@ -58,6 +58,12 @@ function combineDateTime(date: string, time: string): string | null {
 	return new Date(`${date}T${t}:00`).toISOString();
 }
 
+// Sale-window dates carry no time: start at day-open, end at day-close.
+function saleDateToIso(date: string, endOfDay = false): string | undefined {
+	if (!date) return undefined;
+	return new Date(`${date}${endOfDay ? "T23:59:59" : "T00:00:00"}`).toISOString();
+}
+
 export default function CreateEventPage() {
 	const router = useRouter();
 	const { activeOrgId } = useOrganizerOrg();
@@ -248,6 +254,24 @@ export default function CreateEventPage() {
 		}
 		if (coverImageUrl) payload.coverImageUrl = coverImageUrl;
 		if (thumbnailUrl) payload.thumbnailUrl = thumbnailUrl;
+
+		// Ticket types are created atomically with the event by the API.
+		// Map the form's `quantity` onto the API's `totalQuantity` and the
+		// optional sale-window dates onto full ISO datetimes.
+		if (data.tickets.length > 0) {
+			payload.ticketTypes = data.tickets.map((ticket, i) => {
+				const saleStart = saleDateToIso(ticket.saleStartDate);
+				const saleEnd = saleDateToIso(ticket.saleEndDate, true);
+				return {
+					name: ticket.name,
+					price: ticket.price,
+					totalQuantity: ticket.quantity,
+					sortOrder: i,
+					...(saleStart && { saleStartDatetime: saleStart }),
+					...(saleEnd && { saleEndDatetime: saleEnd }),
+				};
+			});
+		}
 
 		try {
 			await createEvent(payload).unwrap();
@@ -748,6 +772,46 @@ export default function CreateEventPage() {
 												{...register(`tickets.${idx}.quantity`)}
 											/>
 										</div>
+										<div className="space-y-2">
+											<p className="text-xs font-medium text-gray-500">
+												Période de vente (facultative)
+											</p>
+											<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+												<Controller
+													control={control}
+													name={`tickets.${idx}.saleStartDate`}
+													render={({ field: f, fieldState }) => (
+														<DatePicker
+															id={`ticket-sale-start-${field.id}`}
+															label="Début des ventes"
+															value={f.value}
+															onChange={f.onChange}
+															error={fieldState.error?.message}
+														/>
+													)}
+												/>
+												<Controller
+													control={control}
+													name={`tickets.${idx}.saleEndDate`}
+													render={({ field: f, fieldState }) => (
+														<DatePicker
+															id={`ticket-sale-end-${field.id}`}
+															label="Fin des ventes"
+															value={f.value}
+															onChange={f.onChange}
+															disabledDates={(d) => {
+																const start =
+																	watch(`tickets.${idx}.saleStartDate`);
+																return start
+																	? d < new Date(`${start}T00:00:00`)
+																	: false;
+															}}
+															error={fieldState.error?.message}
+														/>
+													)}
+												/>
+											</div>
+										</div>
 									</div>
 								))}
 							</div>
@@ -756,7 +820,16 @@ export default function CreateEventPage() {
 						<button
 							type="button"
 							onClick={() =>
-								appendTicket({ name: "", price: 0, quantity: 1 })
+								// Start price/quantity empty (not 0/1) so the placeholders
+								// show and the user types straight in. The schema coerces
+								// blank → undefined and surfaces a "requis" error on submit.
+								appendTicket({
+									name: "",
+									price: undefined as unknown as number,
+									quantity: undefined as unknown as number,
+									saleStartDate: "",
+									saleEndDate: "",
+								})
 							}
 							className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-200 text-sm font-medium text-gray-600 hover:border-primary hover:text-primary transition-colors"
 						>

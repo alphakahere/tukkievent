@@ -27,6 +27,17 @@ export const ticketSchema = yup.object({
 		.typeError("Quantité invalide")
 		.required("Quantité requise")
 		.min(1, "Au moins 1 billet"),
+	// Optional sale window (YYYY-MM-DD); blank means "on sale immediately".
+	saleStartDate: yup.string().trim().default(""),
+	saleEndDate: yup
+		.string()
+		.trim()
+		.default("")
+		.test(
+			"after-start",
+			"La fin doit suivre le début",
+			(val, ctx) => !val || !ctx.parent.saleStartDate || val >= ctx.parent.saleStartDate,
+		),
 });
 
 export const eventFormSchema = yup.object({
