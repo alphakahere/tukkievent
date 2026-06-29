@@ -117,7 +117,7 @@ const EventCard: React.FC<Props> = ({ event, compact = false }) => {
     >
       <div className="relative h-48">
         <Image
-          src={event.coverImageUrl}
+          src={assetUrl(event.coverImageUrl)}
           alt={event.title}
           className="w-full h-full object-cover"
           width={600}

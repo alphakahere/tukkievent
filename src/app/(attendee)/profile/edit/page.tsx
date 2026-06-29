@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -151,10 +152,11 @@ export default function EditProfilePage() {
 						<div className="relative">
 							<div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
 								{user?.avatarUrl ? (
-									// eslint-disable-next-line @next/next/no-img-element
-									<img
+									<Image
 										src={assetUrl(user.avatarUrl)}
 										alt={initials}
+										width={96}
+										height={96}
 										className="w-full h-full object-cover"
 									/>
 								) : (

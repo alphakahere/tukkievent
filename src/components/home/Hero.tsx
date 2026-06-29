@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TrendingUp, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { Event } from "@/store/api/event/event.type";
+import { assetUrl } from "@/lib/utils";
 import { format } from "date-fns";
 
 type HeroProps = {
@@ -40,7 +41,7 @@ export default function Hero({ events }: HeroProps) {
               className="block w-[280px] sm:w-80 h-48 rounded-2xl overflow-hidden relative group"
             >
               <Image
-                src={event.coverImageUrl}
+                src={assetUrl(event.coverImageUrl)}
                 alt={event.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 width={320}
@@ -93,7 +94,7 @@ export default function Hero({ events }: HeroProps) {
           className="col-span-2 relative rounded-2xl overflow-hidden group"
         >
           <Image
-            src={displayEvents[currentSlide].coverImageUrl}
+            src={assetUrl(displayEvents[currentSlide].coverImageUrl)}
             alt={displayEvents[currentSlide].title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -170,7 +171,7 @@ export default function Hero({ events }: HeroProps) {
             >
               <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
                 <Image
-                  src={event.coverImageUrl}
+                  src={assetUrl(event.coverImageUrl)}
                   alt={event.title}
                   fill
                   className="object-cover"

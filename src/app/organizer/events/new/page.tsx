@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -344,11 +345,13 @@ export default function CreateEventPage() {
 				<div className="relative h-56 md:h-72 bg-gradient-to-br from-gray-100 to-gray-50 group">
 					{coverPreview ? (
 						<>
-							{/* eslint-disable-next-line @next/next/no-img-element */}
-							<img
+							<Image
 								src={coverPreview}
 								alt="Couverture"
-								className="w-full h-full object-cover"
+								fill
+								unoptimized
+								sizes="(min-width: 768px) 800px, 100vw"
+								className="object-cover"
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 							<div className="absolute top-4 right-4 flex items-center gap-2">
@@ -393,10 +396,12 @@ export default function CreateEventPage() {
 					<div className="flex items-center justify-between gap-3 py-1">
 						<div className="flex items-center gap-3 min-w-0">
 							{thumbnailPreview ? (
-								/* eslint-disable-next-line @next/next/no-img-element */
-								<img
+								<Image
 									src={thumbnailPreview}
 									alt="Miniature"
+									width={48}
+									height={48}
+									unoptimized
 									className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
 								/>
 							) : (

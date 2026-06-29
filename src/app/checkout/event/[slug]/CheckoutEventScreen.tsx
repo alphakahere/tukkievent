@@ -33,6 +33,7 @@ import {
 	getTicketAvailability,
 	type TicketAvailability,
 } from "@/lib/ticketAvailability";
+import { assetUrl } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -298,7 +299,7 @@ export default function CheckoutEventScreen({ event }: Props) {
 					<div className="flex gap-4">
 						{event.coverImageUrl && (
 							<Image
-								src={event.coverImageUrl}
+								src={assetUrl(event.coverImageUrl)}
 								alt={event.title}
 								width={72}
 								height={72}

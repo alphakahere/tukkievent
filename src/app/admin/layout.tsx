@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
 	LayoutDashboard,
@@ -24,6 +25,7 @@ import { RoleGuard } from "@/components/auth/RoleGuard";
 import { LogoutConfirmDialog } from "@/components/auth/LogoutConfirmDialog";
 import { useAppSelector } from "@/store/features/hooks";
 import { selectAuthUser } from "@/store/selectors/auth.selectors";
+import { assetUrl } from "@/lib/utils";
 
 const sidebarItems = [
   { href: "/admin/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
@@ -80,10 +82,11 @@ function AdminProfileDropdown({
 			>
 				<div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
 					{user?.avatarUrl ? (
-						// eslint-disable-next-line @next/next/no-img-element
-						<img
-							src={user.avatarUrl}
+						<Image
+							src={assetUrl(user.avatarUrl)}
 							alt=""
+							width={32}
+							height={32}
 							className="w-full h-full object-cover"
 						/>
 					) : (

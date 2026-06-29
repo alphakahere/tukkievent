@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -13,6 +14,7 @@ import { InputField } from "@/components/ui/input-field";
 import { Button } from "@/components/ui/button";
 import { useGetMeQuery, useUpdateMeMutation } from "@/store/api/users/users.api";
 import { getApiErrorMessage } from "@/store/api/auth/error";
+import { assetUrl } from "@/lib/utils";
 
 const phoneRegex = /^\+?[0-9 \-()]{6,20}$/;
 const urlRegex = /^https?:\/\/.+/;
@@ -114,8 +116,13 @@ export default function AdminProfilePage() {
 			>
 				<div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shrink-0 overflow-hidden">
 					{me.avatarUrl ? (
-						// eslint-disable-next-line @next/next/no-img-element
-						<img src={me.avatarUrl} alt="" className="w-full h-full object-cover" />
+						<Image
+							src={assetUrl(me.avatarUrl)}
+							alt=""
+							width={56}
+							height={56}
+							className="w-full h-full object-cover"
+						/>
 					) : (
 						initials
 					)}

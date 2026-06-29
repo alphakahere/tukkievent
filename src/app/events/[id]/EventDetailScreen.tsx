@@ -31,6 +31,7 @@ import {
 } from "@/lib/ticketAvailability";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { assetUrl } from "@/lib/utils";
 import BottomNav from "@/components/BottomNav";
 
 type Props = { event: Event };
@@ -139,7 +140,7 @@ export default function EventDetailScreen({ event }: Props) {
 			{/* Cover */}
 			<div className="relative h-80">
 				<Image
-					src={event.coverImageUrl}
+					src={assetUrl(event.coverImageUrl)}
 					alt={event.title}
 					fill
 					className="object-cover"
@@ -298,10 +299,11 @@ export default function EventDetailScreen({ event }: Props) {
 							<div className="flex items-start gap-3">
 								<div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 overflow-hidden">
 									{event.organization.logoUrl ? (
-										// eslint-disable-next-line @next/next/no-img-element
-										<img
-											src={event.organization.logoUrl}
+										<Image
+											src={assetUrl(event.organization.logoUrl)}
 											alt={event.organization.name}
+											width={44}
+											height={44}
 											className="w-full h-full object-cover"
 										/>
 									) : (
